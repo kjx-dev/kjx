@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id      Int      @id @default(autoincrement())
+  username     String   @unique
+  name         String?
+  email        String   @unique
+  phone        String?
+  gender       String?
+  password_hash String
+  created_at   DateTime @default(now())
+  posts        Post[]
+
+  @@map("users")
+}
+
+model Category {
+  category_id Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  icon        String   @default("fa-tags")
+  created_at  DateTime @default(now())
+  parent_id   Int?
+  parent      Category? @relation("CategoryChildren", fields: [parent_id], references: [category_id])
+  children    Category[] @relation("CategoryChildren")
+  posts       Post[]
+
+  @@map("categories")
+}
+
+model Post {
+  post_id    Int      @id @default(autoincrement())
+  title      String
+  content    String
+  created_at DateTime @default(now())
+
+  user_id     Int
+  category_id Int
+  user        User     @relation(fields: [user_id], references: [user_id])
+  category    Category @relation(fields: [category_id], references: [category_id])
+  price       Int?
+  location    String?
+  images      PostImage[]
+  reviews     PostReview[]
+  bids        PostBid[]
+
+  @@map("posts")
+}
+
+model PostImage {
+  image_id  Int    @id @default(autoincrement())
+  post_id   Int
+  url       String
+  mime      String
+  size      Int
+  order     Int    @default(0)
+  post      Post   @relation(fields: [post_id], references: [post_id])
+
+  @@map("post_images")
+}
+
+model PostReview {
+  review_id  Int      @id @default(autoincrement())
+  post_id    Int
+  author     String
+  rating     Int
+  comment    String
+  created_at DateTime @default(now())
+  post       Post     @relation(fields: [post_id], references: [post_id])
+
+  @@unique([post_id, author])
+  @@map("post_reviews")
+}
+
+model PostBid {
+  bid_id     Int      @id @default(autoincrement())
+  post_id    Int
+  user_id    Int?
+  author     String
+  email      String?
+  amount     Int
+  created_at DateTime @default(now())
+  post       Post     @relation(fields: [post_id], references: [post_id])
+  user       User?    @relation(fields: [user_id], references: [user_id])
+
+  @@index([post_id])
+  @@map("post_bids")
+}
