@@ -427,7 +427,7 @@ export default function Home() {
       <section className="hero" aria-labelledby="hero-title" style={{width:'100%', padding:'40px 20px', background:'#f7f8f9'}}>
         <div className="hero__inner" style={{maxWidth:1100, margin:'0 auto', display:'grid', gridTemplateColumns:'1fr 1fr', gap:40, alignItems:'center'}}>
           <div className="hero__content">
-            <h1 id="hero-title" style={{fontSize:'48px', fontWeight:700, color:'#012f34', marginBottom:16}}>Find great deals near you test</h1>
+            <h1 id="hero-title" style={{fontSize:'48px', fontWeight:700, color:'#012f34', marginBottom:16}}>Find great deals near you</h1>
             <p style={{fontSize:'18px', color:'rgba(0,47,52,.84)', marginBottom:24}}>Buy, sell and discover items across Pakistan. Post your ad or browse categories to get started.</p>
             <div className="hero__actions" role="group" aria-label="Primary actions" style={{display:'flex', gap:12}}>
               <a className="btn btn--primary" href="/sell" aria-label="Post your ad" style={{padding:'12px 24px', fontSize:'16px', fontWeight:600}}>Post Your Ad</a>
