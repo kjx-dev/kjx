@@ -14,7 +14,7 @@ model User {
   email         String   @unique
   phone         String?
   gender        String?
-  password_hash String
+  password_hash String?
   created_at    DateTime @default(now())
   posts         Post[]
   bids          PostBid[]
