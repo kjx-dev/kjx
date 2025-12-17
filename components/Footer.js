@@ -1,4 +1,4 @@
-import { FaFacebookF, FaInstagram, FaTwitter } from 'react-icons/fa'
+import { FaFacebookF, FaInstagram, FaTwitter, FaLinkedin } from 'react-icons/fa'
 
 export default function Footer(){
   const year = new Date().getFullYear()
@@ -68,10 +68,18 @@ export default function Footer(){
           <div className="follow_us">
             <h4>FOLLOW US</h4>
             <div className="icons">
-              <FaFacebookF />
-              <FaInstagram />
-              <FaTwitter />
-              <FaInstagram />
+              <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Facebook" className="social-icon">
+                <FaFacebookF />
+              </a>
+              <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Instagram" className="social-icon">
+                <FaInstagram />
+              </a>
+              <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Twitter" className="social-icon">
+                <FaTwitter />
+              </a>
+              <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="Follow us on LinkedIn" className="social-icon">
+                <FaLinkedin />
+              </a>
             </div>
             {/* <div className="apps">
               <a href="#" aria-label="Download on the App Store"><img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" style={{ width: 135, height: 'auto' }} /></a>
