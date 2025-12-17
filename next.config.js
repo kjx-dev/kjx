@@ -9,6 +9,11 @@ const nextConfig = {
     // Add your image domains if needed
     // domains: ['example.com'],
   },
+  
+  // Ensure proper module resolution
+  webpack: (config) => {
+    return config
+  },
 }
 
 module.exports = nextConfig

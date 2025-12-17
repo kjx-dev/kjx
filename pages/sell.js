@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/router'
+import { FaBars, FaUser, FaList, FaHeart, FaComment, FaKey, FaSignOutAlt, FaChevronDown, FaChevronUp, FaTags, FaPlus, FaXmark, FaArrowLeft, FaArrowUp } from 'react-icons/fa'
 
 export default function Sell(){
   const router = useRouter()
@@ -325,12 +326,12 @@ export default function Sell(){
               <div className="nav__mobile" style={{display:'flex', alignItems:'center', justifyContent:'center', position:'relative', width:'100%'}}>
                 <button onClick={sell} className="sell__btn" style={{margin:'0 auto'}}>+ Sell</button>
                 <button aria-label="Menu" className="mobile__menu" ref={profileBtnRef} onClick={toggleProfileMenu} style={{position:'absolute', right:16}}>
-                  <i className="fa-solid fa-bars"></i>
+                  <FaBars />
                 </button>
                 {profileOpen && (
                   <div id="profileMenu" ref={profileMenuRef} className="profile__menu" style={{ position:'fixed', top: profileMenuPos.top, left: profileMenuPos.left }}>
                     <div className="header">
-                      <i className="fa-regular fa-user" style={{fontSize:22}}></i>
+                      <FaUser style={{fontSize:22}} />
                       <div>
                         <h4 style={{fontWeight:500}}>{auth.name || 'My Profile'}</h4>
                         <a href="/profile" className="profile__link" style={{textDecoration:'none'}}>
@@ -340,20 +341,20 @@ export default function Sell(){
       </div>
       {showTop && (
         <button aria-label="Back to top" onClick={()=>{ try{ window.scrollTo({ top:0, behavior:'smooth' }) }catch(_){ } }} style={{position:'fixed', right:16, bottom:16, width:44, height:44, borderRadius:22, background:'#012f34', color:'#fff', border:'none', boxShadow:'0 2px 8px rgba(0,0,0,.2)', zIndex:4000}}>
-          <i className="fa-solid fa-arrow-up"></i>
+          <FaArrowUp />
         </button>
       )}
-                    <div className="menu__item" onClick={manage}><i className="fa-solid fa-rectangle-list"></i><span>My Ads</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/favorites')}><i className="fa-regular fa-heart"></i><span>Favorites</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/chat')}><i className="fa-regular fa-message"></i><span>Chat</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/change-password')}><i className="fa-solid fa-key"></i><span>Change Password</span></div>
-                    <div className="menu__item" onClick={logout}><i className="fa-solid fa-right-from-bracket"></i><span>Logout</span></div>
+                    <div className="menu__item" onClick={manage}><FaList /><span>My Ads</span></div>
+                    <div className="menu__item" onClick={()=>router.push('/favorites')}><FaHeart /><span>Favorites</span></div>
+                    <div className="menu__item" onClick={()=>router.push('/chat')}><FaComment /><span>Chat</span></div>
+                    <div className="menu__item" onClick={()=>router.push('/change-password')}><FaKey /><span>Change Password</span></div>
+                    <div className="menu__item" onClick={logout}><FaSignOutAlt /><span>Logout</span></div>
                   </div>
                 )}
               </div>
             ) : (
               <>
-                <a href="/" aria-label="Back"><i className="fa-solid fa-arrow-left"></i></a>
+                <a href="/" aria-label="Back"><FaArrowLeft /></a>
                 <a href="/" aria-label="Home" style={{marginLeft:8}}>
                   <svg viewBox="0 0 36.289 20.768" alt="Logo"><path d="M18.9 20.77V0h4.93v20.77zM0 10.39a8.56 8.56 0 1 1 8.56 8.56A8.56 8.56 0 0 1 0 10.4zm5.97-.01a2.6 2.6 0 1 0 2.6-2.6 2.6 2.6 0 0 0-2.6 2.6zm27 5.2l-1.88-1.87-1.87 1.88H25.9V12.3l1.9-1.9-1.9-1.89V5.18h3.27l1.92 1.92 1.93-1.92h3.27v3.33l-1.9 1.9 1.9 1.9v3.27z"></path></svg>
                 </a>
@@ -380,7 +381,7 @@ export default function Sell(){
                 <div className="form__label" style={{marginBottom:6}}>Category</div>
                 <div style={{display:'flex', alignItems:'center', gap:10, flexWrap:'wrap'}}>
                   <span style={{display:'inline-flex', alignItems:'center', gap:8, padding:'8px 12px', border:'1px solid rgba(1,47,52,.2)', borderRadius:9999, background:'rgba(1,47,52,.06)'}}>
-                    <i className="fa-solid fa-list" aria-hidden="true"></i>
+                    <FaList aria-hidden="true" />
                     <span style={{fontWeight:600}}>{form.category || 'Select Category'}</span>
                   </span>
                   <span style={{color:'rgba(0,47,52,.64)'}}>{form.category ? 'Selected' : 'Choose a category to continue'}</span>
@@ -392,7 +393,7 @@ export default function Sell(){
                   onClick={()=>{ setHeaderCatOpen(v=>!v) }}
                   style={{border:'1px solid rgba(1,47,52,.2)', background:'#fff', color:'#012f34', borderRadius:20, padding:'6px 12px'}}
                 >
-                  {headerCatOpen ? 'Close' : 'Change'} <i className={"fa-solid "+(headerCatOpen?'fa-chevron-up':'fa-chevron-down')} style={{marginLeft:6}}></i>
+                  {headerCatOpen ? 'Close' : 'Change'} {headerCatOpen ? <FaChevronUp style={{marginLeft:6}} /> : <FaChevronDown style={{marginLeft:6}} />}
                 </button>
               ) : null}
             </div>
@@ -403,7 +404,7 @@ export default function Sell(){
                     const selected = (form.category||'') === (c.k||c)
                     return (
                       <a key={c.k||c} className="cat__card" href="#" onClick={(e)=>{ e.preventDefault(); setForm({...form, category:(c.k||c)}); setErrors(err=>({ ...err, category:'' })); setStep(2); setHeaderCatOpen(false) }} style={selected ? { outline:'2px solid #012f34' } : {}}>
-                        <div className="cat__icon"><i className={"fa-solid "+(c.icon||'fa-tags')}></i></div>
+                        <div className="cat__icon"><FaTags /></div>
                         <div className="cat__label">{c.label||c}</div>
                       </a>
                     )
@@ -452,13 +453,13 @@ export default function Sell(){
                         border:'1px solid rgba(1,47,52,.3)', background:'#fff'
                       }}
                     >
-                      <i className="fa-solid fa-plus" style={{fontSize:20}}></i>
+                      <FaPlus style={{fontSize:20}} />
                     </button>
                   ) : (
                     <>
                       <img src={u.preview} alt="" loading="lazy" decoding="async" style={{position:'absolute', top:0, left:0, width:'100%', height:'100%', objectFit:'cover'}} />
                       <div style={{position:'absolute', left:8, bottom:8, padding:'6px 10px', borderRadius:20, background:'rgba(255,255,255,.9)', border:'1px solid rgba(1,47,52,.2)', color:'rgba(0,47,52,.84)', fontSize:12}}>Change</div>
-                      <button aria-label="Remove image" onClick={(e)=>{ e.stopPropagation(); removeImage(idx) }} style={{position:'absolute', top:8, right:8, background:'rgba(0,0,0,0.6)', color:'#fff', border:'none', borderRadius:14, width:28, height:28, display:'flex', alignItems:'center', justifyContent:'center'}}><i className="fa-solid fa-xmark"></i></button>
+                      <button aria-label="Remove image" onClick={(e)=>{ e.stopPropagation(); removeImage(idx) }} style={{position:'absolute', top:8, right:8, background:'rgba(0,0,0,0.6)', color:'#fff', border:'none', borderRadius:14, width:28, height:28, display:'flex', alignItems:'center', justifyContent:'center'}}><FaXmark /></button>
                     </>
                   )}
                 </div>

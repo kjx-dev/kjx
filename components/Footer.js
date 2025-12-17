@@ -1,3 +1,5 @@
+import { FaFacebookF, FaInstagram, FaTwitter } from 'react-icons/fa'
+
 export default function Footer(){
   const year = new Date().getFullYear()
   return (
@@ -36,10 +38,10 @@ export default function Footer(){
           <div className="follow_us">
             <h4>FOLLOW US</h4>
             <div className="icons">
-              <i className="fa-brands fa-facebook-f"></i>
-              <i className="fa-brands fa-instagram"></i>
-              <i className="fa-brands fa-twitter"></i>
-              <i className="fa-brands fa-instagram"></i>
+              <FaFacebookF />
+              <FaInstagram />
+              <FaTwitter />
+              <FaInstagram />
             </div>
             <div className="apps">
               <a href="#" aria-label="Download on the App Store"><img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" style={{ width: 135, height: 'auto' }} /></a>

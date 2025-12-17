@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import { getHeaderState } from '../lib/headerAuth'
 import Image from 'next/image'
+import { FaSearch, FaBars, FaUser, FaChevronDown, FaList, FaHeart, FaComment, FaKey, FaSignOutAlt, FaSpinner } from 'react-icons/fa'
 
 export default function Profile(){
   const router = useRouter()
@@ -239,26 +240,26 @@ export default function Profile(){
           </button>
           )}
           <div className="select_option">
-            <i className="fa-solid fa-search"></i>
+            <FaSearch />
             <input type="text" placeholder="Jamshed Town, Karachi" />
           </div>
           
           <div className="search__bar" role="search">
             <input type="text" id="profile-txt" aria-label="Search" placeholder="Find Cars, Mobile Phones and more..." value={q} onChange={onSearchChange} onKeyDown={(e)=>{ if(e.key==='Enter'){ applySearch(q) } }} />
             <button className="clear" aria-label="Clear search" onClick={clearSearch}>×</button>
-            <i className="fa-solid fa-search" aria-label="Submit search" onClick={()=>applySearch(q)}></i>
+            <FaSearch aria-label="Submit search" onClick={()=>applySearch(q)} style={{cursor:'pointer'}} />
           </div>
           <div className="login__sell" id="login__sell">
             {isMobile ? (
               <div className="nav__mobile" style={{display:'flex', alignItems:'center', justifyContent:'center', position:'relative', width:'100%'}}>
                 <button onClick={sell} className="sell__btn" style={{margin:'0 auto'}}>+ Sell</button>
                 <button aria-label="Menu" className="mobile__menu" ref={profileBtnRef} onClick={toggleProfileMenu} style={{position:'absolute', right:16}}>
-                  <i className="fa-solid fa-bars"></i>
+                  <FaBars />
                 </button>
                 {profileMenuOpen && (
                   <div id="profileMenu" ref={profileMenuRef} className="profile__menu" style={{ position:'fixed', top: profileMenuPos.top, left: profileMenuPos.left }}>
                     <div className="header">
-                      <i className="fa-regular fa-user" style={{fontSize:22}}></i>
+                      <FaUser style={{fontSize:22}} />
                       <div>
                         <h4 style={{fontWeight:500}}>{auth.name || 'My Profile'}</h4>
                         <a href="/profile" className="profile__link" style={{textDecoration:'none'}}>
@@ -266,11 +267,11 @@ export default function Profile(){
                         </a>
                       </div>
                     </div>
-                    <div className="menu__item" onClick={manage}><i className="fa-solid fa-rectangle-list"></i><span>My Ads</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/favorites')}><i className="fa-regular fa-heart"></i><span>Favorites</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/chat')}><i className="fa-regular fa-message"></i><span>Chat</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/change-password')}><i className="fa-solid fa-key"></i><span>Change Password</span></div>
-                    <div className="menu__item" onClick={logout}><i className="fa-solid fa-right-from-bracket"></i><span>Logout</span></div>
+                    <div className="menu__item" onClick={manage}><FaList /><span>My Ads</span></div>
+                    <div className="menu__item" onClick={()=>router.push('/favorites')}><FaHeart /><span>Favorites</span></div>
+                    <div className="menu__item" onClick={()=>router.push('/chat')}><FaComment /><span>Chat</span></div>
+                    <div className="menu__item" onClick={()=>router.push('/change-password')}><FaKey /><span>Change Password</span></div>
+                    <div className="menu__item" onClick={logout}><FaSignOutAlt /><span>Logout</span></div>
                   </div>
                 )}
               </div>
@@ -278,13 +279,13 @@ export default function Profile(){
               <div className="nav__icons">
                 <div className="profile__wrapper" ref={profileWrapRef}>
                   <button ref={profileBtnRef} className="profile__toggle" aria-haspopup="true" aria-controls="profileMenu" aria-expanded={profileMenuOpen} onClick={toggleProfileMenu}>
-                    <i className="fa-regular fa-user"></i>
-                    <i className="fa-solid fa-chevron-down"></i>
+                    <FaUser />
+                    <FaChevronDown />
                   </button>
                   {profileMenuOpen && (
                     <div id="profileMenu" ref={profileMenuRef} className="profile__menu" style={{ position:'fixed', top: profileMenuPos.top, left: profileMenuPos.left }}>
                       <div className="header">
-                        <i className="fa-regular fa-user" style={{fontSize:22}}></i>
+                        <FaUser style={{fontSize:22}} />
                         <div>
                           <h4 style={{fontWeight:500}}>{auth.name || 'My Profile'}</h4>
                           <a href="/profile" className="profile__link" style={{textDecoration:'none'}}>
@@ -292,20 +293,20 @@ export default function Profile(){
                           </a>
                         </div>
                       </div>
-                    <div className="menu__item" onClick={manage}><i className="fa-solid fa-rectangle-list"></i><span>My Ads</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/favorites')}><i className="fa-regular fa-heart"></i><span>Favorites</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/chat')}><i className="fa-regular fa-message"></i><span>Chat</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/change-password')}><i className="fa-solid fa-key"></i><span>Change Password</span></div>
-                      <div className="menu__item" onClick={logout}><i className="fa-solid fa-right-from-bracket"></i><span>Logout</span></div>
+                    <div className="menu__item" onClick={manage}><FaList /><span>My Ads</span></div>
+                    <div className="menu__item" onClick={()=>router.push('/favorites')}><FaHeart /><span>Favorites</span></div>
+                    <div className="menu__item" onClick={()=>router.push('/chat')}><FaComment /><span>Chat</span></div>
+                    <div className="menu__item" onClick={()=>router.push('/change-password')}><FaKey /><span>Change Password</span></div>
+                      <div className="menu__item" onClick={logout}><FaSignOutAlt /><span>Logout</span></div>
                     </div>
                   )}
                 </div>
                 <button onClick={sell} className="sell__btn">+ Sell</button>
                 <div className="header__category-wrapper" ref={hdrWrapRef}>
                   <button ref={hdrBtnRef} className="header__category-btn" aria-haspopup="true" aria-controls="hdrCatMenu" aria-expanded={hdrOpen} onClick={()=>setHdrOpen(v=>!v)} onKeyDown={(e)=>{ if (e.key==='Enter' || e.key===' '){ e.preventDefault(); setHdrOpen(true) } }}>
-                    <i className="fa-solid fa-list"></i>
+                    <FaList />
                     <span>Category</span>
-                    <i className="fa-solid fa-chevron-down"></i>
+                    <FaChevronDown />
                   </button>
                   <div ref={hdrMenuRef} id="hdrCatMenu" role="menu" className={"header__category-menu" + (hdrOpen ? " open" : "")}>
                     {catTiles.slice(0,10).map(c => {
@@ -408,7 +409,7 @@ export default function Profile(){
         </div>
       </div>
       <div style={{display:'flex', justifyContent:'flex-end', marginTop:20}}>
-        <button className="btn" onClick={saveProfile} disabled={saving} style={{minWidth:160}}>{saving ? (<><i className="fa-solid fa-spinner fa-spin"></i>&nbsp;Saving...</>) : 'Save Changes'}</button>
+        <button className="btn" onClick={saveProfile} disabled={saving} style={{minWidth:160}}>{saving ? (<><FaSpinner style={{animation:'spin 1s linear infinite', display:'inline-block'}} />&nbsp;Saving...</>) : 'Save Changes'}</button>
       </div>
       <div className="status__line" aria-live="polite" style={{marginTop:10}}>{status}</div>
     </div>

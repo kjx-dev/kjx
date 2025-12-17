@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import Footer from '../components/Footer'
 import { useState } from 'react'
+import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock } from 'react-icons/fa'
 
 export default function Contact(){
   const year = new Date().getFullYear()
@@ -54,10 +55,10 @@ export default function Contact(){
           <div className="contact__card">
             <h3>Details</h3>
             <ul className="contact__meta">
-              <li><i className="fa-solid fa-envelope"></i><span>support@omg.pk</span></li>
-              <li><i className="fa-solid fa-phone"></i><span>+92 000 0000000</span></li>
-              <li><i className="fa-solid fa-location-dot"></i><span>Pakistan</span></li>
-              <li><i className="fa-regular fa-clock"></i><span>Mon–Fri, 9:00–18:00 PKT</span></li>
+              <li><FaEnvelope /><span>support@omg.pk</span></li>
+              <li><FaPhone /><span>+92 000 0000000</span></li>
+              <li><FaMapMarkerAlt /><span>Pakistan</span></li>
+              <li><FaClock /><span>Mon–Fri, 9:00–18:00 PKT</span></li>
             </ul>
           </div>
           <form className="contact__form" onSubmit={submit}>

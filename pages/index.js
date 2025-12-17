@@ -4,6 +4,7 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
+import { FaTags, FaHeart, FaWhatsapp, FaMapMarkerAlt, FaArrowUp } from 'react-icons/fa'
 
 export default function Home() {
   const router = useRouter()
@@ -471,7 +472,7 @@ export default function Home() {
                     onClick={(e)=>{ e.preventDefault(); router.push('/category/'+slug) }}
                   >
                     <div className="cat__icon">
-                      <i className={"fa-solid "+(c.icon||'fa-tags')}></i>
+                      <FaTags />
                     </div>
                     <div className="cat__label">{c.label || c.k}</div>
                   </a>
@@ -536,7 +537,7 @@ export default function Home() {
                   <div className="card__content-gap" style={{display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:8}}>
                     <div className="name__heart" style={{display:'flex', alignItems:'center', gap:8, flex:1}}>
                       <h4 style={{margin:0, fontSize:14, fontWeight:600, color:'#012f34', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', textOverflow:'ellipsis'}}>{card.name}</h4>
-                      <i className="fa-solid fa-heart" aria-hidden="true" style={{color:'rgba(0,47,52,.3)', fontSize:16}}></i>
+                      <FaHeart aria-hidden="true" style={{color:'rgba(0,47,52,.3)', fontSize:16}} />
                       <button
                         className="card__wa-btn"
                         aria-label="Chat on WhatsApp"
@@ -545,12 +546,12 @@ export default function Home() {
                         onMouseEnter={(e)=>{ e.currentTarget.style.background='rgba(37,211,102,.15)'; e.currentTarget.style.boxShadow='0 2px 6px rgba(37,211,102,.25)' }}
                         onMouseLeave={(e)=>{ e.currentTarget.style.background='rgba(37,211,102,.1)'; e.currentTarget.style.boxShadow='none' }}
                       >
-                        <i className="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                        <FaWhatsapp aria-hidden="true" />
                       </button>
                     </div>
                     <h2 aria-label={'Price ' + card.price} style={{margin:0, fontSize:18, fontWeight:700, color:'#012f34'}}>Rs {card.price}</h2>
                   </div>
-                  <h5 className="card__location" style={{margin:'8px 0 0', fontSize:12, color:'rgba(0,47,52,.64)'}}><i className="fa-solid fa-location-dot" aria-hidden="true"></i> {card.location}</h5>
+                  <h5 className="card__location" style={{margin:'8px 0 0', fontSize:12, color:'rgba(0,47,52,.64)'}}><FaMapMarkerAlt aria-hidden="true" /> {card.location}</h5>
                 </div>
               </article>
             )
@@ -573,7 +574,7 @@ export default function Home() {
       <Footer />
       {showTop && (
         <button aria-label="Back to top" onClick={toTop} style={{position:'fixed', right:16, bottom:16, width:44, height:44, borderRadius:22, background:'#012f34', color:'#fff', border:'none', boxShadow:'0 2px 8px rgba(0,0,0,.2)', zIndex:4000}}>
-          <i className="fa-solid fa-arrow-up"></i>
+          <FaArrowUp />
         </button>
       )}
     </>
