@@ -4,7 +4,7 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
-import { FaTags, FaHeart, FaWhatsapp, FaMapMarkerAlt, FaArrowUp } from 'react-icons/fa'
+import { FaTags, FaHeart, FaWhatsapp, FaMapMarkerAlt, FaArrowUp, FaChevronDown } from 'react-icons/fa'
 
 export default function Home() {
   const router = useRouter()
@@ -342,9 +342,14 @@ export default function Home() {
       </Head>
       <Header />
 
-        <div className="third__navbar" id="categories" ref={allCatWrapRef} style={{position:'relative'}}>
-          <div className="select__itself"><a href="#" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(v=>!v) }} ref={allCatBtnRef} aria-expanded={allCatOpen}>All Categories</a></div>
-          <div className="links" id="links" style={{display:'flex', flexWrap:'wrap', gap:16, alignItems:'center'}}>
+        <div className="third__navbar" id="categories" ref={allCatWrapRef}>
+          <div className="select__itself">
+            <a href="#" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(v=>!v) }} ref={allCatBtnRef} aria-expanded={allCatOpen} className="all-categories-btn">
+              <span>All Categories</span>
+              <FaChevronDown className={`chevron ${allCatOpen ? 'rotated' : ''}`} />
+            </a>
+          </div>
+          <div className="links" id="links">
           {(() => {
             try {
               const order = ['mobile-phones','cars','motercycles','house','tv-video-audio','tablets','land-plots','jobs','services','furniture']
@@ -361,18 +366,7 @@ export default function Home() {
                     <a 
                       key={c.k || idx} 
                       href={'/category/' + catSlug}
-                      style={{
-                        whiteSpace:'nowrap',
-                        fontSize:'14px',
-                        fontWeight:500,
-                        color:'rgba(0,47,52,.84)',
-                        textDecoration:'none',
-                        padding:'4px 8px',
-                        borderRadius:'6px',
-                        transition:'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e)=>{ e.currentTarget.style.backgroundColor='rgba(1,47,52,.06)' }}
-                      onMouseLeave={(e)=>{ e.currentTarget.style.backgroundColor='transparent' }}
+                      className="category-link"
                     >
                       {displayLabel}
                     </a>
@@ -396,20 +390,20 @@ export default function Home() {
               [byName('Furniture & Home Decor')]
             ]
             return (
-              <div ref={allCatMenuRef} style={{display: allCatOpen ? 'block':'none', position:'absolute', zIndex:30, top:48, left:0, right:0, margin:'0 auto', maxWidth:1100, background:'#fff', border:'1px solid rgba(1,47,52,.2)', boxShadow:'0 6px 18px rgba(0,0,0,.08)', borderRadius:12}}>
-                <div style={{maxHeight:360, overflow:'auto', padding:16}}>
-                  <div style={{display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:24}}>
+              <div ref={allCatMenuRef} className={`all-cat-menu ${allCatOpen ? '' : 'hidden'}`}>
+                <div className="all-cat-menu-content">
+                  <div className="all-cat-menu-grid">
                     {layout.map((list,ci)=> (
                       <div key={'col:'+ci}>
                         {list.map(gr => (
-                          <div key={gr.parent.category_id} style={{marginBottom:12}}>
-                            <div style={{fontWeight:700, color:'#012f34', marginBottom:8}}>{gr.parent.name}</div>
-                            <ul style={{listStyle:'none', padding:0, margin:0}}>
+                          <div key={gr.parent.category_id} className="all-cat-group">
+                            <div className="all-cat-group-title">{gr.parent.name}</div>
+                            <ul className="all-cat-group-list">
                               {gr.children.map(ch => {
                                 const s = String(ch.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
                                 return (
-                                  <li key={ch.category_id} style={{margin:'6px 0'}}>
-                                    <a href={'/category/'+s} style={{textDecoration:'none', color:'rgba(0,47,52,.84)'}} onClick={(e)=>{ e.preventDefault(); setAllCatOpen(false); router.push('/category/'+s) }}>{ch.name}</a>
+                                  <li key={ch.category_id} className="all-cat-group-item">
+                                    <a href={'/category/'+s} className="all-cat-group-link" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(false); router.push('/category/'+s) }}>{ch.name}</a>
                                   </li>
                                 )
                               })}
@@ -425,17 +419,17 @@ export default function Home() {
           })()}
         </div>
 
-      <section className="hero" aria-labelledby="hero-title" style={{width:'100%', padding:'40px 20px', background:'#f7f8f9'}}>
-        <div className="hero__inner" style={{maxWidth:1100, margin:'0 auto', display:'grid', gridTemplateColumns:'1fr 1fr', gap:40, alignItems:'center'}}>
+      <section className="hero" aria-labelledby="hero-title">
+        <div className="hero__inner">
           <div className="hero__content">
             <h1 id="hero-title">Find great deals near you</h1>
-            <p style={{fontSize:'18px', color:'rgba(0,47,52,.84)', marginBottom:24}}>Buy, sell and discover items across Pakistan. Post your ad or browse categories to get started.</p>
-            <div className="hero__actions" role="group" aria-label="Primary actions" style={{display:'flex', gap:12}}>
-              <a className="btn btn--primary" href="/sell" aria-label="Post your ad" style={{padding:'12px 24px', fontSize:'16px', fontWeight:600}}>Post Your Ad</a>
-              <a className="btn btn--secondary" href="#categories" aria-label="Browse categories" style={{padding:'12px 24px', fontSize:'16px', fontWeight:600, background:'#fff', color:'#012f34', border:'2px solid #012f34'}}>Browse Categories</a>
+            <p>Buy, sell and discover items across Pakistan. Post your ad or browse categories to get started.</p>
+            <div className="hero__actions" role="group" aria-label="Primary actions">
+              <a className="btn btn--primary" href="/sell" aria-label="Post your ad">Post Your Ad</a>
+              <a className="btn btn--secondary" href="#categories" aria-label="Browse categories">Browse Categories</a>
             </div>
           </div>
-          <div className="hero__art" aria-hidden="true" style={{display:'flex', alignItems:'center', justifyContent:'center'}}>
+          <div className="hero__art" aria-hidden="true">
             <Image src="/images/banners/mobile.webp" alt="" width={640} height={380} priority sizes="(max-width: 768px) 100vw, 640px" style={{width:'100%', height:'auto'}} />
           </div>
         </div>
@@ -447,7 +441,7 @@ export default function Home() {
           {(() => {
             try {
               if (!Array.isArray(catTiles) || catTiles.length === 0) {
-                return <div style={{gridColumn:'1/-1', textAlign:'center', padding:'20px', color:'rgba(0,47,52,.64)'}}>Loading categories...</div>
+                return <div className="loading-categories">Loading categories...</div>
               }
               const seen = new Set()
               const uniq = []
@@ -489,7 +483,7 @@ export default function Home() {
           const seen = new Set(catTiles.map(t=>String(t.label||t.k||'').toLowerCase()))
           const uniqCount = seen.size
           return (!catsExpanded && uniqCount>21) ? (
-            <div style={{textAlign:'center', marginTop:12}}>
+            <div className="view-more-container">
               <button className="load__more-btn" onClick={()=>setCatsExpanded(true)}>View more</button>
             </div>
           ) : null
@@ -509,9 +503,9 @@ export default function Home() {
       </div>
 
       <div className="fresh__recomandation" aria-labelledby="fresh-title">
-        <div style={{maxWidth:1100, margin:'0 auto'}}>
-          <h1 id="fresh-title" style={{textAlign:'left'}}>Fresh recommendations</h1>
-          <div className="cards__grid" id="cards" style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(240px, 1fr))', gap:16}}>
+        <div className="fresh__recomandation-container">
+          <h1 id="fresh-title">Fresh recommendations</h1>
+          <div className="cards__grid" id="cards">
           {Array.isArray(toShow) && toShow.length > 0 ? toShow.map((card, i) => {
             const isFeatured = i % 3 === 0
             return (
@@ -520,43 +514,34 @@ export default function Home() {
                 className="card"
                 onClick={() => productDetail(i)}
                 aria-label={card.name}
-                style={{
-                  background:'#fff', border:'1px solid rgba(1,47,52,.16)', borderRadius:12, overflow:'hidden',
-                  boxShadow:'0 2px 8px rgba(0,0,0,.04)', cursor:'pointer', transition:'box-shadow .2s, transform .2s'
-                }}
-                onMouseEnter={(e)=>{ e.currentTarget.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'; e.currentTarget.style.transform='translateY(-2px)' }}
-                onMouseLeave={(e)=>{ e.currentTarget.style.boxShadow='0 2px 8px rgba(0,0,0,.04)'; e.currentTarget.style.transform='none' }}
               >
-                <div className="img__featured" style={{position:'relative', width:'100%', paddingTop:'66.66%', background:'#f7f8f9'}}>
+                <div className="img__featured">
                   <Image src={card.image} alt={card.name} fill loading="lazy" sizes="(max-width: 768px) 100vw, 320px" unoptimized style={{objectFit:'cover'}} />
                   {isFeatured && (
-                    <p className="featured" style={{position:'absolute', top:8, left:8, margin:0, padding:'4px 8px', borderRadius:6, fontSize:12, fontWeight:600, background:'linear-gradient(180deg,#FFF1CC,#FFD580)', color:'#5a2c00', boxShadow:'0 1px 4px rgba(0,0,0,.12)'}}>featured</p>
+                    <p className="featured">featured</p>
                   )}
                 </div>
-                <div className="card__content" style={{padding:12}}>
-                  <div className="card__content-gap" style={{display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:8}}>
-                    <div className="name__heart" style={{display:'flex', alignItems:'center', gap:8, flex:1}}>
-                      <h4 style={{margin:0, fontSize:14, fontWeight:600, color:'#012f34', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', textOverflow:'ellipsis'}}>{card.name}</h4>
-                      <FaHeart aria-hidden="true" style={{color:'rgba(0,47,52,.3)', fontSize:16}} />
+                <div className="card__content">
+                  <div className="card__content-gap">
+                    <div className="name__heart">
+                      <h4 className="card__name">{card.name}</h4>
+                      <FaHeart aria-hidden="true" className="card__heart" />
                       <button
                         className="card__wa-btn"
                         aria-label="Chat on WhatsApp"
                         onClick={(e)=>{ e.stopPropagation(); try { window.dispatchEvent(new CustomEvent('whatsapp:open', { detail: { number: (card.profilePhone||'').replace(/[^0-9]/g,''), message: 'Hello! I am interested in ' + (card.name||'') } })) } catch(_){} }}
-                        style={{display:'inline-flex', alignItems:'center', justifyContent:'center', gap:6, padding:'6px 8px', borderRadius:8, border:'1px solid rgba(37,211,102,.3)', background:'rgba(37,211,102,.1)', color:'#25D366'}}
-                        onMouseEnter={(e)=>{ e.currentTarget.style.background='rgba(37,211,102,.15)'; e.currentTarget.style.boxShadow='0 2px 6px rgba(37,211,102,.25)' }}
-                        onMouseLeave={(e)=>{ e.currentTarget.style.background='rgba(37,211,102,.1)'; e.currentTarget.style.boxShadow='none' }}
                       >
                         <FaWhatsapp aria-hidden="true" />
                       </button>
                     </div>
-                    <h2 aria-label={'Price ' + card.price} style={{margin:0, fontSize:18, fontWeight:700, color:'#012f34'}}>Rs {card.price}</h2>
+                    <h2 className="card__price" aria-label={'Price ' + card.price}>Rs {card.price}</h2>
                   </div>
-                  <h5 className="card__location" style={{margin:'8px 0 0', fontSize:12, color:'rgba(0,47,52,.64)'}}><FaMapMarkerAlt aria-hidden="true" /> {card.location}</h5>
+                  <h5 className="card__location"><FaMapMarkerAlt aria-hidden="true" /> {card.location}</h5>
                 </div>
               </article>
             )
           }) : (
-            <div style={{gridColumn:'1/-1', textAlign:'center', padding:'40px 20px', color:'rgba(0,47,52,.64)'}}>
+            <div className="no-products">
               <p>No products found. Be the first to post an ad!</p>
             </div>
           )}
@@ -573,7 +558,7 @@ export default function Home() {
 
       <Footer />
       {showTop && (
-        <button aria-label="Back to top" onClick={toTop} style={{position:'fixed', right:16, bottom:16, width:44, height:44, borderRadius:22, background:'#012f34', color:'#fff', border:'none', boxShadow:'0 2px 8px rgba(0,0,0,.2)', zIndex:4000}}>
+        <button aria-label="Back to top" onClick={toTop} className="back-to-top">
           <FaArrowUp />
         </button>
       )}
