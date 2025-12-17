@@ -4,15 +4,13 @@ import { useRouter } from 'next/router'
 import Image from 'next/image'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
+import { FaWhatsapp, FaUser, FaIdCard, FaList, FaHeart, FaShare } from 'react-icons/fa'
 
 export default function ProductDetails(){
   const router = useRouter()
   const [data, setData] = useState({
     phoneShow:'', phone:'', name:'', description:'', image:'', price:'', location:'', productName:'', category:''
   })
-  const [bids, setBids] = useState([])
-  const [bidAmount, setBidAmount] = useState('')
-  const [placingBid, setPlacingBid] = useState(false)
   const [error, setError] = useState('')
   
   const [activeImg, setActiveImg] = useState('')
@@ -32,7 +30,6 @@ export default function ProductDetails(){
   const [views, setViews] = useState(0)
   const [likes, setLikes] = useState(0)
   const [deadline, setDeadline] = useState(0)
-  const [countdown, setCountdown] = useState('')
   const [reported, setReported] = useState(false)
   const [showPhone, setShowPhone] = useState(false)
   const [hydrated, setHydrated] = useState(false)
@@ -56,16 +53,14 @@ export default function ProductDetails(){
   const hdrMenuRef = useRef(null)
   const [hdrOpen, setHdrOpen] = useState(false)
   const ratingStats = useMemo(() => {
-    const bidRatings = bids.filter(b => typeof b.rating === 'number')
     const reviewRatings = reviews.filter(r => typeof r.rating === 'number')
-    const list = [...bidRatings, ...reviewRatings]
+    const list = [...reviewRatings]
     const total = list.length || 1
     const avg = list.reduce((a,b)=>a+((b.rating)||0),0)/total
     const dist = [0,0,0,0,0]
     list.forEach(b=>{ const r = Math.round(b.rating||0); const idx = Math.max(1, Math.min(5, r)); dist[5-idx]++ })
     return { avg: Number(avg.toFixed(1)), dist, total }
-  }, [bids, reviews])
-  const topAmount = useMemo(() => Math.max(0, ...bids.map(b => Number(b.amount)||0)), [bids])
+  }, [reviews])
   const [activeTab, setActiveTab] = useState('details')
   function getPostId(){
     try{
@@ -168,12 +163,6 @@ export default function ProductDetails(){
                   const listR = Array.isArray(rj.data) ? rj.data : []
                   setReviews(listR.map(r=>({ name:r.author, text:r.comment, rating:r.rating, time:r.created_at })))
                 }catch(_){ setReviews([]) }
-                try{
-                  const rb = await fetch('/api/v1/posts/'+idFromSlug+'/bids')
-                  const bj = await rb.json()
-                  const listB = Array.isArray(bj.data) ? bj.data : []
-                  setBids(listB.map(b=>({ email:b.email||'', name:b.author, amount:b.amount, created_at:b.created_at })))
-                }catch(_){ setBids([]) }
                 return
               }
             }catch(_){ }
@@ -234,12 +223,6 @@ export default function ProductDetails(){
                   const listR = Array.isArray(rj.data) ? rj.data : []
                   setReviews(listR.map(r=>({ name:r.author, text:r.comment, rating:r.rating, time:r.created_at })))
                 }catch(_){ setReviews([]) }
-                try{
-                  const rb = await fetch('/api/v1/posts/'+id+'/bids')
-                  const bj = await rb.json()
-                  const listB = Array.isArray(bj.data) ? bj.data : []
-                  setBids(listB.map(b=>({ email:b.email||'', name:b.author, amount:b.amount, created_at:b.created_at })))
-                }catch(_){ setBids([]) }
                 return
               }
         } catch(e) {}
@@ -285,12 +268,7 @@ export default function ProductDetails(){
       try {
         const pid = (router.query.slug||router.query.id||'').toString()
         const idPart = parseInt((pid.split('-').pop()||pid),10)
-        const rb = await fetch('/api/v1/posts/'+encodeURIComponent(String(idPart))+'/bids')
-        const bj = await rb.json()
-        const listB = Array.isArray(bj.data) ? bj.data : []
-        setBids(listB.map(b=>({ email:b.email||'', name:b.author, amount:b.amount, created_at:b.created_at })))
       } catch (e) {
-        setBids([])
         setError('Failed to load product details')
       }
       try {
@@ -333,21 +311,6 @@ export default function ProductDetails(){
     }
     loadFav()
   }, [router.query.id, router.query.slug])
-  useEffect(() => {
-    if (!deadline) return
-    const fmt = (ms) => {
-      const s = Math.max(0, Math.floor(ms/1000))
-      const hh = String(Math.floor(s/3600)).padStart(2,'0')
-      const mm = String(Math.floor((s%3600)/60)).padStart(2,'0')
-      const ss = String(s%60).padStart(2,'0')
-      return hh+':'+mm+':'+ss
-    }
-    const id = setInterval(() => {
-      setCountdown(fmt(deadline - Date.now()))
-    }, 1000)
-    setCountdown(fmt(deadline - Date.now()))
-    return () => clearInterval(id)
-  }, [deadline])
   function search(){ router.push('/') }
   function sell(){ if (auth.email && auth.isAuthenticated) router.push('/sell'); else router.push('/login') }
   function manage(){ router.push('/manage') }
@@ -439,55 +402,6 @@ export default function ProductDetails(){
       setActionStatus('Reported')
       try{ if (typeof window !== 'undefined' && window.swal){ window.swal('Thank you', 'Your report has been submitted', 'success') } }catch(_){ }
     }catch(_){ setReporting(false); setActionStatus('Failed to report') }
-  }
-  async function placeBid(){
-    if (placingBid) return
-    const email = localStorage.getItem('email') || ''
-    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
-    const name = localStorage.getItem('name') || ''
-    if (!isAuthenticated || !email) { try{ if (typeof window !== 'undefined' && window.swal){ window.swal('Login required', 'Please login to place a bid', 'warning') } }catch(_){ } router.push('/login'); return }
-    const amount = parseFloat(bidAmount)
-    if (isNaN(amount) || amount<=0) { setError('Enter a valid bid amount'); return }
-    setPlacingBid(true)
-    try{
-      const idPart = getPostId()
-      if (Number.isNaN(idPart)) { setError('Invalid product id'); setPlacingBid(false); return }
-      const res = await fetch('/api/v1/posts/'+encodeURIComponent(String(idPart))+'/bids', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ amount: Math.round(amount), author: name || email, email }) })
-      const js = await res.json().catch(()=>null)
-      if (res.status===409){ setError('You have already placed a bid'); setPlacingBid(false); return }
-      if (!res.ok){ setError((js && js.message) || 'Failed to place bid'); setPlacingBid(false); return }
-      const r = js?.data || { email, author: name||email, amount: Math.round(amount), created_at: Date.now() }
-      const created = { email: r.email||'', name: r.author||name||email, amount: r.amount, created_at: r.created_at }
-      const next = [created, ...bids].sort((a,b)=>Number(b.amount||0)-Number(a.amount||0))
-      setBids(next)
-      setBidAmount('')
-      setError('')
-    }catch(_){ setError('Failed to place bid') }
-    finally{ setPlacingBid(false) }
-  }
-  async function removeBid(b){
-    async function apply(){
-      try{
-        const idPart = getPostId()
-        if (Number.isNaN(idPart)) return
-        const payload = { email: b.email||'', author: b.name||'' }
-        const res = await fetch('/api/v1/posts/'+encodeURIComponent(String(idPart))+'/bids', { method:'DELETE', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) })
-        const js = await res.json().catch(()=>null)
-        if (!res.ok){ setError((js && js.message) || 'Failed to remove bid'); return }
-        const next = bids.filter(x => !(String(x.email||'')===String(b.email||'') && String(x.name||'')===String(b.name||'')))
-        setBids(next)
-        setError('')
-      }catch(_){ setError('Failed to remove bid') }
-    }
-    try{
-      if (typeof window !== 'undefined' && window.swal){
-        const ok = await window.swal({ title:'Remove bid?', text:'Are you sure you want to remove your bid?', icon:'warning', buttons:['Cancel','Remove'] })
-        if (ok) await apply()
-      } else {
-        const ok = typeof window !== 'undefined' ? window.confirm('Remove your bid?') : true
-        if (ok) await apply()
-      }
-    }catch(_){ await apply() }
   }
   function formatPrice(val){
     try{
@@ -665,13 +579,12 @@ export default function ProductDetails(){
       </Head>
       <Header />
    
-    <div className="productDetails" style={{marginTop:40}}>
+    <div className="productDetails" style={{marginTop:40, maxWidth:'1400px', margin:'40px auto', padding:'0 20px'}}>
       <div className="left__side">
         
         <div className="hero__grid">
-          <div className="details__gallery" style={{display:'grid', gap:12}}>
-            <div className="details__image product__banner" style={{position:'relative', borderRadius:12, overflow:'hidden', boxShadow:'0 6px 18px rgba(1,47,52,.08)'}}>
-            <div className="ribbon ribbon--bid"><i className="fa-solid fa-gavel"></i><span>Bid</span></div>
+          <div className="details__gallery" style={{display:'grid', gap:16}}>
+            <div className="details__image product__banner" style={{position:'relative', borderRadius:16, overflow:'hidden', boxShadow:'0 8px 24px rgba(1,47,52,.12)', background:'#f8f9fa'}}>
             <Image
               src={activeImg || data.image || 'https://static-01.daraz.pk/p/37cd9cf9ea23a97b7d3097bfd9a03347.jpg_720x720.jpg_.webp'}
               alt={data.productName || 'Product image'}
@@ -682,12 +595,14 @@ export default function ProductDetails(){
               unoptimized
               style={{ width:'100%', height:'auto', objectFit:'cover' }}
             />
-            <div className="slider__controls" aria-label="Image slider controls">
-              <button className="slider__btn slider__btn--prev" aria-label="Previous image" onClick={prevImage}><i className="fa-solid fa-chevron-left"></i></button>
-              <button className="slider__btn slider__btn--next" aria-label="Next image" onClick={nextImage}><i className="fa-solid fa-chevron-right"></i></button>
+            {gallery.length > 1 && (
+              <div className="slider__controls" aria-label="Image slider controls">
+                <button className="slider__btn slider__btn--prev" aria-label="Previous image" onClick={prevImage}><i className="fa-solid fa-chevron-left"></i></button>
+                <button className="slider__btn slider__btn--next" aria-label="Next image" onClick={nextImage}><i className="fa-solid fa-chevron-right"></i></button>
+              </div>
+            )}
             </div>
-            </div>
-            <div className="details__thumbs" role="list" aria-label="Gallery thumbnails" style={{display:'flex', gap:10, flexWrap:'wrap'}}>
+            <div className="details__thumbs" role="list" aria-label="Gallery thumbnails" style={{display:'flex', gap:12, flexWrap:'wrap'}}>
               {gallery.map((src,i)=> (
                 <button
                   key={i}
@@ -696,134 +611,405 @@ export default function ProductDetails(){
                   className="thumb"
                   style={{
                     padding:0,
-                    border:'1px solid rgba(1,47,52,.2)',
-                    borderRadius:10,
+                    border: activeImg===src ? '3px solid #3a77ff' : '2px solid rgba(1,47,52,.15)',
+                    borderRadius:12,
                     overflow:'hidden',
-                    boxShadow: (activeImg===src) ? '0 2px 8px rgba(0,0,0,.12)' : 'none'
+                    boxShadow: activeImg===src ? '0 4px 12px rgba(58,119,255,.25)' : '0 2px 6px rgba(0,0,0,.08)',
+                    transition:'all 0.2s ease',
+                    cursor:'pointer',
+                    background:'#fff'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeImg !== src) {
+                      e.currentTarget.style.borderColor = 'rgba(58,119,255,.4)'
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,.12)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeImg !== src) {
+                      e.currentTarget.style.borderColor = 'rgba(1,47,52,.15)'
+                      e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,.08)'
+                    }
                   }}
                 >
-                  <Image src={src.replace('/800/600','/240/180')} alt={'Image '+(i+1)} width={120} height={90} unoptimized style={{display:'block'}} />
+                  <Image src={src.replace('/800/600','/240/180')} alt={'Image '+(i+1)} width={120} height={90} unoptimized style={{display:'block', width:'100%', height:'auto'}} />
                 </button>
               ))}
             </div>
           </div>
-          <aside className="profile__card" aria-label="Seller info">
-            <div className="profile__header">
-              <div className="profile__label">Posted by</div>
-              <div className="profile__name">{data.name || 'Seller'}</div>
-              <div className="profile__role">Seller</div>
-              <i className="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          <aside className="profile__card" aria-label="Seller info" style={{
+            border: '1px solid rgba(1,47,52,.12)',
+            borderRadius: '16px',
+            padding: '20px',
+            background: '#fff',
+            boxShadow: '0 4px 20px rgba(1,47,52,.08)',
+            display: 'grid',
+            gap: '16px',
+            position: 'sticky',
+            top: '20px'
+          }}>
+            <div className="profile__header" style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom:'4px' }}>
+                <div style={{width:'40px', height:'40px', borderRadius:'50%', background:'linear-gradient(135deg, #3a77ff 0%, #5a9fff 100%)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 8px rgba(58,119,255,.3)'}}>
+                  <FaUser style={{ fontSize: '18px', color: '#fff' }} aria-hidden="true" />
+                </div>
+                <div style={{flex:1}}>
+                  <div className="profile__label" style={{fontSize:'12px', color:'rgba(0,47,52,.6)', marginBottom:'2px'}}>Posted by</div>
+                  <div className="profile__name" style={{fontSize:'16px', fontWeight:600, color:'#012f34'}}>{data.name || 'Seller'}</div>
+                </div>
+              </div>
             </div>
-            <div className="profile__divider"></div>
-            <div className="profile__meta">
-              <div className="profile__stat"><i className="fa-regular fa-id-badge"></i><div><div className="muted">Member Since</div><div className="val">{new Date(data.created_at||Date.now()).getFullYear()}</div></div></div>
-              <div className="profile__stat"><i className="fa-regular fa-rectangle-list"></i><div><div className="muted">Active Ads</div><div className="val"><span suppressHydrationWarning={true}>{hydrated ? activeAdsCount : 7}</span></div></div></div>
+            <div className="profile__divider" style={{height:'1px', background:'rgba(1,47,52,.1)', margin:'4px 0'}}></div>
+            <div className="profile__meta" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}}>
+              <div className="profile__stat" style={{
+                display:'flex',
+                alignItems:'center',
+                gap:'12px',
+                padding:'14px',
+                border:'1px solid rgba(1,47,52,.1)',
+                borderRadius:'12px',
+                background:'linear-gradient(135deg, #f6f8fc 0%, #ffffff 100%)',
+                boxShadow:'0 2px 8px rgba(0,0,0,.04)'
+              }}>
+                <div style={{width:'36px', height:'36px', borderRadius:'10px', background:'linear-gradient(135deg, #e6efff 0%, #d0e0ff 100%)', display:'flex', alignItems:'center', justifyContent:'center', border:'1px solid rgba(58,119,255,.2)'}}>
+                  <FaIdCard style={{ fontSize: '18px', color: '#3a77ff' }} aria-hidden="true" />
+                </div>
+                <div>
+                  <div className="muted" style={{fontSize:'11px', color:'rgba(0,47,52,.6)', marginBottom:'4px', fontWeight:500}}>Member Since</div>
+                  <div className="val" style={{fontSize:'16px', fontWeight:700, color:'#012f34'}}>{new Date(data.created_at||Date.now()).getFullYear()}</div>
+                </div>
+              </div>
+              <div className="profile__stat" style={{
+                display:'flex',
+                alignItems:'center',
+                gap:'12px',
+                padding:'14px',
+                border:'1px solid rgba(1,47,52,.1)',
+                borderRadius:'12px',
+                background:'linear-gradient(135deg, #f6f8fc 0%, #ffffff 100%)',
+                boxShadow:'0 2px 8px rgba(0,0,0,.04)'
+              }}>
+                <div style={{width:'36px', height:'36px', borderRadius:'10px', background:'linear-gradient(135deg, #e6efff 0%, #d0e0ff 100%)', display:'flex', alignItems:'center', justifyContent:'center', border:'1px solid rgba(58,119,255,.2)'}}>
+                  <FaList style={{ fontSize: '18px', color: '#3a77ff' }} aria-hidden="true" />
+                </div>
+                <div>
+                  <div className="muted" style={{fontSize:'11px', color:'rgba(0,47,52,.6)', marginBottom:'4px', fontWeight:500}}>Active Ads</div>
+                  <div className="val" style={{fontSize:'16px', fontWeight:700, color:'#012f34'}}><span suppressHydrationWarning={true}>{hydrated ? activeAdsCount : 7}</span></div>
+                </div>
+              </div>
             </div>
-            <div className="profile__actions">
-              <button className="btn btn--primary btn--xl" onClick={callSeller}><i className="fa-solid fa-phone"></i>&nbsp;{showPhone ? (data.profilePhone||data.phone||'') : 'Show phone number'}</button>
-              <button className="btn btn--secondary btn--outline btn--xl" onClick={openChat}><i className="fa-regular fa-message"></i>&nbsp;Chat</button>
-              <button className="btn btn--secondary btn--outline btn--xl" onClick={()=>triggerWhatsApp(data.profilePhone||data.phone||'', data.productName)} aria-label="Chat on WhatsApp"><i className="fa-brands fa-whatsapp"></i>&nbsp;WhatsApp</button>
+            <div className="profile__actions" style={{display:'grid', gap:'12px'}}>
+              <button 
+                className="btn btn--primary btn--xl" 
+                onClick={callSeller}
+                style={{
+                  width:'100%',
+                  padding:'14px 20px',
+                  borderRadius:'12px',
+                  fontWeight:600,
+                  fontSize:'15px',
+                  background:'linear-gradient(135deg, #3a77ff 0%, #5a9fff 100%)',
+                  border:'none',
+                  color:'#fff',
+                  cursor:'pointer',
+                  boxShadow:'0 4px 12px rgba(58,119,255,.3)',
+                  transition:'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(58,119,255,.4)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(58,119,255,.3)'
+                }}
+              >
+                <i className="fa-solid fa-phone"></i>&nbsp;{showPhone ? (data.profilePhone||data.phone||'') : 'Show phone number'}
+              </button>
+              <button 
+                className="btn btn--secondary btn--outline btn--xl" 
+                onClick={openChat}
+                style={{
+                  width:'100%',
+                  padding:'14px 20px',
+                  borderRadius:'12px',
+                  fontWeight:600,
+                  fontSize:'15px',
+                  background:'#fff',
+                  border:'2px solid rgba(1,47,52,.2)',
+                  color:'#012f34',
+                  cursor:'pointer',
+                  transition:'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#3a77ff'
+                  e.currentTarget.style.background = 'rgba(58,119,255,.05)'
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(1,47,52,.2)'
+                  e.currentTarget.style.background = '#fff'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                <i className="fa-regular fa-message"></i>&nbsp;Chat
+              </button>
+              <button 
+                className="btn btn--secondary btn--outline btn--xl" 
+                onClick={()=>triggerWhatsApp(data.profilePhone||data.phone||'', data.productName)} 
+                aria-label="Chat on WhatsApp"
+                style={{
+                  width:'100%',
+                  padding:'14px 20px',
+                  borderRadius:'12px',
+                  fontWeight:600,
+                  fontSize:'15px',
+                  background:'#fff',
+                  border:'2px solid rgba(37,211,102,.3)',
+                  color:'#25D366',
+                  cursor:'pointer',
+                  transition:'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#25D366'
+                  e.currentTarget.style.background = 'rgba(37,211,102,.08)'
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(37,211,102,.3)'
+                  e.currentTarget.style.background = '#fff'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                <i className="fa-brands fa-whatsapp"></i>&nbsp;WhatsApp
+              </button>
             </div>
-            <div className="profile__footer">
-              <div className="ad__id">Ad ID: {getPostId()}</div>
-              <button type="button" className="report__link" onClick={(e)=>{ e.preventDefault(); openReport() }} aria-haspopup="dialog" aria-controls="repReason"><i className="fa-regular fa-flag"></i><span>Report this ad</span></button>
+            <div className="profile__footer" style={{display:'flex', alignItems:'center', justifyContent:'space-between', paddingTop:'12px', borderTop:'1px solid rgba(1,47,52,.1)', fontSize:'12px', color:'rgba(0,47,52,.6)'}}>
+              <div className="ad__id" style={{fontWeight:500}}>Ad ID: {getPostId()}</div>
+              <button 
+                type="button" 
+                className="report__link" 
+                onClick={(e)=>{ e.preventDefault(); openReport() }} 
+                aria-haspopup="dialog" 
+                aria-controls="repReason"
+                style={{
+                  background:'transparent',
+                  border:'none',
+                  color:'rgba(0,47,52,.7)',
+                  cursor:'pointer',
+                  fontWeight:500,
+                  fontSize:'12px',
+                  display:'flex',
+                  alignItems:'center',
+                  gap:'6px',
+                  padding:'4px 8px',
+                  borderRadius:'6px',
+                  transition:'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#012f34'
+                  e.currentTarget.style.background = 'rgba(1,47,52,.05)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'rgba(0,47,52,.7)'
+                  e.currentTarget.style.background = 'transparent'
+                }}
+              >
+                <i className="fa-regular fa-flag"></i><span>Report this ad</span>
+              </button>
             </div>
           </aside>
         </div>
-        <div className="status__line" aria-live="polite">{actionStatus}</div>
+        <div className="status__line" aria-live="polite" style={{padding:'12px 16px', background:'rgba(58,119,255,.08)', borderRadius:'10px', margin:'16px 0', color:'#3a77ff', fontWeight:500, fontSize:'14px', textAlign:'center'}}>{actionStatus}</div>
         <div className="details__grid">
-          <section className="details__section details__section--full" aria-labelledby="details-heading">
-            <div className="tabs" role="tablist" aria-label="Product details, bids, and reviews">
-              <button role="tab" aria-selected={activeTab==='details'} className={"tab"+(activeTab==='details'?' tab--active':'')} onClick={()=>setActiveTab('details')}>Details</button>
-              <button role="tab" aria-selected={activeTab==='bids'} className={"tab"+(activeTab==='bids'?' tab--active':'')} onClick={()=>setActiveTab('bids')}>Bids</button>
-              <button role="tab" aria-selected={activeTab==='reviews'} className={"tab"+(activeTab==='reviews'?' tab--active':'')} onClick={()=>setActiveTab('reviews')}>Reviews</button>
+          <section className="details__section details__section--full" aria-labelledby="details-heading" style={{
+            background:'#fff',
+            border:'1px solid rgba(1,47,52,.12)',
+            borderRadius:'16px',
+            padding:'24px',
+            boxShadow:'0 4px 20px rgba(1,47,52,.06)'
+          }}>
+            <div className="tabs" role="tablist" aria-label="Product details and reviews" style={{
+              display:'flex',
+              gap:'8px',
+              borderBottom:'2px solid rgba(1,47,52,.1)',
+              marginBottom:'24px',
+              paddingBottom:'0'
+            }}>
+              <button 
+                role="tab" 
+                aria-selected={activeTab==='details'} 
+                className={"tab"+(activeTab==='details'?' tab--active':'')} 
+                onClick={()=>setActiveTab('details')}
+                style={{
+                  padding:'12px 24px',
+                  background:'transparent',
+                  border:'none',
+                  borderBottom: activeTab==='details' ? '3px solid #3a77ff' : '3px solid transparent',
+                  color: activeTab==='details' ? '#3a77ff' : 'rgba(0,47,52,.6)',
+                  fontWeight: activeTab==='details' ? 600 : 500,
+                  fontSize:'15px',
+                  cursor:'pointer',
+                  transition:'all 0.2s ease',
+                  marginBottom:'-2px'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== 'details') {
+                    e.currentTarget.style.color = '#012f34'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== 'details') {
+                    e.currentTarget.style.color = 'rgba(0,47,52,.6)'
+                  }
+                }}
+              >
+                Details
+              </button>
+              <button 
+                role="tab" 
+                aria-selected={activeTab==='reviews'} 
+                className={"tab"+(activeTab==='reviews'?' tab--active':'')} 
+                onClick={()=>setActiveTab('reviews')}
+                style={{
+                  padding:'12px 24px',
+                  background:'transparent',
+                  border:'none',
+                  borderBottom: activeTab==='reviews' ? '3px solid #3a77ff' : '3px solid transparent',
+                  color: activeTab==='reviews' ? '#3a77ff' : 'rgba(0,47,52,.6)',
+                  fontWeight: activeTab==='reviews' ? 600 : 500,
+                  fontSize:'15px',
+                  cursor:'pointer',
+                  transition:'all 0.2s ease',
+                  marginBottom:'-2px'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== 'reviews') {
+                    e.currentTarget.style.color = '#012f34'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== 'reviews') {
+                    e.currentTarget.style.color = 'rgba(0,47,52,.6)'
+                  }
+                }}
+              >
+                Reviews
+              </button>
             </div>
             <div className="tab__content">
               {activeTab==='details' && (
                 <>
-                  <div className="details__head" aria-label="Product header" style={{display:'flex', alignItems:'flex-start', justifyContent:'space-between', padding:'8px 0'}}>
-                    <div className="head__left" style={{display:'grid', gap:6}}>
-                      <div className="price__value" id="price" aria-live="polite">{formatPrice(data.price)}</div>
-                      <h1 className="details__title" style={{margin:0, fontSize:24, fontWeight:700, color:'#012f34'}}>{data.productName}</h1>
-                      <p className="price__location" id="location" style={{color:'rgba(0,47,52,.64)'}}><i className="fa-solid fa-location-dot"></i> {data.location}</p>
+                  <div className="details__head" aria-label="Product header" style={{display:'flex', alignItems:'flex-start', justifyContent:'space-between', padding:'0 0 24px 0', marginBottom:'24px', borderBottom:'1px solid rgba(1,47,52,.1)'}}>
+                    <div className="head__left" style={{display:'grid', gap:10, flex:1}}>
+                      <div className="price__value" id="price" aria-live="polite" style={{fontSize:'42px', fontWeight:700, color:'#012f34', lineHeight:1.2}}>{formatPrice(data.price)}</div>
+                      <h1 className="details__title" style={{margin:0, fontSize:28, fontWeight:700, color:'#012f34', lineHeight:1.3}}>{data.productName}</h1>
+                      <p className="price__location" id="location" style={{color:'rgba(0,47,52,.7)', fontSize:'15px', display:'flex', alignItems:'center', gap:'8px', marginTop:'4px'}}>
+                        <i className="fa-solid fa-location-dot" style={{color:'#3a77ff', fontSize:'16px'}}></i> 
+                        <span>{data.location}</span>
+                      </p>
                     </div>
-                    <div className="head__right" style={{display:'grid', gap:8, justifyItems:'end'}}>
-                      <div className="details__time" style={{color:'#012f34'}}>{timeAgo(data.created_at)}</div>
-                      <div className="price__actions" aria-label="Actions" style={{display:'inline-flex', alignItems:'center', gap:16}}>
-                        <button className="icon__btn" onClick={toggleFavorite} aria-label="Save"><i className={(isFav ? 'fa-solid' : 'fa-regular') + ' fa-heart'}></i></button>
-                        <button className="icon__btn" onClick={shareLink} aria-label="Share"><i className="fa-solid fa-share-nodes"></i></button>
+                    <div className="head__right" style={{display:'flex', flexDirection:'column', gap:12, alignItems:'flex-end'}}>
+                      <div className="details__time" style={{color:'rgba(0,47,52,.6)', fontSize:'13px', fontWeight:500, padding:'6px 12px', background:'rgba(1,47,52,.05)', borderRadius:'8px'}}>{timeAgo(data.created_at)}</div>
+                      <div className="price__actions" aria-label="Actions" style={{display:'inline-flex', alignItems:'center', gap:12}}>
+                        <button 
+                          className="icon__btn" 
+                          onClick={toggleFavorite} 
+                          aria-label="Save"
+                          style={{
+                            width:'44px',
+                            height:'44px',
+                            borderRadius:'12px',
+                            border:'2px solid rgba(1,47,52,.15)',
+                            background: isFav ? 'rgba(255,59,48,.1)' : '#fff',
+                            color: isFav ? '#ff3b30' : '#012f34',
+                            display:'flex',
+                            alignItems:'center',
+                            justifyContent:'center',
+                            cursor:'pointer',
+                            transition:'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = isFav ? '#ff3b30' : '#3a77ff'
+                            e.currentTarget.style.background = isFav ? 'rgba(255,59,48,.15)' : 'rgba(58,119,255,.08)'
+                            e.currentTarget.style.transform = 'scale(1.05)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = isFav ? 'rgba(255,59,48,.3)' : 'rgba(1,47,52,.15)'
+                            e.currentTarget.style.background = isFav ? 'rgba(255,59,48,.1)' : '#fff'
+                            e.currentTarget.style.transform = 'scale(1)'
+                          }}
+                        >
+                          <FaHeart style={{
+                            fontSize:'18px', 
+                            color: isFav ? '#ff3b30' : '#012f34',
+                            opacity: isFav ? 1 : 0.5
+                          }} />
+                        </button>
+                        <button 
+                          className="icon__btn" 
+                          onClick={shareLink} 
+                          aria-label="Share"
+                          style={{
+                            width:'44px',
+                            height:'44px',
+                            borderRadius:'12px',
+                            border:'2px solid rgba(1,47,52,.15)',
+                            background:'#fff',
+                            color:'#012f34',
+                            display:'flex',
+                            alignItems:'center',
+                            justifyContent:'center',
+                            cursor:'pointer',
+                            transition:'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = '#3a77ff'
+                            e.currentTarget.style.background = 'rgba(58,119,255,.08)'
+                            e.currentTarget.style.transform = 'scale(1.05)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = 'rgba(1,47,52,.15)'
+                            e.currentTarget.style.background = '#fff'
+                            e.currentTarget.style.transform = 'scale(1)'
+                          }}
+                        >
+                          <FaShare style={{fontSize:'18px'}} />
+                        </button>
                       </div>
                     </div>
                   </div>
                   
-                  <h3 className="section__heading" style={{margin:'16px 0 8px'}}>Description</h3>
-                  <div className="summary__desc" aria-labelledby="pdesc-summary-heading" style={{border:'none', borderRadius:12, padding:16, background:'#fff'}}>
-                    <div className="desc__content" style={{color:'rgba(0,47,52,.84)'}}>
-                      <p id="description">{data.description}</p>
+                  <h3 className="section__heading" style={{margin:'0 0 16px 0', fontSize:'20px', fontWeight:600, color:'#012f34', display:'flex', alignItems:'center', gap:'10px'}}>
+                    <span style={{width:'4px', height:'20px', background:'linear-gradient(135deg, #3a77ff 0%, #5a9fff 100%)', borderRadius:'2px'}}></span>
+                    Description
+                  </h3>
+                  <div className="summary__desc" aria-labelledby="pdesc-summary-heading" style={{
+                    border:'1px solid rgba(1,47,52,.1)',
+                    borderRadius:'14px',
+                    padding:'20px',
+                    background:'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)',
+                    boxShadow:'0 2px 8px rgba(0,0,0,.04)'
+                  }}>
+                    <div className="desc__content" style={{color:'rgba(0,47,52,.85)', fontSize:'15px', lineHeight:1.7}}>
+                      <p id="description" style={{margin:0, whiteSpace:'pre-wrap'}}>{data.description}</p>
                     </div>
                   </div>
     </>
               )}
-              {activeTab==='bids' && (
-                <div className="bid__card bid__card--featured">
-                  <div className="bid__header">
-                    <h3>Bids</h3>
-                    <div className="bid__status"><i className="fa-solid fa-bolt"></i><span>Limited stock</span><span className="sep">•</span><span className="time">{countdown}</span></div>
-                  </div>
-                  {error && (<div className="error__text">{error}</div>)}
-                  <div className="bid__sub">Total bids: {bids.length}</div>
-                  <div className="bid__grid">
-                    <div className="bid__left">
-                      <div className="bid__row">
-                        <div className="bid__input-wrap">
-                          <span className="bid__prefix">Rs</span>
-                          <input className="bid__input" type="number" placeholder="Enter bid amount" value={bidAmount} onChange={e=>setBidAmount(e.target.value)} aria-label="Bid amount" disabled={placingBid} />
-                        </div>
-                        <button className="btn btn--primary btn--xl btn--pulse" onClick={placeBid} disabled={placingBid}>{placingBid ? (<><i className="fa-solid fa-spinner fa-spin"></i>&nbsp;Placing...</>) : 'Place Bid'}</button>
-                      </div>
-                      {placingBid && (
-                        <div aria-live="polite" aria-busy="true" style={{display:'flex', alignItems:'center', gap:8, marginTop:8, color:'rgba(0,47,52,.64)'}}>
-                          <span style={{width:16, height:16, border:'2px solid rgba(1,47,52,.3)', borderTopColor:'#3a77ff', borderRadius:'50%', animation:'spin 1s linear infinite'}}></span>
-                          <span>Submitting your bid...</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="bids__list">
-                      {bids.length===0 && (<div className="bid__empty">No bids yet</div>)}
-                      {bids.map((b,i)=> (
-                        <div key={i} className={"bid__item" + (((Number(b.amount)||0)===topAmount) ? " bid__item--top" : "")}>
-                          <div className="bid__row-top">
-                            <div className="bid__person">
-                              <div className="bid__title">
-                                <div className="bid__name">{(String(b.name||'').trim() && !String(b.name||'').includes('@')) ? String(b.name||'').trim() : 'Mr X'}</div>
-                              </div>
-                            </div>
-                            <div className="bid__meta">
-                              <span className="amount">{formatPrice(b.amount)}</span>
-                              <span className="timeline">{b.days ? (b.days + ' days') : ''}</span>
-                              {((String(b.email||'')===String(auth.email||'')) || (!b.email && String(b.name||'')===String(auth.name||''))) ? (
-                                <button
-                                  className="bid__remove"
-                                  onClick={()=>removeBid(b)}
-                                  aria-label="Remove bid"
-                                >
-                                  <i className="fa-solid fa-xmark"></i>
-                                </button>
-                              ) : null}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
               {activeTab==='reviews' && (
                 <>
-                  <div className="review__form" aria-label="Submit your review" style={{border:'1px solid rgba(1,47,52,.2)', borderRadius:12, padding:'12px 14px', marginBottom:16, background:'#fff', boxShadow:'0 6px 18px rgba(1,47,52,.06)'}}>
-                    <div className="review__intro" style={{margin:'0 0 8px', color:'#012f34', fontWeight:600}}>Share your review and rating</div>
-                    <div className="review__controls" role="radiogroup" aria-label="Select rating" style={{marginBottom:8}}>
-                      <div className="stars stars--input" style={{display:'inline-flex', gap:6}}>
+                  <div className="review__form" aria-label="Submit your review" style={{
+                    border:'1px solid rgba(1,47,52,.12)',
+                    borderRadius:'16px',
+                    padding:'20px',
+                    marginBottom:'24px',
+                    background:'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                    boxShadow:'0 4px 16px rgba(1,47,52,.08)'
+                  }}>
+                    <div className="review__intro" style={{margin:'0 0 16px', color:'#012f34', fontWeight:600, fontSize:'16px'}}>Share your review and rating</div>
+                    <div className="review__controls" role="radiogroup" aria-label="Select rating" style={{marginBottom:'16px'}}>
+                      <div className="stars stars--input" style={{display:'inline-flex', gap:8}}>
                         {[1,2,3,4,5].map(s=> (
                           <i
                             key={s}
@@ -833,45 +1019,174 @@ export default function ProductDetails(){
                             className={'fa-solid fa-star'+(s<=reviewRating?' on':'')}
                             onClick={()=>setReviewRating(s)}
                             onKeyDown={(e)=>{ if (e.key==='Enter' || e.key===' ') { e.preventDefault(); setReviewRating(s) } }}
-                            style={{color: (s<=reviewRating) ? '#ffce32' : 'rgba(1,47,52,.28)', fontSize:18, cursor:'pointer'}}
+                            style={{
+                              color: (s<=reviewRating) ? '#ffce32' : 'rgba(1,47,52,.25)',
+                              fontSize:24,
+                              cursor:'pointer',
+                              transition:'all 0.2s ease',
+                              filter: (s<=reviewRating) ? 'drop-shadow(0 2px 4px rgba(255,206,50,.3))' : 'none'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (s > reviewRating) {
+                                e.currentTarget.style.color = 'rgba(255,206,50,.6)'
+                                e.currentTarget.style.transform = 'scale(1.1)'
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (s > reviewRating) {
+                                e.currentTarget.style.color = 'rgba(1,47,52,.25)'
+                                e.currentTarget.style.transform = 'scale(1)'
+                              }
+                            }}
                           ></i>
                         ))}
                       </div>
                     </div>
-                    <textarea placeholder="Write your review" value={reviewText} onChange={e=>setReviewText(e.target.value)} aria-label="Review text" style={{border:'1px solid rgba(1,47,52,.2)', borderRadius:10, padding:'8px 10px', minHeight:80, margin:'4px 0 10px', width:'100%'}}></textarea>
-                    <button className="btn btn--secondary" onClick={addReview} disabled={reviewLoading}>{reviewLoading ? 'Submitting...' : 'Submit Review'}</button>
+                    <textarea 
+                      placeholder="Write your review..." 
+                      value={reviewText} 
+                      onChange={e=>setReviewText(e.target.value)} 
+                      aria-label="Review text" 
+                      style={{
+                        border:'2px solid rgba(1,47,52,.15)',
+                        borderRadius:'12px',
+                        padding:'14px 16px',
+                        minHeight:100,
+                        margin:'0 0 16px 0',
+                        width:'100%',
+                        fontSize:'15px',
+                        fontFamily:'inherit',
+                        resize:'vertical',
+                        transition:'all 0.2s ease'
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = '#3a77ff'
+                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(58,119,255,.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(1,47,52,.15)'
+                        e.currentTarget.style.boxShadow = 'none'
+                      }}
+                    ></textarea>
+                    <button 
+                      className="btn btn--secondary" 
+                      onClick={addReview} 
+                      disabled={reviewLoading}
+                      style={{
+                        padding:'12px 24px',
+                        borderRadius:'12px',
+                        fontWeight:600,
+                        fontSize:'15px',
+                        background: reviewLoading ? 'rgba(1,47,52,.1)' : 'linear-gradient(135deg, #3a77ff 0%, #5a9fff 100%)',
+                        border:'none',
+                        color:'#fff',
+                        cursor: reviewLoading ? 'not-allowed' : 'pointer',
+                        boxShadow:'0 4px 12px rgba(58,119,255,.3)',
+                        transition:'all 0.2s ease',
+                        opacity: reviewLoading ? 0.7 : 1
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!reviewLoading) {
+                          e.currentTarget.style.transform = 'translateY(-2px)'
+                          e.currentTarget.style.boxShadow = '0 6px 16px rgba(58,119,255,.4)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!reviewLoading) {
+                          e.currentTarget.style.transform = 'translateY(0)'
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(58,119,255,.3)'
+                        }
+                      }}
+                    >
+                      {reviewLoading ? 'Submitting...' : 'Submit Review'}
+                    </button>
                   </div>
-                  <div className="reviews__list" style={{display:'grid', gap:10}}>
+                  <div className="reviews__list" style={{display:'grid', gap:16}}>
                     {reviews.map((r,i)=> (
-                      <article key={i} className="review" aria-label={'Review'} style={{border:'1px solid rgba(1,47,52,.2)', borderRadius:10, padding:'10px 12px', background:'#fff', boxShadow:'0 2px 8px rgba(1,47,52,.06)'}}>
-                        <div className="review__name" style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:8}}>
-                          <span style={{color:'#012f34', fontWeight:600}}>{r.name || 'A user'}</span>
+                      <article key={i} className="review" aria-label={'Review'} style={{
+                        border:'1px solid rgba(1,47,52,.1)',
+                        borderRadius:'14px',
+                        padding:'18px 20px',
+                        background:'#fff',
+                        boxShadow:'0 2px 10px rgba(1,47,52,.06)',
+                        transition:'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(1,47,52,.1)'
+                        e.currentTarget.style.transform = 'translateY(-2px)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = '0 2px 10px rgba(1,47,52,.06)'
+                        e.currentTarget.style.transform = 'translateY(0)'
+                      }}
+                      >
+                        <div className="review__name" style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom:'12px'}}>
+                          <div style={{display:'flex', alignItems:'center', gap:10}}>
+                            <div style={{
+                              width:'40px',
+                              height:'40px',
+                              borderRadius:'50%',
+                              background:'linear-gradient(135deg, #3a77ff 0%, #5a9fff 100%)',
+                              display:'flex',
+                              alignItems:'center',
+                              justifyContent:'center',
+                              color:'#fff',
+                              fontWeight:600,
+                              fontSize:'16px',
+                              boxShadow:'0 2px 8px rgba(58,119,255,.3)'
+                            }}>
+                              {(r.name || 'A')[0].toUpperCase()}
+                            </div>
+                            <span style={{color:'#012f34', fontWeight:600, fontSize:'15px'}}>{r.name || 'A user'}</span>
+                          </div>
                           {((String(r.name||'')===String(auth.email||'')) || (String(r.name||'')===String(auth.name||''))) ? (
                             <button
                               className="btn btn--mini"
                               onClick={()=>removeReview(r)}
                               aria-label="Remove review"
                               style={{
-                                display:'inline-flex', alignItems:'center', justifyContent:'center',
-                                width: isMobile ? 24 : 32,
-                                height: isMobile ? 24 : 32,
-                                borderRadius: isMobile ? 12 : 16,
+                                display:'inline-flex', 
+                                alignItems:'center', 
+                                justifyContent:'center',
+                                width: isMobile ? 32 : 36,
+                                height: isMobile ? 32 : 36,
+                                borderRadius:'10px',
                                 padding:0,
-                                background:'rgba(1,47,52,.08)',
-                                border:'1px solid rgba(1,47,52,.2)',
-                                color:'#012f34'
+                                background:'rgba(255,59,48,.08)',
+                                border:'1px solid rgba(255,59,48,.2)',
+                                color:'#ff3b30',
+                                cursor:'pointer',
+                                transition:'all 0.2s ease'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'rgba(255,59,48,.15)'
+                                e.currentTarget.style.borderColor = '#ff3b30'
+                                e.currentTarget.style.transform = 'scale(1.1)'
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'rgba(255,59,48,.08)'
+                                e.currentTarget.style.borderColor = 'rgba(255,59,48,.2)'
+                                e.currentTarget.style.transform = 'scale(1)'
                               }}
                             >
-                              <i className="fa-solid fa-xmark" style={{fontSize: isMobile ? 12 : 16}}></i>
+                              <i className="fa-solid fa-xmark" style={{fontSize: isMobile ? 14 : 16}}></i>
                             </button>
                           ) : null}
                         </div>
-                        <div className="stars stars--gold" aria-label={(r.rating||0)+' out of 5'} style={{margin:'6px 0'}}>
+                        <div className="stars stars--gold" aria-label={(r.rating||0)+' out of 5'} style={{margin:'0 0 12px 0', display:'flex', gap:'4px'}}>
                           {[1,2,3,4,5].map(s=> (
-                            <i key={s} className={'fa-solid fa-star'+(s <= (r.rating||0) ? ' on' : '')} style={{color:'#ffce32'}}></i>
+                            <i 
+                              key={s} 
+                              className={'fa-solid fa-star'+(s <= (r.rating||0) ? ' on' : '')} 
+                              style={{
+                                color: s <= (r.rating||0) ? '#ffce32' : 'rgba(1,47,52,.2)',
+                                fontSize:'16px',
+                                filter: s <= (r.rating||0) ? 'drop-shadow(0 1px 2px rgba(255,206,50,.3))' : 'none'
+                              }}
+                            ></i>
                           ))}
                         </div>
-                        <p style={{margin:0, color:'rgba(0,47,52,.84)'}}>{r.text}</p>
+                        <p style={{margin:0, color:'rgba(0,47,52,.85)', fontSize:'15px', lineHeight:1.6, whiteSpace:'pre-wrap'}}>{r.text}</p>
                       </article>
                     ))}
                   </div>
@@ -883,7 +1198,39 @@ export default function ProductDetails(){
       </div>
       
     </div>
-    <button className="whatsapp-float" aria-label="Open WhatsApp chat" onClick={()=>triggerWhatsApp(data.profilePhone||data.phone||'', data.productName)}><i className="fa-brands fa-whatsapp"></i></button>
+    <button 
+      className="whatsapp-float" 
+      aria-label="Open WhatsApp chat" 
+      onClick={()=>triggerWhatsApp(data.profilePhone||data.phone||'', data.productName)}
+      style={{
+        position: 'fixed',
+        right: '20px',
+        bottom: '20px',
+        width: '56px',
+        height: '56px',
+        borderRadius: '50%',
+        background: '#25D366',
+        color: '#fff',
+        border: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        boxShadow: '0 8px 24px rgba(0,0,0,.16)',
+        zIndex: 4000,
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px)'
+        e.currentTarget.style.boxShadow = '0 12px 28px rgba(0,0,0,.2)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)'
+        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,.16)'
+      }}
+    >
+      <FaWhatsapp style={{ fontSize: '28px' }} />
+    </button>
     <Footer />
     {reportOpen && (
       <div className="whatsapp-modal" role="dialog" aria-modal="true" aria-label="Report ad">
