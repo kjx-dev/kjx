@@ -1093,6 +1093,40 @@ color: #3c3c3c;
     align-items: center;
 }
 
+.facebook-signin-button {
+    width: 100%;
+    height: 44px;
+    border-radius: 5px;
+    border: 1px solid #1877f2;
+    background: #1877f2;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.facebook-signin-button:hover {
+    background: #166fe5;
+    border-color: #166fe5;
+    box-shadow: 0 4px 8px rgba(0,0,0,.15);
+    transform: translateY(-1px);
+}
+
+.facebook-signin-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.facebook-signin-button i {
+    font-size: 18px;
+}
+
 .email_login img {
     width: 80px;
     height: auto;
