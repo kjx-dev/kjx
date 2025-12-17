@@ -51,7 +51,7 @@ export default function Footer(){
           </div>
         </div>
         <div className="footer__bottom">
-          <p>Free Classifieds in Pakistan . © {year} OMG</p>
+          <p>Free Classifieds in Pakistan . © {year} KJX</p>
         </div>
       </div>
     </footer>
