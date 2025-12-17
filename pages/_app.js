@@ -1,8 +1,17 @@
 import Head from 'next/head'
 import { useEffect, useState } from 'react'
-import '../style.css'
-import '../profile.css'
-import '../sell.css'
+import { Roboto } from 'next/font/google'
+import '../assets/css/style.css'
+import '../assets/css/profile.css'
+import '../assets/css/sell.css'
+
+const roboto = Roboto({
+  weight: ['100', '300', '400', '500', '700', '900'],
+  style: ['normal', 'italic'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-roboto',
+})
 
 export default function App({ Component, pageProps }) {
   const [waOpen, setWaOpen] = useState(false)
@@ -38,7 +47,7 @@ export default function App({ Component, pageProps }) {
     setWaOpen(false)
   }
   return (
-    <>
+    <div className={roboto.variable}>
       <Head>
         <meta charSet="UTF-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
@@ -70,6 +79,6 @@ export default function App({ Component, pageProps }) {
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }
