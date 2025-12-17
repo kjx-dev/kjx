@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/router'
-import { FaBars, FaUser, FaList, FaHeart, FaComment, FaKey, FaSignOutAlt, FaChevronDown, FaChevronUp, FaTags, FaPlus, FaXmark, FaArrowLeft, FaArrowUp } from 'react-icons/fa'
+import { FaBars, FaUser, FaList, FaHeart, FaComment, FaKey, FaSignOutAlt, FaChevronDown, FaChevronUp, FaTags, FaPlus, FaTimes, FaArrowLeft, FaArrowUp } from 'react-icons/fa'
 
 export default function Sell(){
   const router = useRouter()
@@ -337,13 +337,8 @@ export default function Sell(){
                         <a href="/profile" className="profile__link" style={{textDecoration:'none'}}>
                           <span>View Public Profile</span>
                         </a>
-      </div>
-      </div>
-      {showTop && (
-        <button aria-label="Back to top" onClick={()=>{ try{ window.scrollTo({ top:0, behavior:'smooth' }) }catch(_){ } }} style={{position:'fixed', right:16, bottom:16, width:44, height:44, borderRadius:22, background:'#012f34', color:'#fff', border:'none', boxShadow:'0 2px 8px rgba(0,0,0,.2)', zIndex:4000}}>
-          <FaArrowUp />
-        </button>
-      )}
+                      </div>
+                    </div>
                     <div className="menu__item" onClick={manage}><FaList /><span>My Ads</span></div>
                     <div className="menu__item" onClick={()=>router.push('/favorites')}><FaHeart /><span>Favorites</span></div>
                     <div className="menu__item" onClick={()=>router.push('/chat')}><FaComment /><span>Chat</span></div>
@@ -363,6 +358,11 @@ export default function Sell(){
           </div>
         </div>
       </div>
+      {showTop && (
+        <button aria-label="Back to top" onClick={()=>{ try{ window.scrollTo({ top:0, behavior:'smooth' }) }catch(_){ } }} style={{position:'fixed', right:16, bottom:16, width:44, height:44, borderRadius:22, background:'#012f34', color:'#fff', border:'none', boxShadow:'0 2px 8px rgba(0,0,0,.2)', zIndex:4000}}>
+          <FaArrowUp />
+        </button>
+      )}
     <div className="sell__main">
       <h1>Post Your Ad</h1>
       <div className="sell__grid">
@@ -459,7 +459,7 @@ export default function Sell(){
                     <>
                       <img src={u.preview} alt="" loading="lazy" decoding="async" style={{position:'absolute', top:0, left:0, width:'100%', height:'100%', objectFit:'cover'}} />
                       <div style={{position:'absolute', left:8, bottom:8, padding:'6px 10px', borderRadius:20, background:'rgba(255,255,255,.9)', border:'1px solid rgba(1,47,52,.2)', color:'rgba(0,47,52,.84)', fontSize:12}}>Change</div>
-                      <button aria-label="Remove image" onClick={(e)=>{ e.stopPropagation(); removeImage(idx) }} style={{position:'absolute', top:8, right:8, background:'rgba(0,0,0,0.6)', color:'#fff', border:'none', borderRadius:14, width:28, height:28, display:'flex', alignItems:'center', justifyContent:'center'}}><FaXmark /></button>
+                      <button aria-label="Remove image" onClick={(e)=>{ e.stopPropagation(); removeImage(idx) }} style={{position:'absolute', top:8, right:8, background:'rgba(0,0,0,0.6)', color:'#fff', border:'none', borderRadius:14, width:28, height:28, display:'flex', alignItems:'center', justifyContent:'center'}}><FaTimes /></button>
                     </>
                   )}
                 </div>

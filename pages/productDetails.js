@@ -4,7 +4,7 @@ import { useRouter } from 'next/router'
 import Image from 'next/image'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
-import { FaWhatsapp, FaUser, FaIdCard, FaList, FaHeart, FaShare } from 'react-icons/fa'
+import { FaWhatsapp, FaUser, FaIdCard, FaList, FaHeart, FaShare, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 
 export default function ProductDetails(){
   const router = useRouter()
@@ -595,10 +595,78 @@ export default function ProductDetails(){
               unoptimized
               style={{ width:'100%', height:'auto', objectFit:'cover' }}
             />
-            {gallery.length > 1 && (
-              <div className="slider__controls" aria-label="Image slider controls">
-                <button className="slider__btn slider__btn--prev" aria-label="Previous image" onClick={prevImage}><i className="fa-solid fa-chevron-left"></i></button>
-                <button className="slider__btn slider__btn--next" aria-label="Next image" onClick={nextImage}><i className="fa-solid fa-chevron-right"></i></button>
+            {Array.isArray(gallery) && gallery.length > 1 && (
+              <div className="slider__controls" aria-label="Image slider controls" style={{position:'absolute', left:0, right:0, top:0, bottom:0, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 16px', pointerEvents:'none', zIndex:100}}>
+                <button 
+                  className="slider__btn slider__btn--prev" 
+                  aria-label="Previous image" 
+                  onClick={prevImage} 
+                  type="button"
+                  style={{
+                    pointerEvents:'auto',
+                    width:'44px',
+                    height:'44px',
+                    borderRadius:'50%',
+                    border:'2px solid rgba(1,47,52,.5)',
+                    background:'rgba(255,255,255,.98)',
+                    display:'inline-flex',
+                    alignItems:'center',
+                    justifyContent:'center',
+                    cursor:'pointer',
+                    zIndex:101,
+                    boxShadow:'0 4px 12px rgba(0,0,0,.2)',
+                    transition:'all .2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#fff'
+                    e.currentTarget.style.borderColor = '#012f34'
+                    e.currentTarget.style.transform = 'scale(1.1)'
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,.3)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,.98)'
+                    e.currentTarget.style.borderColor = 'rgba(1,47,52,.5)'
+                    e.currentTarget.style.transform = 'scale(1)'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,.2)'
+                  }}
+                >
+                  <FaChevronLeft style={{color:'#012f34', fontSize:'18px', fontWeight:'bold'}} />
+                </button>
+                <button 
+                  className="slider__btn slider__btn--next" 
+                  aria-label="Next image" 
+                  onClick={nextImage} 
+                  type="button"
+                  style={{
+                    pointerEvents:'auto',
+                    width:'44px',
+                    height:'44px',
+                    borderRadius:'50%',
+                    border:'2px solid rgba(1,47,52,.5)',
+                    background:'rgba(255,255,255,.98)',
+                    display:'inline-flex',
+                    alignItems:'center',
+                    justifyContent:'center',
+                    cursor:'pointer',
+                    zIndex:101,
+                    boxShadow:'0 4px 12px rgba(0,0,0,.2)',
+                    transition:'all .2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#fff'
+                    e.currentTarget.style.borderColor = '#012f34'
+                    e.currentTarget.style.transform = 'scale(1.1)'
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,.3)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,.98)'
+                    e.currentTarget.style.borderColor = 'rgba(1,47,52,.5)'
+                    e.currentTarget.style.transform = 'scale(1)'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,.2)'
+                  }}
+                >
+                  <FaChevronRight style={{color:'#012f34', fontSize:'18px', fontWeight:'bold'}} />
+                </button>
               </div>
             )}
             </div>

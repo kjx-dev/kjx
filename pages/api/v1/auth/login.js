@@ -31,6 +31,10 @@ export default async function handler(req, res){
     try{
       const user = await prisma.user.findUnique({ where: { email } })
       if (!user) return res.status(401).json({ error: 'Invalid credentials' })
+      // Check if user is OAuth user (no password or placeholder)
+      if (!user.password_hash || user.password_hash === 'OAUTH_USER_NO_PASSWORD') {
+        return res.status(401).json({ error: 'This account uses Google sign-in. Please sign in with Google.' })
+      }
       const ok = verifyPassword(password, user.password_hash)
       if (!ok) return res.status(401).json({ error: 'Invalid credentials' })
       const token = sign({ sub: user.user_id, email: user.email, exp: Date.now() + 1000*60*60*12 })
