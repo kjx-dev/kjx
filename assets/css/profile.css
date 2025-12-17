@@ -34,9 +34,9 @@
     text-align: left;
     margin: 10px 0;
     padding: 10px 30px;
-    background-color: #012f34;
+    background-color: var(--primary-color);
     color: #fff;
-    border: 1px solid #012f34;
+    border: 1px solid var(--primary-color);
     border-radius: 5px;
     cursor: pointer;
 }

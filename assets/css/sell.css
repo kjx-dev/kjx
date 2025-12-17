@@ -82,8 +82,8 @@
 
 #btnSubmit{
     padding: 14px 18px;
-    background-color: #012f34;
-    border: 1px solid #012f34;
+    background-color: var(--primary-color);
+    border: 1px solid var(--primary-color);
     color: #fff;
     border-radius: 8px;
     font-size: 16px;

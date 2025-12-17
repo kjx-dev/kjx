@@ -4,7 +4,7 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
-import { FaTags, FaHeart, FaWhatsapp, FaMapMarkerAlt, FaArrowUp, FaChevronDown } from 'react-icons/fa'
+import { FaTags, FaHeart, FaWhatsapp, FaMapMarkerAlt, FaArrowUp, FaChevronDown, FaMobileAlt, FaCar, FaMotorcycle, FaHome, FaTv, FaTabletAlt, FaMapMarker, FaBriefcase, FaPaintRoller, FaChair, FaLaptop, FaHeadphones, FaCamera, FaGamepad, FaBook, FaDumbbell, FaShirt, FaBaby, FaDog, FaIndustry, FaTools } from 'react-icons/fa'
 
 export default function Home() {
   const router = useRouter()
@@ -454,9 +454,38 @@ export default function Home() {
               }
               const tiles = catsExpanded ? uniq : uniq.slice(0, 21)
               if (tiles.length === 0) return null
+              
+              function getCategoryIcon(category) {
+                if (!category) return FaTags
+                const cat = String(category.k || category.label || category || '').toLowerCase()
+                if (cat.includes('mobile') || cat.includes('phone')) return FaMobileAlt
+                if (cat.includes('car') || cat.includes('vehicle')) return FaCar
+                if (cat.includes('motor') || cat.includes('moter') || cat.includes('bike')) return FaMotorcycle
+                if (cat.includes('house') || cat.includes('property')) return FaHome
+                if (cat.includes('tv') || cat.includes('video') || cat.includes('audio') || cat.includes('electronics')) return FaTv
+                if (cat.includes('tablet')) return FaTabletAlt
+                if (cat.includes('land') || cat.includes('plot')) return FaMapMarker
+                if (cat.includes('job')) return FaBriefcase
+                if (cat.includes('service')) return FaPaintRoller
+                if (cat.includes('furniture')) return FaChair
+                if (cat.includes('laptop') || cat.includes('computer')) return FaLaptop
+                if (cat.includes('headphone') || cat.includes('audio')) return FaHeadphones
+                if (cat.includes('camera')) return FaCamera
+                if (cat.includes('game') || cat.includes('console')) return FaGamepad
+                if (cat.includes('book') || cat.includes('hobby')) return FaBook
+                if (cat.includes('sport') || cat.includes('fitness')) return FaDumbbell
+                if (cat.includes('fashion') || cat.includes('beauty') || cat.includes('clothing')) return FaShirt
+                if (cat.includes('kid') || cat.includes('children') || cat.includes('baby')) return FaBaby
+                if (cat.includes('animal') || cat.includes('pet')) return FaDog
+                if (cat.includes('business') || cat.includes('industrial')) return FaIndustry
+                if (cat.includes('tool')) return FaTools
+                return FaTags
+              }
+              
               return tiles.map((c,i) => {
                 if (!c || !c.k) return null
                 const slug = String(c.k||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
+                const IconComponent = getCategoryIcon(c)
                 return (
                   <a
                     key={(c.label||c.k||'')+':'+i}
@@ -466,7 +495,7 @@ export default function Home() {
                     onClick={(e)=>{ e.preventDefault(); router.push('/category/'+slug) }}
                   >
                     <div className="cat__icon">
-                      <FaTags />
+                      <IconComponent />
                     </div>
                     <div className="cat__label">{c.label || c.k}</div>
                   </a>
@@ -504,7 +533,7 @@ export default function Home() {
 
       <div className="fresh__recomandation" aria-labelledby="fresh-title">
         <div className="fresh__recomandation-container">
-          <h1 id="fresh-title">Fresh recommendations</h1>
+          <h1 id="fresh-title">Popular Ads</h1>
           <div className="cards__grid" id="cards">
           {Array.isArray(toShow) && toShow.length > 0 ? toShow.map((card, i) => {
             const isFeatured = i % 3 === 0
@@ -524,17 +553,18 @@ export default function Home() {
                 <div className="card__content">
                   <div className="card__content-gap">
                     <div className="name__heart">
-                      <h4 className="card__name">{card.name}</h4>
+                          <h4 className="card__price" aria-label={'Price ' + card.price}>Rs {card.price}</h4>
                       <FaHeart aria-hidden="true" className="card__heart" />
-                      <button
+                      {/* <button
                         className="card__wa-btn"
                         aria-label="Chat on WhatsApp"
                         onClick={(e)=>{ e.stopPropagation(); try { window.dispatchEvent(new CustomEvent('whatsapp:open', { detail: { number: (card.profilePhone||'').replace(/[^0-9]/g,''), message: 'Hello! I am interested in ' + (card.name||'') } })) } catch(_){} }}
                       >
                         <FaWhatsapp aria-hidden="true" />
-                      </button>
+                      </button> */}
                     </div>
-                    <h2 className="card__price" aria-label={'Price ' + card.price}>Rs {card.price}</h2>
+<h4 className="card__name">{card.name}</h4>
+                
                   </div>
                   <h5 className="card__location"><FaMapMarkerAlt aria-hidden="true" /> {card.location}</h5>
                 </div>
