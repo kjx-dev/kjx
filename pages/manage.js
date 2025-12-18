@@ -196,9 +196,10 @@ export default function Manage(){
     }
   }
   const list = filtered()
-  const cAll = products.length
-  const cActive = products.filter(p=>p.status==='active').length
-  const cInactive = products.filter(p=>p.status==='inactive').length
+  const productsArray = Array.isArray(products) ? products : []
+  const cAll = productsArray.length || 0
+  const cActive = productsArray.filter(p=>p.status==='active').length || 0
+  const cInactive = productsArray.filter(p=>p.status==='inactive').length || 0
   return (
     <>
       <Header />

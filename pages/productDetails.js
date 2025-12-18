@@ -536,7 +536,8 @@ export default function ProductDetails(){
     setHydrated(true)
     try{
       const products = JSON.parse(localStorage.getItem('products')||'[]') || []
-      setActiveAdsCount(Array.isArray(products) ? products.length : 7)
+      const count = Array.isArray(products) ? (products.length || 0) : 7
+      setActiveAdsCount(Number.isNaN(count) ? 7 : (count || 0))
     }catch(_){ setActiveAdsCount(7) }
   }, [])
   useEffect(() => {
@@ -762,7 +763,7 @@ export default function ProductDetails(){
                 </div>
                 <div>
                   <div className="muted" style={{fontSize:'11px', color:'rgba(0,47,52,.6)', marginBottom:'4px', fontWeight:500}}>Active Ads</div>
-                  <div className="val" style={{fontSize:'16px', fontWeight:700, color:'#012f34'}}><span suppressHydrationWarning={true}>{hydrated ? activeAdsCount : 7}</span></div>
+                  <div className="val" style={{fontSize:'16px', fontWeight:700, color:'#012f34'}}><span suppressHydrationWarning={true}>{hydrated ? (Number.isNaN(activeAdsCount) ? 0 : activeAdsCount) : 7}</span></div>
                 </div>
               </div>
             </div>
