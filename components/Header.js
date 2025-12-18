@@ -88,11 +88,11 @@ export default function Header(){
             </a>
           </div>
           <div className="actions__links">
-            <a href="https://www.olx.com.pk/motors/" aria-label="OMG Motors">
+            <a href="/category/cars" onClick={(e)=>{ e.preventDefault(); router.push('/category/cars') }} aria-label="OMG Motors">
               <FaCar />
               <span>MOTORS</span>
             </a>
-            <a href="https://www.olx.com.pk/properties/" className="ac22b0e1" aria-label="OMG Property">
+            <a href="/category/house" onClick={(e)=>{ e.preventDefault(); router.push('/category/house') }} className="ac22b0e1" aria-label="OMG Property">
               <FaHome />
               <span>PROPERTY</span>
             </a>

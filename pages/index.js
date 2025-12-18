@@ -4,7 +4,8 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
-import { FaTags, FaHeart, FaWhatsapp, FaMapMarkerAlt, FaArrowUp, FaChevronDown, FaMobileAlt, FaCar, FaMotorcycle, FaHome, FaTv, FaTabletAlt, FaMapMarker, FaBriefcase, FaPaintRoller, FaChair, FaLaptop, FaHeadphones, FaCamera, FaGamepad, FaBook, FaDumbbell, FaShirt, FaBaby, FaDog, FaIndustry, FaTools } from 'react-icons/fa'
+import CategorySlider from '../components/CategorySlider'
+import { FaTags, FaHeart, FaWhatsapp, FaMapMarkerAlt, FaArrowUp, FaChevronDown, FaChevronLeft, FaChevronRight, FaMobileAlt, FaCar, FaMotorcycle, FaHome, FaTv, FaTabletAlt, FaMapMarker, FaBriefcase, FaPaintRoller, FaChair, FaLaptop, FaHeadphones, FaCamera, FaGamepad, FaBook, FaDumbbell, FaShirt, FaBaby, FaDog, FaIndustry, FaTools } from 'react-icons/fa'
 
 export default function Home() {
   const router = useRouter()
@@ -37,6 +38,7 @@ export default function Home() {
   const year = new Date().getFullYear()
   const [showTop, setShowTop] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [sliderIndex, setSliderIndex] = useState(0)
 
   useEffect(() => {
     setMounted(true)
@@ -86,6 +88,7 @@ export default function Home() {
       localStorage.setItem('products', JSON.stringify(db))
       setAllProducts(merged)
       setList(merged)
+      setSliderIndex(0)
     }
     loadProducts()
   }, [])
@@ -327,7 +330,23 @@ export default function Home() {
     }
     setDisplayCount(displayCount + 8)
   }
-  const toShow = Array.isArray(list) ? (usingDb ? list : list.slice(0, displayCount)) : []
+  const toShow = Array.isArray(list) ? (usingDb ? list.slice(0, 8) : list.slice(0, Math.min(displayCount, 8))) : []
+  
+  // Slider functionality - Popular Ads limited to 8 items
+  const itemsPerPage = 4
+  const totalPages = Math.ceil(toShow.length / itemsPerPage)
+  const currentPage = Math.min(sliderIndex, totalPages - 1)
+  const startIndex = currentPage * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const visibleItems = toShow.slice(startIndex, endIndex)
+  
+  function nextSlide() {
+    setSliderIndex((prev) => (prev + 1) % totalPages)
+  }
+  
+  function prevSlide() {
+    setSliderIndex((prev) => (prev - 1 + totalPages) % totalPages)
+  }
 
   return (
     <>
@@ -531,60 +550,99 @@ export default function Home() {
         />
       </div>
 
+      {/* Popular Ads - All Categories */}
       <div className="fresh__recomandation" aria-labelledby="fresh-title">
         <div className="fresh__recomandation-container">
           <h1 id="fresh-title">Popular Ads</h1>
-          <div className="cards__grid" id="cards">
-          {Array.isArray(toShow) && toShow.length > 0 ? toShow.map((card, i) => {
-            const isFeatured = i % 3 === 0
-            return (
-              <article
-                key={i}
-                className="card"
-                onClick={() => productDetail(i)}
-                aria-label={card.name}
+          {Array.isArray(toShow) && toShow.length > 0 ? (
+            <div className="popular-ads-slider">
+              <button 
+                className="slider-nav slider-nav-prev" 
+                onClick={prevSlide}
+                aria-label="Previous ads"
+                disabled={totalPages <= 1}
               >
-                <div className="img__featured">
-                  <Image src={card.image} alt={card.name} fill loading="lazy" sizes="(max-width: 768px) 100vw, 320px" unoptimized style={{objectFit:'cover'}} />
-                  {isFeatured && (
-                    <p className="featured">featured</p>
-                  )}
+                <FaChevronLeft />
+              </button>
+              <div className="slider-container">
+                <div className="slider-track" style={{ transform: `translateX(-${currentPage * 100}%)` }}>
+                  {Array.from({ length: totalPages }).map((_, pageIndex) => {
+                    const pageStart = pageIndex * itemsPerPage
+                    const pageEnd = pageStart + itemsPerPage
+                    const pageItems = toShow.slice(pageStart, pageEnd)
+                    return (
+                      <div key={pageIndex} className="slider-page">
+                        <div className="cards__grid">
+                          {pageItems.map((card, i) => {
+                            const originalIndex = pageStart + i
+                            const isFeatured = originalIndex % 3 === 0
+                            return (
+                              <article
+                                key={originalIndex}
+                                className="card"
+                                onClick={() => productDetail(originalIndex)}
+                                aria-label={card.name}
+                              >
+                                <div className="img__featured">
+                                  <Image src={card.image} alt={card.name} fill loading="lazy" sizes="(max-width: 768px) 100vw, 320px" unoptimized style={{objectFit:'cover'}} />
+                                  {isFeatured && (
+                                    <p className="featured">featured</p>
+                                  )}
+                                </div>
+                                <div className="card__content">
+                                  <div className="card__content-gap">
+                                    <div className="name__heart">
+                                      <h4 className="card__price" aria-label={'Price ' + card.price}>Rs {card.price}</h4>
+                                      <FaHeart aria-hidden="true" className="card__heart" />
+                                    </div>
+                                    <h4 className="card__name">{card.name}</h4>
+                                  </div>
+                                  <h5 className="card__location"><FaMapMarkerAlt aria-hidden="true" /> {card.location}</h5>
+                                </div>
+                              </article>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-                <div className="card__content">
-                  <div className="card__content-gap">
-                    <div className="name__heart">
-                          <h4 className="card__price" aria-label={'Price ' + card.price}>Rs {card.price}</h4>
-                      <FaHeart aria-hidden="true" className="card__heart" />
-                      {/* <button
-                        className="card__wa-btn"
-                        aria-label="Chat on WhatsApp"
-                        onClick={(e)=>{ e.stopPropagation(); try { window.dispatchEvent(new CustomEvent('whatsapp:open', { detail: { number: (card.profilePhone||'').replace(/[^0-9]/g,''), message: 'Hello! I am interested in ' + (card.name||'') } })) } catch(_){} }}
-                      >
-                        <FaWhatsapp aria-hidden="true" />
-                      </button> */}
-                    </div>
-<h4 className="card__name">{card.name}</h4>
-                
-                  </div>
-                  <h5 className="card__location"><FaMapMarkerAlt aria-hidden="true" /> {card.location}</h5>
+              </div>
+              <button 
+                className="slider-nav slider-nav-next" 
+                onClick={nextSlide}
+                aria-label="Next ads"
+                disabled={totalPages <= 1}
+              >
+                <FaChevronRight />
+              </button>
+              {totalPages > 1 && (
+                <div className="slider-dots">
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <button
+                      key={i}
+                      className={`slider-dot ${i === currentPage ? 'active' : ''}`}
+                      onClick={() => setSliderIndex(i)}
+                      aria-label={`Go to page ${i + 1}`}
+                    />
+                  ))}
                 </div>
-              </article>
-            )
-          }) : (
+              )}
+            </div>
+          ) : (
             <div className="no-products">
               <p>No products found. Be the first to post an ad!</p>
             </div>
           )}
-          </div>
-          <div className="load__more">
-          {usingDb ? (
-            dbHasMore ? (<button className="load__more-btn" onClick={loadMore}>Load More</button>) : null
-          ) : (
-            displayCount < list.length ? (<button className="load__more-btn" onClick={loadMore}>Load More</button>) : null
-          )}
-          </div>
         </div>
       </div>
+
+      {/* Category-wise Sliders */}
+      <CategorySlider heading="Mobile Phones" category="Mobile Phones" />
+      <CategorySlider heading="Cars & Vehicles" category="Cars" />
+      <CategorySlider heading="Motorcycles" category="Motercycles" />
+      <CategorySlider heading="Property & Real Estate" category="House" />
+      <CategorySlider heading="Electronics" category="Tv - Video - Audio" />
 
       <Footer />
       {showTop && (

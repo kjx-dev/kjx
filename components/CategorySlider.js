@@ -1,0 +1,181 @@
+import { useState, useEffect } from 'react'
+import Image from 'next/image'
+import { useRouter } from 'next/router'
+import { FaHeart, FaMapMarkerAlt } from 'react-icons/fa'
+
+function slugify(str) {
+  return String(str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+}
+
+function categoryImage(cat) {
+  const s = String(cat || '').toLowerCase()
+  if (s.includes('mobile') || s.includes('phone')) return 'https://picsum.photos/seed/phone/800/600'
+  if (s.includes('car')) return 'https://picsum.photos/seed/car/800/600'
+  if (s.includes('motor')) return 'https://picsum.photos/seed/motorcycle/800/600'
+  if (s.includes('house') || s.includes('property') || s.includes('land')) return 'https://picsum.photos/seed/property/800/600'
+  return 'https://picsum.photos/seed/product/800/600'
+}
+
+export default function CategorySlider({ heading, category }) {
+  const router = useRouter()
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!category) {
+      setLoading(false)
+      return
+    }
+
+    async function loadCategoryProducts() {
+      setLoading(true)
+      try {
+        const categorySlug = slugify(category)
+        const res = await fetch(`/api/v1/category/${encodeURIComponent(categorySlug)}`)
+        const data = await res.json()
+        const raw = (data.data?.products) || []
+
+        let statusMap = {}
+        try {
+          statusMap = JSON.parse(localStorage.getItem('post_statuses') || '{}') || {}
+        } catch (_) {
+          statusMap = {}
+        }
+
+        const list = raw.map((p, i) => {
+          const withImg = Array.isArray(p.images) && p.images.length ? { ...p, image: p.images[0].url } : p
+          const needsReplace = !withImg.image || withImg.image === '/images/products/img1.jpg'
+          const base = needsReplace ? { ...withImg, image: categoryImage(category) } : withImg
+          const id = base.id || base.post_id || (i + 1)
+          const slug = base.slug || (slugify(base.title || base.name) + '-' + id)
+          const key = 'db:' + String(id)
+          const status = String(statusMap[key] || 'active')
+
+          return {
+            id,
+            slug,
+            name: base.title || base.name || 'Item',
+            description: base.content || base.description || '',
+            image: base.image,
+            price: base.price || '',
+            location: base.location || '',
+            profilePhone: base.profilePhone || '',
+            category: category,
+            status
+          }
+        })
+
+        const merged = list.filter(p => String(p.status || 'active') === 'active')
+        // Limit to 4 products for category slider
+        setProducts(merged.slice(0, 4))
+      } catch (e) {
+        console.error('Error loading category products:', e)
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadCategoryProducts()
+  }, [category])
+
+  function productDetail(product) {
+    if (!product) return
+    localStorage.setItem('productName', product.name)
+    localStorage.setItem('name', product.profileName || '')
+    localStorage.setItem('description', product.description)
+    localStorage.setItem('image', product.image)
+    localStorage.setItem('price', product.price)
+    localStorage.setItem('location', product.location)
+    localStorage.setItem('phone', product.profilePhone)
+    localStorage.setItem('phoneShow', product.phoneShow || 'no')
+    localStorage.setItem('category', product.category || '')
+    router.push('/product/' + encodeURIComponent(product.slug))
+  }
+
+  // Show only 4 products, no pagination needed
+
+  const categorySlugForLoading = slugify(category)
+  const categoryUrlForLoading = `/category/${categorySlugForLoading}`
+
+  if (loading) {
+    return (
+      <div className="fresh__recomandation" aria-labelledby={`category-title-${categorySlugForLoading}`}>
+        <div className="fresh__recomandation-container">
+          <div className="category-slider-header">
+            <h1 id={`category-title-${categorySlugForLoading}`}>{heading}</h1>
+            <a href={categoryUrlForLoading} className="view-more-btn" onClick={(e) => { e.preventDefault(); router.push(categoryUrlForLoading) }}>
+              View More
+            </a>
+          </div>
+          <div className="loading-products">Loading...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!products || products.length === 0) {
+    return null
+  }
+
+  const categorySlug = slugify(category)
+  const categoryUrl = `/category/${categorySlug}`
+
+  return (
+    <div className="fresh__recomandation" aria-labelledby={`category-title-${categorySlug}`}>
+      <div className="fresh__recomandation-container">
+        <div className="category-slider-header">
+          <h1 id={`category-title-${categorySlug}`}>{heading}</h1>
+          <a href={categoryUrl} className="view-more-btn" onClick={(e) => { e.preventDefault(); router.push(categoryUrl) }}>
+            View More
+          </a>
+        </div>
+        <div className="category-products-grid">
+          <div className="cards__grid">
+            {products.map((card, i) => {
+              const isFeatured = i % 3 === 0
+              return (
+                <article
+                  key={card.id || i}
+                  className="card"
+                  onClick={() => productDetail(card)}
+                  aria-label={card.name}
+                >
+                  <div className="img__featured">
+                    <Image
+                      src={card.image}
+                      alt={card.name}
+                      fill
+                      loading="lazy"
+                      sizes="(max-width: 768px) 100vw, 320px"
+                      unoptimized
+                      style={{ objectFit: 'cover' }}
+                    />
+                    {isFeatured && (
+                      <p className="featured">featured</p>
+                    )}
+                  </div>
+                  <div className="card__content">
+                    <div className="card__content-gap">
+                      <div className="name__heart">
+                        <h4 className="card__price" aria-label={'Price ' + card.price}>
+                          Rs {card.price}
+                        </h4>
+                        <FaHeart aria-hidden="true" className="card__heart" />
+                      </div>
+                      <h4 className="card__name">{card.name}</h4>
+                    </div>
+                    <h5 className="card__location">
+                      <FaMapMarkerAlt aria-hidden="true" /> {card.location}
+                    </h5>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
