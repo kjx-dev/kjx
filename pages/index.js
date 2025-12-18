@@ -5,7 +5,7 @@ import { useRouter } from 'next/router'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 import CategorySlider from '../components/CategorySlider'
-import { FaTags, FaHeart, FaWhatsapp, FaMapMarkerAlt, FaArrowUp, FaChevronDown, FaChevronLeft, FaChevronRight, FaMobileAlt, FaCar, FaMotorcycle, FaHome, FaTv, FaTabletAlt, FaMapMarker, FaBriefcase, FaPaintRoller, FaChair, FaLaptop, FaHeadphones, FaCamera, FaGamepad, FaBook, FaDumbbell, FaShirt, FaBaby, FaDog, FaIndustry, FaTools } from 'react-icons/fa'
+import { FaTags, FaHeart, FaRegHeart, FaWhatsapp, FaMapMarkerAlt, FaArrowUp, FaChevronDown, FaChevronLeft, FaChevronRight, FaMobileAlt, FaCar, FaMotorcycle, FaHome, FaTv, FaTabletAlt, FaMapMarker, FaBriefcase, FaPaintRoller, FaChair, FaLaptop, FaHeadphones, FaCamera, FaGamepad, FaBook, FaDumbbell, FaShirt, FaBaby, FaDog, FaIndustry, FaTools } from 'react-icons/fa'
 
 export default function Home() {
   const router = useRouter()
@@ -39,17 +39,73 @@ export default function Home() {
   const [showTop, setShowTop] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [sliderIndex, setSliderIndex] = useState(0)
+  const [favorites, setFavorites] = useState(new Set())
+  const [userId, setUserId] = useState(null)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  function getUserId(){
+    try{
+      const tok = localStorage.getItem('auth_token')||''
+      const parts = String(tok||'').split('.')
+      if (parts.length>=3){
+        const data = parts[1]
+        const pad = data.length%4===2 ? '==' : data.length%4===3 ? '=' : ''
+        const norm = data.replace(/-/g,'+').replace(/_/g,'/') + pad
+        const json = JSON.parse(atob(norm))
+        return json && json.sub ? json.sub : null
+      }
+    }catch(_){ }
+    return null
+  }
 
   useEffect(() => {
     const email = localStorage.getItem('email') || ''
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
     const name = localStorage.getItem('name') || ''
     setAuth({ email, isAuthenticated, name })
+    const uid = getUserId()
+    setUserId(uid)
 
+    async function loadFavorites(){
+      try{
+        const uid = getUserId()
+        if (!uid) return
+        const res = await fetch('/api/v1/favorites?user_id='+encodeURIComponent(String(uid)))
+        const js = await res.json().catch(()=>({}))
+        const list = Array.isArray(js.data) ? js.data : []
+        const favSet = new Set()
+        list.forEach(x => {
+          if (x.post_id) favSet.add(String(x.post_id))
+          if (x.id) favSet.add(String(x.id))
+        })
+        setFavorites(favSet)
+      }catch(_){ }
+    }
+    loadFavorites()
+  }, [])
+
+  useEffect(() => {
+    async function loadFavoritesOnUserIdChange(){
+      if (!userId) return
+      try{
+        const res = await fetch('/api/v1/favorites?user_id='+encodeURIComponent(String(userId)))
+        const js = await res.json().catch(()=>({}))
+        const list = Array.isArray(js.data) ? js.data : []
+        const favSet = new Set()
+        list.forEach(x => {
+          if (x.post_id) favSet.add(String(x.post_id))
+          if (x.id) favSet.add(String(x.id))
+        })
+        setFavorites(favSet)
+      }catch(_){ }
+    }
+    loadFavoritesOnUserIdChange()
+  }, [userId])
+
+  useEffect(() => {
     async function loadProducts(){
       let demo = []
       function categoryImage(cat){
@@ -68,20 +124,24 @@ export default function Home() {
         const r2 = await fetch('/api/v1/posts?page=1&limit=8')
         const j2 = await r2.json()
         const rows = Array.isArray(j2.data) ? j2.data : []
-        db = rows.filter(p => String(p.status||'active')==='active').map((p,i) => ({
-          id: p.post_id||p.id||i+1,
-          slug: (slugify(p.title||'')+"-"+(p.post_id||p.id||i+1)),
-          name: p.title||'Item',
-          description: p.content||'',
-          image: (Array.isArray(p.images)&&p.images.length ? p.images[0].url : categoryImage(p.category?.name||'')),
-          price: p.price||'',
-          location: p.location||'',
-          profileName: '',
-          profilePhone: '',
-          phoneShow: 'no',
-          category: (p.category && p.category.name) || '',
-          status: p.status || 'active'
-        }))
+        db = rows.filter(p => String(p.status||'active')==='active').map((p,i) => {
+          const postId = p.post_id||p.id||i+1
+          return {
+            id: postId,
+            post_id: postId,
+            slug: (slugify(p.title||'')+"-"+postId),
+            name: p.title||'Item',
+            description: p.content||'',
+            image: (Array.isArray(p.images)&&p.images.length ? p.images[0].url : categoryImage(p.category?.name||'')),
+            price: p.price||'',
+            location: p.location||'',
+            profileName: '',
+            profilePhone: '',
+            phoneShow: 'no',
+            category: (p.category && p.category.name) || '',
+            status: p.status || 'active'
+          }
+        })
         if (rows.length){ setUsingDb(true); setDbPage(1); setDbHasMore(!!j2.has_more) }
       }catch(_){ db = [] }
       const merged = db.filter(p => String(p.status||'active')==='active')
@@ -309,6 +369,7 @@ export default function Home() {
         const rows = Array.isArray(j.data) ? j.data : []
         const more = rows.filter(p => String(p.status||'active')==='active').map((p,i) => ({
           id: p.post_id||p.id||i+1,
+          post_id: p.post_id||p.id||i+1,
           slug: (String(p.title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')+"-"+(p.post_id||p.id||i+1)),
           name: p.title||'Item',
           description: p.content||'',
@@ -346,6 +407,45 @@ export default function Home() {
   
   function prevSlide() {
     setSliderIndex((prev) => (prev - 1 + totalPages) % totalPages)
+  }
+
+  async function toggleFavorite(postId, e){
+    if (e) {
+      e.stopPropagation()
+      e.preventDefault()
+    }
+    try{
+      const uid = userId || getUserId()
+      if (!uid){ 
+        router.push('/login')
+        return 
+      }
+      const pid = Number(postId)
+      if (Number.isNaN(pid)) return
+      
+      const isFav = favorites.has(String(pid))
+      if (!isFav){
+        await fetch('/api/v1/favorites', { 
+          method:'POST', 
+          headers:{ 'Content-Type':'application/json' }, 
+          body: JSON.stringify({ user_id: uid, post_id: pid }) 
+        })
+        setFavorites(prev => new Set([...prev, String(pid)]))
+        try{ if (typeof window !== 'undefined' && window.swal){ window.swal('Success','Added to favorites','success') } }catch(_){ }
+      } else {
+        await fetch('/api/v1/favorites', { 
+          method:'DELETE', 
+          headers:{ 'Content-Type':'application/json' }, 
+          body: JSON.stringify({ user_id: uid, post_id: pid }) 
+        })
+        setFavorites(prev => {
+          const next = new Set(prev)
+          next.delete(String(pid))
+          return next
+        })
+        try{ if (typeof window !== 'undefined' && window.swal){ window.swal('Removed','Removed from favorites','info') } }catch(_){ }
+      }
+    }catch(_){ }
   }
 
   return (
@@ -593,7 +693,35 @@ export default function Home() {
                                   <div className="card__content-gap">
                                     <div className="name__heart">
                                       <h4 className="card__price" aria-label={'Price ' + card.price}>Rs {card.price}</h4>
-                                      <FaHeart aria-hidden="true" className="card__heart" />
+                                      <button
+                                        onClick={(e) => toggleFavorite(card.post_id || card.id, e)}
+                                        aria-label={favorites.has(String(card.post_id || card.id)) ? 'Remove from favorites' : 'Add to favorites'}
+                                        className="card__heart-btn"
+                                      >
+                                        {favorites.has(String(card.post_id || card.id)) ? (
+                                          <FaHeart 
+                                            aria-hidden="true" 
+                                            className="card__heart" 
+                                            style={{
+                                              color: '#f55100',
+                                              fill: '#f55100',
+                                              fontSize: '16px',
+                                              transition: 'all 0.2s ease'
+                                            }} 
+                                          />
+                                        ) : (
+                                          <FaRegHeart 
+                                            aria-hidden="true" 
+                                            className="card__heart" 
+                                            style={{
+                                              color: '#f55100',
+                                              opacity: 0.5,
+                                              fontSize: '16px',
+                                              transition: 'all 0.2s ease'
+                                            }} 
+                                          />
+                                        )}
+                                      </button>
                                     </div>
                                     <h4 className="card__name">{card.name}</h4>
                                   </div>
@@ -638,11 +766,11 @@ export default function Home() {
       </div>
 
       {/* Category-wise Sliders */}
-      <CategorySlider heading="Mobile Phones" category="Mobile Phones" />
-      <CategorySlider heading="Cars & Vehicles" category="Cars" />
-      <CategorySlider heading="Motorcycles" category="Motercycles" />
-      <CategorySlider heading="Property & Real Estate" category="House" />
-      <CategorySlider heading="Electronics" category="Tv - Video - Audio" />
+      <CategorySlider heading="Mobile Phones" category="Mobile Phones" favorites={favorites} onToggleFavorite={toggleFavorite} userId={userId} />
+      <CategorySlider heading="Cars & Vehicles" category="Cars" favorites={favorites} onToggleFavorite={toggleFavorite} userId={userId} />
+      <CategorySlider heading="Motorcycles" category="Motercycles" favorites={favorites} onToggleFavorite={toggleFavorite} userId={userId} />
+      <CategorySlider heading="Property & Real Estate" category="House" favorites={favorites} onToggleFavorite={toggleFavorite} userId={userId} />
+      <CategorySlider heading="Electronics" category="Tv - Video - Audio" favorites={favorites} onToggleFavorite={toggleFavorite} userId={userId} />
 
       <Footer />
       {showTop && (
