@@ -253,16 +253,19 @@ export default function Manage(){
           })()}
         </div>
     <div style={{width:'100%', margin:'24px 0', padding:'0 16px', textAlign:'left'}}>
-      <h1 style={{fontWeight:500, textAlign:'left', margin:'0 0 12px'}}>Manage and view your Ads</h1>
-      <div style={{maxWidth:1100, margin:'0 auto', padding:'0 16px'}}>
+      <h1 style={{fontSize:'22px', fontWeight:500, textAlign:'left', margin:'0 0 12px'}}>Manage and view your Ads</h1>
+      <div style={{
+        // maxWidth:1100,
+         margin:'0 auto', 
+        //  padding:'0 16px'
+         }}>
         {error && (<div style={{color:'#b00020', marginBottom:12}}>{error}</div>)}
       <div style={{display:'flex', gap:8, alignItems:'center', justifyContent:'flex-start', flexWrap:'wrap', marginBottom:8}}>
         {['all','active','inactive'].map(kind => {
           const count = kind==='all'?cAll:kind==='active'?cActive:cInactive
           const isActive = tab===kind
-          const base = { border:'2px solid #012f34', padding:'8px 16px', borderRadius:8, fontWeight:600, background:isActive?'#012f34':'transparent', color:isActive?'#fff':'#012f34' }
           return (
-            <button key={kind} className="load__more-btn" onClick={()=>setTab(kind)} aria-pressed={isActive} aria-current={isActive? 'page': undefined} style={base}>
+            <button key={kind} className="manage-tab-btn" onClick={()=>setTab(kind)} aria-pressed={isActive} aria-current={isActive? 'page': undefined}>
               {kind==='all'?'View all':(kind.charAt(0).toUpperCase()+kind.slice(1))} (<span suppressHydrationWarning={true}>{hydrated ? count : 0}</span>)
             </button>
           )

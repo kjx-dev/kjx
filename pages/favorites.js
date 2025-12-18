@@ -199,7 +199,7 @@ export default function Favorites(){
         })()}
       </div>
       <div style={{width:'100%', padding:'0 16px'}}>
-      <h1 style={{margin:'12px 0 16px', fontWeight:600}}>Favorites</h1>
+      <h1 style={{ fontSize:'22px', margin:'12px 0 16px', fontWeight:600}}>Favorites</h1>
       {loading ? (
         <div>Loading favorites...</div>
       ) : error ? (
