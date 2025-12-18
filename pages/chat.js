@@ -395,7 +395,7 @@ export default function Chat(){
         })()}
       </div>
 
-      <h1 style={{margin:'12px 0 16px', fontWeight:600}}>Inbox</h1>
+      <h1 style={{fontSize:'22px', margin:'12px 0 16px', fontWeight:600}}>Inbox</h1>
       {(!auth.isAuthenticated || !auth.email) && (
         <div style={{margin:'8px 0 16px', color:'rgba(0,47,52,.64)'}}>Login to view your chats</div>
       )}
