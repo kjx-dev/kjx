@@ -329,7 +329,7 @@ export default function CategoryPage(){
       <div className="same__color">
         <Header />
         <div className="third__navbar" id="categories" ref={allCatWrapRef} style={{position:'relative'}}>
-          <div className="select__itself"><a href="#" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(v=>!v) }} ref={allCatBtnRef} aria-expanded={allCatOpen} style={{textDecoration:'none', color:'rgba(0,47,52,.84)'}}>All Categories</a></div>
+          <div className="select__itself"><a href="#" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(v=>!v) }} ref={allCatBtnRef} aria-expanded={allCatOpen} style={{textDecoration:'none'}}>All Categories</a></div>
           <div className="links" id="links" style={{display:'flex', flexWrap:'wrap', gap:16}}>
             {(() => {
               const order = ['mobile-phones','cars','motercycles','house','tv-video-audio','tablets','land-plots','jobs','services','furniture']
@@ -357,7 +357,9 @@ export default function CategoryPage(){
               [byName('Furniture & Home Decor')]
             ]
             return (
-              <div ref={allCatMenuRef} style={{display: allCatOpen ? 'block':'none', position:'absolute', zIndex:30, top:48, left:0, right:0, margin:'0 auto', maxWidth:1100, background:'#fff', border:'1px solid rgba(1,47,52,.2)', boxShadow:'0 6px 18px rgba(0,0,0,.08)', borderRadius:12}}>
+              <div ref={allCatMenuRef} style={{display: allCatOpen ? 'block':'none', position:'absolute', zIndex:30, top:48, left:0, right:0, margin:'0 30px',
+              //  maxWidth:1100,
+                background:'#fff', border:'1px solid rgba(1,47,52,.2)', boxShadow:'0 6px 18px rgba(0,0,0,.08)', borderRadius:12}}>
                 <div style={{maxHeight:360, overflow:'auto', padding:16}}>
                   <div style={{display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:24}}>
                     {layout.map((list,ci)=> (
@@ -385,9 +387,13 @@ export default function CategoryPage(){
             )
           })()}
         </div>
-        <div className="fresh__recomandation" aria-labelledby="cat-title" style={{textAlign:'left'}}>
+        <div className="fresh__recomandation" aria-labelledby="cat-title" style={{textAlign:'left',
+          margin:'20px 0 0 0'
+        }}>
           <h1 id="cat-title" style={{fontWeight:500, textAlign:'left'}}>{label}</h1>
-          <div style={{maxWidth:1100, margin:'0 auto', padding:'0 16px'}}>
+          <div style={{
+            // maxWidth:1100,
+             margin:'0 auto', padding:'0 0px'}}>
           <div className="cat__layout" style={{display:'grid', gridTemplateColumns:'280px 1fr', gap:16}}>
             <aside style={{position:'sticky', top:80, alignSelf:'start'}}>
               <div className="sell__section" style={{border:'1px solid rgba(1,47,52,.2)', borderRadius:12, padding:12, background:'#fff', boxShadow:'0 2px 8px rgba(0,0,0,.04)'}}>

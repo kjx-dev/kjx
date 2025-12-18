@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
-import { FaHeart, FaMapMarkerAlt } from 'react-icons/fa'
+import { FaHeart, FaRegHeart, FaMapMarkerAlt } from 'react-icons/fa'
 
 function slugify(str) {
   return String(str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
@@ -16,10 +16,11 @@ function categoryImage(cat) {
   return 'https://picsum.photos/seed/product/800/600'
 }
 
-export default function CategorySlider({ heading, category }) {
+export default function CategorySlider({ heading, category, favorites, onToggleFavorite, userId }) {
   const router = useRouter()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const favSet = favorites instanceof Set ? favorites : new Set()
 
   useEffect(() => {
     if (!category) {
@@ -53,6 +54,7 @@ export default function CategorySlider({ heading, category }) {
 
           return {
             id,
+            post_id: base.post_id || base.id || id,
             slug,
             name: base.title || base.name || 'Item',
             description: base.content || base.description || '',
@@ -161,7 +163,41 @@ export default function CategorySlider({ heading, category }) {
                         <h4 className="card__price" aria-label={'Price ' + card.price}>
                           Rs {card.price}
                         </h4>
-                        <FaHeart aria-hidden="true" className="card__heart" />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            e.preventDefault()
+                            if (onToggleFavorite) {
+                              onToggleFavorite(card.post_id || card.id, e)
+                            }
+                          }}
+                          aria-label={favSet.has(String(card.post_id || card.id)) ? 'Remove from favorites' : 'Add to favorites'}
+                          className="card__heart-btn"
+                        >
+                          {favSet.has(String(card.post_id || card.id)) ? (
+                            <FaHeart 
+                              aria-hidden="true" 
+                              className="card__heart" 
+                              style={{
+                                color: '#f55100',
+                                fill: '#f55100',
+                                fontSize: '16px',
+                                transition: 'all 0.2s ease'
+                              }} 
+                            />
+                          ) : (
+                            <FaRegHeart 
+                              aria-hidden="true" 
+                              className="card__heart" 
+                              style={{
+                                color: '#f55100',
+                                opacity: 0.5,
+                                fontSize: '16px',
+                                transition: 'all 0.2s ease'
+                              }} 
+                            />
+                          )}
+                        </button>
                       </div>
                       <h4 className="card__name">{card.name}</h4>
                     </div>
