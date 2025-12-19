@@ -8,14 +8,36 @@ export default async function handler(req, res){
     res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS')
     res.setHeader('Access-Control-Allow-Headers','Content-Type, X-Requested-With, X-Request-Id')
     if (req.method === 'OPTIONS'){ res.status(204).end(); return }
-    if (req.method === 'GET'){
-      const prisma = getPrisma()
-      if (!prisma){ res.setHeader('Content-Type','application/json'); res.status(200).json({ data: [], status:'degraded', message:'Database unavailable', request_id:reqId }); return }
-      const items = await prisma.user.findMany()
-      res.setHeader('Content-Type','application/json')
-      res.status(200).json({ data: items, request_id: reqId })
-      return
-    }
+      if (req.method === 'GET'){
+        const prisma = getPrisma()
+        if (!prisma){ res.setHeader('Content-Type','application/json'); res.status(200).json({ data: [], status:'degraded', message:'Database unavailable', request_id:reqId }); return }
+        
+        // Use raw SQL to ensure we get role and status fields
+        try {
+          const sql = `SELECT 
+            user_id, 
+            username, 
+            name, 
+            email, 
+            phone, 
+            gender, 
+            password_hash, 
+            COALESCE(status, 'active') as status, 
+            COALESCE(role, 'user') as role, 
+            created_at 
+          FROM users ORDER BY user_id DESC`
+          const rows = await prisma.$queryRawUnsafe(sql)
+          res.setHeader('Content-Type','application/json')
+          res.status(200).json({ data: rows || [], request_id: reqId })
+        } catch (sqlError) {
+          // Fallback to Prisma if SQL fails
+          console.log('Falling back to Prisma for user list:', sqlError.message)
+          const items = await prisma.user.findMany()
+          res.setHeader('Content-Type','application/json')
+          res.status(200).json({ data: items, request_id: reqId })
+        }
+        return
+      }
     if (req.method === 'POST'){
       if (req.headers['content-type'] && !String(req.headers['content-type']).includes('application/json')){ res.status(415).json({ status:'error', message:'Content-Type must be application/json', data:null, request_id:reqId }); return }
       const body = req.body || {}

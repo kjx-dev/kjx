@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/router'
-import { FaBars, FaUser, FaList, FaHeart, FaComment, FaKey, FaSignOutAlt, FaChevronDown, FaChevronUp, FaTags, FaPlus, FaTimes, FaArrowLeft, FaArrowUp } from 'react-icons/fa'
+import { FaBars, FaUser, FaList, FaHeart, FaComment, FaKey, FaSignOutAlt, FaChevronDown, FaChevronUp, FaTags, FaPlus, FaTimes, FaArrowLeft, FaArrowUp, FaCog } from 'react-icons/fa'
 
 export default function Sell(){
   const router = useRouter()
@@ -343,6 +343,7 @@ export default function Sell(){
                     <div className="menu__item" onClick={()=>router.push('/favorites')}><FaHeart /><span>Favorites</span></div>
                     <div className="menu__item" onClick={()=>router.push('/chat')}><FaComment /><span>Chat</span></div>
                     <div className="menu__item" onClick={()=>router.push('/change-password')}><FaKey /><span>Change Password</span></div>
+                    <div className="menu__item" onClick={()=>router.push('/admin')}><FaCog /><span>Admin</span></div>
                     <div className="menu__item" onClick={logout}><FaSignOutAlt /><span>Logout</span></div>
                   </div>
                 )}
