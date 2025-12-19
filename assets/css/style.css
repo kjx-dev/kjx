@@ -672,7 +672,8 @@ b {
 .hero__inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 16px; align-items: center; }
 .hero__content { display: block; }
 .hero__content h1 { font-size: 28px; font-weight: 700; color: #3c3c3c; text-align: left; margin: 0 0 16px; }
-.hero__content p { font-size: 18px; color: rgba(0,47,52,.84); margin-bottom: 24px; line-height: 1.7; }
+.hero__content p { font-size: 18px; color: rgba(0,47,52,.84); margin-bottom: 24px; line-height: 1.7;
+margin-left: 0; }
 .hero__actions { display: flex; gap: 12px; }
 .hero__art { display: flex; align-items: center; justify-content: center; }
 .hero__art img { width: 100%; height: auto; }
