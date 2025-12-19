@@ -15,6 +15,8 @@ model User {
   phone         String?
   gender        String?
   password_hash String?
+  status        String   @default("active")
+  role          String   @default("user")
   created_at    DateTime @default(now())
   posts         Post[]
   bids          PostBid[]
@@ -126,4 +128,15 @@ model ChatMessage {
 
   @@index([post_id])
   @@map("chat_messages")
+}
+
+model RolePermission {
+  permission_id Int      @id @default(autoincrement())
+  role          String
+  resource      String
+  action        String
+  created_at    DateTime @default(now())
+
+  @@unique([role, resource, action], name: "role_resource_action")
+  @@map("role_permissions")
 }
