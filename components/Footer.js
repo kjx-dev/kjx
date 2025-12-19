@@ -4,13 +4,13 @@ export default function Footer(){
   const year = new Date().getFullYear()
   return (
     <footer>
-      <div className="footer_the_olx_app_section">
+      {/* <div className="footer_the_olx_app_section">
         <picture>
           <source srcSet="/images/banners/mobile.webp" type="image/webp" />
-          <img src="/images/banners/mobile.webp" alt="OMG app banner" loading="lazy" decoding="async" />
+          <img src="/images/banners/mobile.webp" alt="KJX app banner" loading="lazy" decoding="async" />
         </picture>
         <div className="footer_olx_content">
-          <h1>Try The OMG App</h1>
+          <h1>Try The KJX App</h1>
           <h3>Buy, sell and find just about anything using the app on your mobile.</h3>
         </div>
         <div className="line"></div>
@@ -22,7 +22,7 @@ export default function Footer(){
             <a href="#" aria-label="Explore on AppGallery"><img src="/images/stores/app_gallery.svg" alt="AppGallery" loading="lazy" decoding="async" style={{ width: 120, height: 'auto' }} /></a>
           </div>
         </div>
-      </div>
+      </div> */}
       <div className="footer__real">
         <div className="footer__content">
           <div className="lists">

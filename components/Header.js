@@ -84,7 +84,9 @@ export default function Header(){
           <div className="small__navbar_left">
           <div className="small__navbar_logo">
             <a href="/" onClick={(e)=>{ e.preventDefault(); router.push('/') }} style={{display:'inline-block', textDecoration:'none'}}>
-              <svg height="20" viewBox="0 0 36.289 20.768" alt="Logo"><path d="M18.9 20.77V0h4.93v20.77zM0 10.39a8.56 8.56 0 1 1 8.56 8.56A8.56 8.56 0 0 1 0 10.4zm5.97-.01a2.6 2.6 0 1 0 2.6-2.6 2.6 2.6 0 0 0-2.6 2.6zm27 5.2l-1.88-1.87-1.87 1.88H25.9V12.3l1.9-1.9-1.9-1.89V5.18h3.27l1.92 1.92 1.93-1.92h3.27v3.33l-1.9 1.9 1.9 1.9v3.39h-3.27z"></path></svg>
+              <svg height="32" viewBox="0 0 80 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="KJX Logo">
+                <text x="2" y="26" fontFamily="'Arial Black', 'Arial Bold', Arial, sans-serif" fontSize="27" fontWeight="900" fill="#f55100" fontStyle="italic" transform="skewX(0)">KJX</text>
+              </svg>
             </a>
           </div>
           <div className="actions__links">
@@ -110,7 +112,10 @@ export default function Header(){
                 {profileMenuOpen && (
                   <div id="profileMenu" ref={profileMenuRef} className="profile__menu" style={{ position:'fixed', top: profileMenuPos.top, left: profileMenuPos.left }}>
                     <div className="header">
-                      <FaUser style={{fontSize:22}} />
+                      <div className="profile-icon-wrapper"> 
+                          <FaUser style={{fontSize:22}} />
+                      </div>
+                     
                       <div>
                         <h4 style={{fontWeight:500}}>{auth.name || 'My Profile'}</h4>
                         <a href="/profile" className="profile__link"><span>View Public Profile</span></a>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/router'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 import CategorySlider from '../components/CategorySlider'
-import { FaTags, FaHeart, FaRegHeart, FaWhatsapp, FaMapMarkerAlt, FaArrowUp, FaChevronDown, FaChevronLeft, FaChevronRight, FaMobileAlt, FaCar, FaMotorcycle, FaHome, FaTv, FaTabletAlt, FaMapMarker, FaBriefcase, FaPaintRoller, FaChair, FaLaptop, FaHeadphones, FaCamera, FaGamepad, FaBook, FaDumbbell, FaShirt, FaBaby, FaDog, FaIndustry, FaTools } from 'react-icons/fa'
+import { FaTags, FaHeart, FaRegHeart, FaWhatsapp, FaMapMarkerAlt, FaArrowUp, FaChevronDown, FaChevronLeft, FaChevronRight, FaMobileAlt, FaCar, FaMotorcycle, FaHome, FaTv, FaTabletAlt, FaMapMarker, FaBriefcase, FaPaintRoller, FaChair, FaLaptop, FaHeadphones, FaCamera, FaGamepad, FaBook, FaDumbbell, FaShirt, FaBaby, FaDog, FaIndustry, FaTools, FaClock, FaRegClock } from 'react-icons/fa'
 
 export default function Home() {
   const router = useRouter()
@@ -139,7 +139,8 @@ export default function Home() {
             profilePhone: '',
             phoneShow: 'no',
             category: (p.category && p.category.name) || '',
-            status: p.status || 'active'
+            status: p.status || 'active',
+            created_at: p.created_at || null
           }
         })
         if (rows.length){ setUsingDb(true); setDbPage(1); setDbHasMore(!!j2.has_more) }
@@ -380,7 +381,8 @@ export default function Home() {
           profilePhone: '',
           phoneShow: 'no',
           category: (p.category && p.category.name) || '',
-          status: p.status || 'active'
+          status: p.status || 'active',
+          created_at: p.created_at || null
         }))
         const nextList = [...list, ...more].filter(p => String(p.status||'active')==='active')
         setList(nextList)
@@ -407,6 +409,41 @@ export default function Home() {
   
   function prevSlide() {
     setSliderIndex((prev) => (prev - 1 + totalPages) % totalPages)
+  }
+
+  function getTimeAgo(dateString) {
+    if (!dateString) return 'Recently'
+    try {
+      const date = new Date(dateString)
+      const now = new Date()
+      const diffInSeconds = Math.floor((now - date) / 1000)
+      
+      if (diffInSeconds < 60) return 'Just now'
+      if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60)
+        return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`
+      }
+      if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600)
+        return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`
+      }
+      if (diffInSeconds < 604800) {
+        const days = Math.floor(diffInSeconds / 86400)
+        return `${days} ${days === 1 ? 'day' : 'days'} ago`
+      }
+      if (diffInSeconds < 2592000) {
+        const weeks = Math.floor(diffInSeconds / 604800)
+        return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`
+      }
+      if (diffInSeconds < 31536000) {
+        const months = Math.floor(diffInSeconds / 2592000)
+        return `${months} ${months === 1 ? 'month' : 'months'} ago`
+      }
+      const years = Math.floor(diffInSeconds / 31536000)
+      return `${years} ${years === 1 ? 'year' : 'years'} ago`
+    } catch (_) {
+      return 'Recently'
+    }
   }
 
   async function toggleFavorite(postId, e){
@@ -723,9 +760,14 @@ export default function Home() {
                                         )}
                                       </button>
                                     </div>
+                                    <div className="card__name-wrap">
                                     <h4 className="card__name">{card.name}</h4>
+                                    </div>
                                   </div>
                                   <h5 className="card__location"><FaMapMarkerAlt aria-hidden="true" /> {card.location}</h5>
+                                  <h5 className="card__location time-total">
+                                    {getTimeAgo(card.created_at)}
+                                  </h5>
                                 </div>
                               </article>
                             )

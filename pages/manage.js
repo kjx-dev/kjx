@@ -281,7 +281,7 @@ export default function Manage(){
           if (imgSrc === './images/img1.jpg') imgSrc = '/images/products/img1.jpg'
           const idx = products.indexOf(p)
           const statusBadge = p.status==='active' ? (
-            <span style={{background:'#3a77ff',color:'#fff',padding:'4px 8px',borderRadius:4,fontSize:12}}>Active</span>
+            <span style={{background:'#248f3c',color:'#fff',padding:'4px 8px',borderRadius:4,fontSize:12}}>Active</span>
           ) : (
             <span style={{background:'#999',color:'#fff',padding:'4px 8px',borderRadius:4,fontSize:12}}>Inactive</span>
           )
