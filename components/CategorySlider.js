@@ -16,6 +16,41 @@ function categoryImage(cat) {
   return 'https://picsum.photos/seed/product/800/600'
 }
 
+function getTimeAgo(dateString) {
+  if (!dateString) return 'Recently'
+  try {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInSeconds = Math.floor((now - date) / 1000)
+    
+    if (diffInSeconds < 60) return 'Just now'
+    if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60)
+      return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`
+    }
+    if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600)
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`
+    }
+    if (diffInSeconds < 604800) {
+      const days = Math.floor(diffInSeconds / 86400)
+      return `${days} ${days === 1 ? 'day' : 'days'} ago`
+    }
+    if (diffInSeconds < 2592000) {
+      const weeks = Math.floor(diffInSeconds / 604800)
+      return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`
+    }
+    if (diffInSeconds < 31536000) {
+      const months = Math.floor(diffInSeconds / 2592000)
+      return `${months} ${months === 1 ? 'month' : 'months'} ago`
+    }
+    const years = Math.floor(diffInSeconds / 31536000)
+    return `${years} ${years === 1 ? 'year' : 'years'} ago`
+  } catch (_) {
+    return 'Recently'
+  }
+}
+
 export default function CategorySlider({ heading, category, favorites, onToggleFavorite, userId }) {
   const router = useRouter()
   const [products, setProducts] = useState([])
@@ -63,7 +98,8 @@ export default function CategorySlider({ heading, category, favorites, onToggleF
             location: base.location || '',
             profilePhone: base.profilePhone || '',
             category: category,
-            status
+            status,
+            created_at: base.created_at || null
           }
         })
 
@@ -199,11 +235,16 @@ export default function CategorySlider({ heading, category, favorites, onToggleF
                           )}
                         </button>
                       </div>
+                      <div className="card__name-wrap">
                       <h4 className="card__name">{card.name}</h4>
+                      </div>
                     </div>
                     <h5 className="card__location">
                       <FaMapMarkerAlt aria-hidden="true" /> {card.location}
                     </h5>
+                      <h5 className="card__location time-total">
+                                    {getTimeAgo(card.created_at)}
+                                  </h5>
                   </div>
                 </article>
               )
