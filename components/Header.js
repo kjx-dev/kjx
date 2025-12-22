@@ -78,9 +78,9 @@ export default function Header(){
   function applySearch(val){ const s = String(val||'').trim(); if (!s) return; router.push('/?q='+encodeURIComponent(s)) }
 
   return (
-    <div style={{width:'100%'}}>
+    <div className='header-top-area'>
       <div className="same__color">
-        <div className="small__navbar">
+        <div className="small__navbar container-width">
           <div className="small__navbar_left">
           <div className="small__navbar_logo">
             <a href="/" onClick={(e)=>{ e.preventDefault(); router.push('/') }} style={{display:'inline-block', textDecoration:'none'}}>
@@ -89,7 +89,7 @@ export default function Header(){
               </svg>
             </a>
           </div>
-          <div className="actions__links">
+          {/* <div className="actions__links">
             <a href="/category/cars" onClick={(e)=>{ e.preventDefault(); router.push('/category/cars') }} aria-label="OMG Motors">
               <FaCar />
               <span>MOTORS</span>
@@ -98,7 +98,9 @@ export default function Header(){
               <FaHome />
               <span>PROPERTY</span>
             </a>
-          </div></div>
+          </div> */}
+          
+          </div>
 
 
  <div className="login__sell" id="login__sell">
@@ -131,7 +133,7 @@ export default function Header(){
                 )}
               </div>
             ) : (
-              <button className="login__btn" onClick={() => router.push('/login')}>Login</button>
+              <button className="login__btn" onClick={() => router.push('/login')}>Login / Register</button>
             )}
             <button onClick={sell} className="sell__btn">+ SELL</button>
           </div>
@@ -139,7 +141,7 @@ export default function Header(){
           
         </div>
       </div>
-      <div className={"second__navbar" + (menuOpen ? " open" : "") }>
+      <div className={"second__navbar container-width" + (menuOpen ? " open" : "") }>
         {/* <div className="second-navbar__logo">
           <a href="/">
             <svg viewBox="0 0 36.289 20.768" alt="Logo"><path d="M18.9 20.77V0h4.93v20.77zM0 10.39a8.56 8.56 0 1 1 8.56 8.56A8.56 8.56 0 0 1 0 10.4zm5.97-.01a2.6 2.6 0 1 0 2.6-2.6 2.6 2.6 0 0 0-2.6 2.6zm27 5.2l-1.88-1.87-1.87 1.88H25.9V12.3l1.9-1.9-1.9-1.89V5.18h3.27l1.92 1.92 1.93-1.92h3.27v3.33l-1.9 1.89 1.9 1.9v3.39h-3.27z"/></svg>

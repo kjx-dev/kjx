@@ -86,13 +86,17 @@ b {
     position: sticky;
     width: 100%;
 }
-
+.container-width {
+    /* max-width: 1100px;
+    margin: 0 auto;
+    width: 100%; */
+}
 .small__navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    padding: 20px;
+    padding: 20px 20px;
     height: 70px;
 }
 .small__navbar_left {
@@ -112,7 +116,7 @@ b {
     gap: 16px;
     width: 100%;
     /* height: 80px; */
-    padding: 15px 15px;
+    padding: 15px 20px;
     box-sizing: border-box;
     z-index: 1000;
 }
@@ -210,7 +214,7 @@ b {
 .login__btn {
     text-decoration: none;
     color: #000000;
-    font-size: 19px;
+    font-size: 15px;
     cursor: pointer;
     border: 0;
     border-bottom: none;
@@ -442,7 +446,9 @@ b {
 .profile__menu .menu__item:hover {
     background: rgba(1,47,52,.06);
 }
-
+.header-top-area {
+    border-bottom: 1px solid rgba(0,47,52,.16);
+}
 @media (max-width: 1024px) {
   .second__navbar {
     flex-wrap: wrap;
@@ -479,9 +485,9 @@ b {
     margin-top: 0px;
     justify-content: flex-start;
     width: 100%;
-    height: 50px;
-    padding: 20px 30px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    /* height: 50px; */
+    padding: 15px 20px 20px 20px;
+    /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
 }
 
 .select__itself {
@@ -534,13 +540,13 @@ b {
 }
 
 .select__itself a {
-    font-size: 17px;
+    font-size: 14px;
     border: 0;
     background: var(--primary-color);
     text-decoration: none;
     color: #fff;
     margin-right: 10px;
-    padding: 10px 16px;
+    padding: 8px 16px;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -669,7 +675,10 @@ b {
 
 /* Hero */
 .hero { width: 100%; padding: 40px 20px; background: #f7f8f9; display: block; }
-.hero__inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 16px; align-items: center; }
+.hero.home-hero {
+    padding: 0px;
+}
+.hero__inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 16px; align-items: center; padding: 0 20px; }
 .hero__content { display: block; }
 .hero__content h1 { font-size: 28px; font-weight: 700; color: #3c3c3c; text-align: left; margin: 0 0 16px; }
 .hero__content p { font-size: 18px; color: rgba(0,47,52,.84); margin-bottom: 24px; line-height: 1.7;
@@ -692,10 +701,18 @@ margin-left: 0; }
   .cards__grid { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
 }
 @media (min-width: 1200px) {
-  .hero__inner { grid-template-columns: 1fr 1fr; gap: 40px; max-width: 1100px; }
+  .hero__inner { grid-template-columns: 1fr 1fr; gap: 40px; 
+    /* max-width: 1100px; */
+ }
   .cards__grid { grid-template-columns: repeat(4, minmax(0,1fr)); gap: 20px; }
 }
-
+@media (min-width: 1312px) {
+.container-width {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+}
 .img__featured .featured {
     position: absolute;
     bottom: 7px;
@@ -1360,7 +1377,8 @@ p {
 /* Home categories */
 .home__categories { width: 100%; 
     /* max-width: 1200px; */
-     margin: 24px auto; padding: 0 30px; }
+     margin: 24px auto;
+      padding: 0 30px; }
 .home__categories h2 { font-size: 22px; font-weight: 600; margin-bottom: 20px; color: #012f34; }
 .home__categories-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 16px; }
 /* Ensure category grid on sell page responds to the left column width, not viewport */
