@@ -5,6 +5,7 @@ import { FaSearch, FaUser, FaChevronDown, FaList, FaHeart, FaComment, FaKey, FaS
 export default function Header(){
   const router = useRouter()
   const [auth, setAuth] = useState({ email:'', isAuthenticated:false, name:'' })
+  const [isAdmin, setIsAdmin] = useState(false)
   const [q, setQ] = useState('')
   const [location, setLocation] = useState('')
   const [headerCatOpen, setHeaderCatOpen] = useState(false)
@@ -27,6 +28,26 @@ export default function Header(){
       const name = localStorage.getItem('name') || ''
       setAuth({ email, isAuthenticated, name })
     }catch(_){ }
+    
+    // Check if user is admin
+    async function checkAdminStatus(){
+      try{
+        const token = localStorage.getItem('auth_token')
+        if (!token) { setIsAdmin(false); return }
+        const res = await fetch('/api/v1/auth/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (res.ok){
+          const data = await res.json()
+          setIsAdmin(data.user?.role === 'admin')
+        } else {
+          setIsAdmin(false)
+        }
+      }catch(_){
+        setIsAdmin(false)
+      }
+    }
+    checkAdminStatus()
     ;(async () => {
       try{
         const r = await fetch('/api/v1/category')
@@ -138,7 +159,9 @@ export default function Header(){
                     <div className="menu__item" onClick={()=>router.push('/favorites')}><FaHeart /><span>Favorites</span></div>
                     <div className="menu__item" onClick={()=>router.push('/chat')}><FaComment /><span>Chat</span></div>
                     <div className="menu__item" onClick={()=>router.push('/change-password')}><FaKey /><span>Change Password</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/admin')}><FaCog /><span>Admin</span></div>
+                    {isAdmin && (
+                      <div className="menu__item" onClick={()=>router.push('/admin')}><FaCog /><span>Admin</span></div>
+                    )}
                     <div className="menu__item" onClick={logout}><FaSignOutAlt /><span>Logout</span></div>
                   </div>
                 )}

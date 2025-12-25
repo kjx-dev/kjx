@@ -11,6 +11,8 @@ export default function Admin(){
   const [auth, setAuth] = useState({ email:'', isAuthenticated:false, name:'' })
   const [activeTab, setActiveTab] = useState('users')
   const [error, setError] = useState('')
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
     const email = localStorage.getItem('email') || ''
@@ -21,7 +23,56 @@ export default function Admin(){
       router.push('/login')
       return 
     }
+    
+    // Check if user is admin
+    async function checkAdminStatus(){
+      try{
+        setChecking(true)
+        const token = localStorage.getItem('auth_token')
+        if (!token) { 
+          setIsAdmin(false)
+          setChecking(false)
+          router.push('/')
+          return 
+        }
+        const res = await fetch('/api/v1/auth/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (res.ok){
+          const data = await res.json()
+          const userIsAdmin = data.user?.role === 'admin'
+          setIsAdmin(userIsAdmin)
+          if (!userIsAdmin) {
+            router.push('/')
+            return
+          }
+        } else {
+          setIsAdmin(false)
+          router.push('/')
+          return
+        }
+      }catch(_){
+        setIsAdmin(false)
+        router.push('/')
+        return
+      } finally {
+        setChecking(false)
+      }
+    }
+    checkAdminStatus()
   }, [router])
+  
+  // Don't render admin panel until we've checked admin status
+  if (checking || !isAdmin) {
+    return (
+      <>
+        <Header />
+        <div style={{minHeight: '100vh', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          <div>Loading...</div>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>

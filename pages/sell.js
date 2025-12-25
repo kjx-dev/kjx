@@ -107,6 +107,7 @@ export default function Sell(){
   }
   const cities = ['Karachi','Lahore','Islamabad','Rawalpindi','Peshawar','Quetta','Multan','Hyderabad','Faisalabad','Sialkot','Gujranwala']
   const [auth, setAuth] = useState({ email:'', isAuthenticated:false, name:'' })
+  const [isAdmin, setIsAdmin] = useState(false)
   const [showTop, setShowTop] = useState(false)
   useEffect(() => {
     const email = localStorage.getItem('email') || ''
@@ -114,6 +115,26 @@ export default function Sell(){
     const name = localStorage.getItem('name') || ''
     setAuth({ email, isAuthenticated, name })
     if (!isAuthenticated || !email) { router.push('/login'); return }
+    
+    // Check if user is admin
+    async function checkAdminStatus(){
+      try{
+        const token = localStorage.getItem('auth_token')
+        if (!token) { setIsAdmin(false); return }
+        const res = await fetch('/api/v1/auth/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (res.ok){
+          const data = await res.json()
+          setIsAdmin(data.user?.role === 'admin')
+        } else {
+          setIsAdmin(false)
+        }
+      }catch(_){
+        setIsAdmin(false)
+      }
+    }
+    checkAdminStatus()
     const uname = (localStorage.getItem('name')||'').toUpperCase()
     const phone = (localStorage.getItem('phone')||'').toUpperCase()
     setForm(f => ({ ...f, profileName:uname, profilePhone:phone }))
@@ -387,7 +408,9 @@ export default function Sell(){
                     <div className="menu__item" onClick={()=>router.push('/favorites')}><FaHeart /><span>Favorites</span></div>
                     <div className="menu__item" onClick={()=>router.push('/chat')}><FaComment /><span>Chat</span></div>
                     <div className="menu__item" onClick={()=>router.push('/change-password')}><FaKey /><span>Change Password</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/admin')}><FaCog /><span>Admin</span></div>
+                    {isAdmin && (
+                      <div className="menu__item" onClick={()=>router.push('/admin')}><FaCog /><span>Admin</span></div>
+                    )}
                     <div className="menu__item" onClick={logout}><FaSignOutAlt /><span>Logout</span></div>
                   </div>
                 )}
