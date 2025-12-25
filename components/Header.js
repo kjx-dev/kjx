@@ -6,7 +6,9 @@ export default function Header(){
   const router = useRouter()
   const [auth, setAuth] = useState({ email:'', isAuthenticated:false, name:'' })
   const [q, setQ] = useState('')
+  const [location, setLocation] = useState('')
   const [headerCatOpen, setHeaderCatOpen] = useState(false)
+  const cities = ['Karachi','Lahore','Islamabad','Rawalpindi','Peshawar','Quetta','Multan','Hyderabad','Faisalabad','Sialkot','Gujranwala']
   const [catTiles, setCatTiles] = useState([])
   const [menuOpen, setMenuOpen] = useState(false)
   const profileWrapRef = useRef(null)
@@ -74,8 +76,17 @@ export default function Header(){
   function manage(){ router.push('/manage') }
   function logout(){ try{ localStorage.removeItem('auth_token'); localStorage.removeItem('email'); localStorage.removeItem('username'); localStorage.removeItem('name'); localStorage.removeItem('phone'); localStorage.removeItem('gender'); localStorage.removeItem('isAuthenticated'); }catch(_){ } router.push('/login') }
   function onSearchChange(e){ setQ(e.target.value) }
+  function onLocationChange(e){ setLocation(e.target.value) }
   function clearSearch(){ setQ('') }
-  function applySearch(val){ const s = String(val||'').trim(); if (!s) return; router.push('/?q='+encodeURIComponent(s)) }
+  function applySearch(val, loc){ 
+    const s = String(val||'').trim()
+    const l = String(loc||'').trim()
+    if (!s && !l) return
+    const params = new URLSearchParams()
+    if (s) params.set('q', s)
+    if (l) params.set('location', l)
+    router.push('/search?' + params.toString())
+  }
 
   return (
     <div style={{width:'100%'}}>
@@ -152,12 +163,17 @@ export default function Header(){
         </button> */}
         <div className="select_option">
           <FaSearch />
-          <input type="text" placeholder="Pakistan" name="loc" autoComplete="off" spellCheck={false} />
+          <select name="loc" value={location} onChange={onLocationChange} style={{border:'none', background:'transparent', outline:'none', width:'100%', padding:0, margin:0, marginLeft:15, appearance:'none', WebkitAppearance:'none', MozAppearance:'none', cursor:'pointer', fontSize:17, color:location ? 'inherit' : 'rgba(0,47,52,.64)'}}>
+            <option value="">All Locations</option>
+            {cities.map(city => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
         </div>
         <div className="search__bar" role="search">
-          <input type="search" id="hdr-txt" aria-label="Search" placeholder="Find Cars, Mobile Phones and more..." value={q} onChange={onSearchChange} onKeyDown={(e)=>{ if(e.key==='Enter'){ applySearch(q) } }} name="search" autoComplete="nope" aria-autocomplete="none" spellCheck={false} inputMode="search" autoCorrect="off" autoCapitalize="none" />
+          <input type="search" id="hdr-txt" aria-label="Search" placeholder="Find Cars, Mobile Phones and more..." value={q} onChange={onSearchChange} onKeyDown={(e)=>{ if(e.key==='Enter'){ applySearch(q, location) } }} name="search" autoComplete="nope" aria-autocomplete="none" spellCheck={false} inputMode="search" autoCorrect="off" autoCapitalize="none" />
           <button className="clear" aria-label="Clear search" onClick={clearSearch}>×</button>
-          <button className="search__btn" aria-label="Submit search" onClick={()=>applySearch(q)}>
+          <button className="search__btn" aria-label="Submit search" onClick={()=>applySearch(q, location)}>
             <FaSearch />
             <span>Search</span>
           </button>

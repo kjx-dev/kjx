@@ -4,6 +4,7 @@ import Head from 'next/head'
 import Footer from '../../components/Footer'
 import Image from 'next/image'
 import Header from '../../components/Header'
+import { FaChevronDown } from 'react-icons/fa'
 // keep utilities local for page logic; test coverage uses lib/catUtils.js
 
 function slugify(str){
@@ -328,24 +329,43 @@ export default function CategoryPage(){
       </Head>
       <div className="same__color">
         <Header />
-        <div className="third__navbar" id="categories" ref={allCatWrapRef} style={{position:'relative'}}>
-          <div className="select__itself"><a href="#" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(v=>!v) }} ref={allCatBtnRef} aria-expanded={allCatOpen} style={{textDecoration:'none'}}>All Categories</a></div>
-          <div className="links" id="links" style={{display:'flex', flexWrap:'wrap', gap:16}}>
-            {(() => {
+        <div className="third__navbar" id="categories" ref={allCatWrapRef}>
+          <div className="select__itself">
+            <a href="#" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(v=>!v) }} ref={allCatBtnRef} aria-expanded={allCatOpen} className="all-categories-btn">
+              <span>All Categories</span>
+              <FaChevronDown className={`chevron ${allCatOpen ? 'rotated' : ''}`} />
+            </a>
+          </div>
+          <div className="links" id="links">
+          {(() => {
+            try {
               const order = ['mobile-phones','cars','motercycles','house','tv-video-audio','tablets','land-plots','jobs','services','furniture']
               function slug(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') }
-              const tiles = order.map(sl => catTiles.find(t => slug(t.k)===sl)).filter(Boolean)
-              return tiles.map(c => (
-                <a
-                  key={c.k}
-                  href={'/category/' + slug(c.k)}
-                  onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('selectedCategory', slug(c.k)) }catch(_){ } router.push('/category/'+slug(c.k)) }}
-                  style={{textDecoration:'none', color:'rgba(0,47,52,.84)'}}
-                >
-                  {c.label}
-                </a>
-              ))
-            })()}
+              if (!Array.isArray(catTiles) || catTiles.length === 0) return null
+              const tiles = order.map(sl => catTiles.find(t => t && slug(t.k)===sl)).filter(Boolean)
+              if (tiles.length === 0) return null
+              return tiles.map((c, idx) => {
+                if (!c || !c.k) return null
+                try {
+                  const displayLabel = c.shortLabel || c.label || c.k || 'Category'
+                  const catSlug = slug(c.k)
+                  return (
+                    <a 
+                      key={c.k || idx} 
+                      href={'/category/' + catSlug}
+                      className="category-link"
+                    >
+                      {displayLabel}
+                    </a>
+                  )
+                } catch(e) {
+                  return null
+                }
+              })
+            } catch(e) {
+              return null
+            }
+          })()}
           </div>
           {(() => {
             const groups = Array.isArray(catGroups) ? catGroups : []
@@ -357,22 +377,20 @@ export default function CategoryPage(){
               [byName('Furniture & Home Decor')]
             ]
             return (
-              <div ref={allCatMenuRef} style={{display: allCatOpen ? 'block':'none', position:'absolute', zIndex:30, top:48, left:0, right:0, margin:'0 30px',
-              //  maxWidth:1100,
-                background:'#fff', border:'1px solid rgba(1,47,52,.2)', boxShadow:'0 6px 18px rgba(0,0,0,.08)', borderRadius:12}}>
-                <div style={{maxHeight:360, overflow:'auto', padding:16}}>
-                  <div style={{display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:24}}>
+              <div ref={allCatMenuRef} className={`all-cat-menu ${allCatOpen ? '' : 'hidden'}`}>
+                <div className="all-cat-menu-content">
+                  <div className="all-cat-menu-grid">
                     {layout.map((list,ci)=> (
                       <div key={'col:'+ci}>
                         {list.map(gr => (
-                          <div key={gr.parent.category_id} style={{marginBottom:12}}>
-                            <div style={{fontWeight:700, color:'#012f34', marginBottom:8}}>{gr.parent.name}</div>
-                            <ul style={{listStyle:'none', padding:0, margin:0}}>
+                          <div key={gr.parent.category_id} className="all-cat-group">
+                            <div className="all-cat-group-title">{gr.parent.name}</div>
+                            <ul className="all-cat-group-list">
                               {gr.children.map(ch => {
                                 const s = String(ch.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
                                 return (
-                                  <li key={ch.category_id} style={{margin:'6px 0'}}>
-                                    <a href={'/category/'+s} style={{textDecoration:'none', color:'rgba(0,47,52,.84)'}} onClick={(e)=>{ e.preventDefault(); setAllCatOpen(false); router.push('/category/'+s) }}>{ch.name}</a>
+                                  <li key={ch.category_id} className="all-cat-group-item">
+                                    <a href={'/category/'+s} className="all-cat-group-link" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(false); router.push('/category/'+s) }}>{ch.name}</a>
                                   </li>
                                 )
                               })}
@@ -396,20 +414,28 @@ export default function CategoryPage(){
              margin:'0 auto', padding:'0 0px'}}>
           <div className="cat__layout" style={{display:'grid', gridTemplateColumns:'280px 1fr', gap:16}}>
             <aside style={{position:'sticky', top:80, alignSelf:'start'}}>
-              <div className="sell__section" style={{border:'1px solid rgba(1,47,52,.2)', borderRadius:12, padding:12, background:'#fff', boxShadow:'0 2px 8px rgba(0,0,0,.04)'}}>
-                <div style={{display:'flex', alignItems:'center', gap:8, marginTop:0, marginBottom:8}}>
-                  <span style={{width:22, display:'inline-flex', alignItems:'center', justifyContent:'center', color:'#3a77ff'}}><i className="fa-solid fa-rectangle-list"></i></span>
-                  <h4 style={{margin:0}}>Categories</h4>
-                </div>
-                <div style={{display:'flex', alignItems:'center', gap:8, margin:'8px 0'}}>
-                  <input className="form__input" placeholder="Search categories" value={catQ||''} onChange={(e)=>setCatQ(e.target.value)} />
-                </div>
-                <div style={{maxHeight:300, overflow:'auto', borderRadius:8}}>
+              <div className="sell__section" style={{border:'1px solid rgba(1,47,52,.2)', borderRadius:12, padding:20, background:'#fff', boxShadow:'0 2px 8px rgba(0,0,0,.04)'}}>
+                <h4 style={{margin:'0 0 16px 0', fontSize:18, fontWeight:600, color:'#012f34', letterSpacing:'-0.01em'}}>Categories</h4>
+                <div style={{maxHeight:450, overflowY:'auto', overflowX:'hidden'}}>
                   <ul style={{listStyle:'none', padding:0, margin:0}}>
-                    <li style={{margin:'6px 0'}}>
-                      <a href="/" onClick={(e)=>{ e.preventDefault(); router.push('/') }} style={{textDecoration:'none', display:'flex', alignItems:'center', gap:10, padding:'8px 10px', borderRadius:8, color:'rgba(0,47,52,.84)'}}>
-                        <span style={{display:'inline-flex', alignItems:'center', justifyContent:'center', width:20}}><i className="fa-solid fa-layer-group" style={{color:'#012f34'}}></i></span>
-                        <span>All categories</span>
+                    <li>
+                      <a 
+                        href="/" 
+                        onClick={(e)=>{ e.preventDefault(); router.push('/') }} 
+                        style={{
+                          textDecoration:'none', 
+                          display:'block', 
+                          padding:'12px 0', 
+                          color:'rgba(0,47,52,.84)',
+                          fontSize:15,
+                          fontWeight:400,
+                          borderBottom:'1px solid rgba(1,47,52,.1)',
+                          transition:'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e)=>{ e.currentTarget.style.color = '#012f34'; e.currentTarget.style.paddingLeft = '4px' }}
+                        onMouseLeave={(e)=>{ e.currentTarget.style.color = 'rgba(0,47,52,.84)'; e.currentTarget.style.paddingLeft = '0' }}
+                      >
+                        All categories
                       </a>
                     </li>
                     {(() => {
@@ -422,24 +448,43 @@ export default function CategoryPage(){
                         seen.add(key)
                         list.push(t)
                       }
-                      const tiles = catExpanded ? list : list.slice(0, 10)
+                      const tiles = catExpanded ? list : list.slice(0, 12)
                       return tiles.map(c => {
                         const s = String(c.k||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
                         const active = isActiveSlug(slug, s)
                         return (
-                          <li key={c.k} style={{margin:'2px 0'}}>
+                          <li key={c.k}>
                             <a
                               href={'/category/'+s}
                               className={active ? 'active-category' : ''}
-                              style={{textDecoration:'none', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 10px', borderRadius:8, background: active ? 'rgba(230,239,246,0.7)' : 'transparent', color: active ? '#012f34' : 'rgba(0,47,52,.84)'}}
+                              style={{
+                                textDecoration:'none', 
+                                display:'block', 
+                                padding:'12px 0', 
+                                color: active ? '#012f34' : 'rgba(0,47,52,.84)',
+                                fontSize:15,
+                                fontWeight: active ? 500 : 400,
+                                borderBottom:'1px solid rgba(1,47,52,.1)',
+                                transition:'all 0.2s ease',
+                                position:'relative'
+                              }}
                               onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('selectedCategory', s) }catch(_){ } router.push('/category/'+s) }}
+                              onMouseEnter={(e)=>{ 
+                                if(!active) {
+                                  e.currentTarget.style.color = '#012f34'
+                                  e.currentTarget.style.paddingLeft = '4px'
+                                }
+                              }}
+                              onMouseLeave={(e)=>{ 
+                                if(!active) {
+                                  e.currentTarget.style.color = 'rgba(0,47,52,.84)'
+                                  e.currentTarget.style.paddingLeft = '0'
+                                }
+                              }}
                               aria-current={active ? 'page' : undefined}
                             >
-                              <span style={{display:'inline-flex', alignItems:'center', gap:8}}>
-                                <span style={{width:20, display:'inline-flex', alignItems:'center', justifyContent:'center', color:'#012f34'}}><i className={"fa-solid "+(c.icon||'fa-tags')}></i></span>
-                                {c.label}
-                              </span>
-                              <i className="fa-solid fa-chevron-right" style={{fontSize:10, color:'rgba(0,47,52,.64)'}}></i>
+                              {active && <span style={{position:'absolute', left:0, top:'50%', transform:'translateY(-50%)', width:3, height:16, background:'#3a77ff', borderRadius:'0 2px 2px 0'}}></span>}
+                              <span style={{display:'inline-block', marginLeft: active ? '8px' : '0', transition:'margin-left 0.2s ease'}}>{c.label}</span>
                             </a>
                           </li>
                         )
@@ -449,9 +494,24 @@ export default function CategoryPage(){
                 </div>
                 {(() => {
                   const seen = new Set(catTiles.map(t=>String(t.label||t.k||'').toLowerCase()))
-                  return (!catExpanded && seen.size>10) ? (
-                    <div style={{marginTop:10}}>
-                      <button className="load__more-btn" onClick={()=>setCatExpanded(true)}>View more</button>
+                  return (!catExpanded && seen.size>12) ? (
+                    <div style={{marginTop:16, paddingTop:16, borderTop:'1px solid rgba(1,47,52,.1)'}}>
+                      <a 
+                        href="#" 
+                        onClick={(e)=>{ e.preventDefault(); setCatExpanded(true) }}
+                        style={{
+                          textDecoration:'none',
+                          color:'#3a77ff',
+                          fontSize:14,
+                          fontWeight:500,
+                          display:'inline-block',
+                          transition:'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e)=>{ e.currentTarget.style.textDecoration = 'underline'; e.currentTarget.style.color = '#2d5cdd' }}
+                        onMouseLeave={(e)=>{ e.currentTarget.style.textDecoration = 'none'; e.currentTarget.style.color = '#3a77ff' }}
+                      >
+                        View more
+                      </a>
                     </div>
                   ) : null
                 })()}
@@ -547,12 +607,33 @@ export default function CategoryPage(){
               </div>
               <div style={{position:'relative', display:'inline-flex', alignItems:'center', gap:8}} ref={sortWrapRef}>
                 <span style={{fontWeight:600, color:'#012f34'}}>Sort by:</span>
-                <button ref={sortBtnRef} aria-haspopup="true" aria-expanded={sortOpen} onClick={()=>setSortOpen(v=>!v)} style={{border:'none', background:'transparent', color:'rgba(0,47,52,.84)', display:'inline-flex', alignItems:'center', gap:6, cursor:'pointer'}}>
+                <button 
+                  ref={sortBtnRef} 
+                  aria-haspopup="true" 
+                  aria-expanded={sortOpen} 
+                  onClick={()=>setSortOpen(v=>!v)} 
+                  style={{
+                    border:'none', 
+                    background: sortOpen ? '#f5f8fa' : 'transparent',
+                    color:'#012f34', 
+                    display:'inline-flex', 
+                    alignItems:'center', 
+                    gap:8, 
+                    cursor:'pointer',
+                    padding:'8px 12px',
+                    borderRadius:8,
+                    fontWeight:500,
+                    fontSize:14,
+                    transition:'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e)=>{ if(!sortOpen) e.currentTarget.style.background = '#f5f8fa' }}
+                  onMouseLeave={(e)=>{ if(!sortOpen) e.currentTarget.style.background = 'transparent' }}
+                >
                   <span>{sortKey==='newly_listed' ? 'Newly listed' : sortKey==='price_asc' ? 'Price: Low to High' : sortKey==='price_desc' ? 'Price: High to Low' : sortKey==='name_asc' ? 'Name: A–Z' : 'Name: Z–A'}</span>
-                  <i className="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                  <i className="fa-solid fa-chevron-down" aria-hidden="true" style={{fontSize:11, transform: sortOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition:'transform 0.2s ease'}}></i>
                 </button>
                 {sortOpen && (
-                  <div ref={sortMenuRef} role="menu" style={{position:'absolute', top:'100%', right:0, background:'#fff', border:'1px solid rgba(1,47,52,.2)', borderRadius:8, boxShadow:'0 2px 10px rgba(0,0,0,.08)', minWidth:220, zIndex:10}}>
+                  <div ref={sortMenuRef} role="menu" style={{position:'absolute', top:'calc(100% + 4px)', right:0, background:'#fff', border:'1px solid rgba(1,47,52,.2)', borderRadius:8, boxShadow:'0 4px 12px rgba(0,0,0,.12)', minWidth:220, zIndex:1000, overflow:'hidden'}}>
                     {[
                       {k:'newly_listed', label:'Newly listed'},
                       {k:'price_asc', label:'Price: Low to High'},
@@ -560,7 +641,26 @@ export default function CategoryPage(){
                       {k:'name_asc', label:'Name: A–Z'},
                       {k:'name_desc', label:'Name: Z–A'},
                     ].map(opt => (
-                      <button key={opt.k} role="menuitem" onClick={()=>{ setSortKey(opt.k); setSortOpen(false); setDisplayCount(12) }} style={{display:'block', width:'100%', textAlign:'left', padding:'10px 12px', border:'none', background: sortKey===opt.k ? 'rgba(230,239,246,0.7)' : 'transparent', cursor:'pointer', color:'rgba(0,47,52,.84)'}}>
+                      <button 
+                        key={opt.k} 
+                        role="menuitem" 
+                        onClick={()=>{ setSortKey(opt.k); setSortOpen(false); setDisplayCount(12) }} 
+                        style={{
+                          display:'block', 
+                          width:'100%', 
+                          textAlign:'left', 
+                          padding:'10px 16px', 
+                          border:'none', 
+                          background: sortKey===opt.k ? '#e6eff6' : 'transparent', 
+                          cursor:'pointer', 
+                          color: sortKey===opt.k ? '#012f34' : 'rgba(0,47,52,.84)',
+                          fontWeight: sortKey===opt.k ? 600 : 400,
+                          fontSize:14,
+                          transition:'all 0.15s ease'
+                        }}
+                        onMouseEnter={(e)=>{ if(sortKey!==opt.k) e.currentTarget.style.background = '#f5f8fa' }}
+                        onMouseLeave={(e)=>{ if(sortKey!==opt.k) e.currentTarget.style.background = 'transparent' }}
+                      >
                         {opt.label}
                       </button>
                     ))}
@@ -665,8 +765,8 @@ export default function CategoryPage(){
           <div className="cards__grid cat__grid" style={{gap:16}}>
             {toShow.map((card, i) => (
               <article key={i} className="card" onClick={() => productDetail(card)} aria-label={card.name} style={{background:'#fff', border:'1px solid rgba(1,47,52,.16)', borderRadius:12, boxShadow:'0 2px 8px rgba(0,0,0,.04)', cursor:'pointer'}}>
-                <div className="img__featured" style={{overflow:'hidden', borderTopLeftRadius:12, borderTopRightRadius:12}}>
-                  <Image src={card.image} alt={card.name} width={320} height={240} loading="lazy" sizes="(max-width: 768px) 100vw, 280px" unoptimized style={{objectFit:'cover'}} />
+                <div className="img__featured" style={{overflow:'hidden', borderTopLeftRadius:12, borderTopRightRadius:12, position:'relative', width:'100%', height:240}}>
+                  <Image src={card.image} alt={card.name} fill loading="lazy" sizes="(max-width: 768px) 100vw, 280px" unoptimized style={{objectFit:'cover'}} />
                 </div>
                 <div className="card__content" style={{padding:'10px 12px'}}>
                   <div className="card__content-gap">

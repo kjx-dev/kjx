@@ -12,7 +12,6 @@ export default function Chat(){
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [composeText, setComposeText] = useState('')
-  const [catTiles, setCatTiles] = useState([])
   const messagesRef = useRef(null)
   const wsRef = useRef(null)
   const [wsReady, setWsReady] = useState(false)
@@ -21,10 +20,6 @@ export default function Chat(){
   const queueRef = useRef([])
   const selectedRef = useRef('')
   const seenRef = useRef(new Set())
-  const [allCatOpen, setAllCatOpen] = useState(false)
-  const allCatWrapRef = useRef(null)
-  const allCatBtnRef = useRef(null)
-  const allCatMenuRef = useRef(null)
 
   useEffect(() => {
     try{
@@ -34,24 +29,6 @@ export default function Chat(){
       setAuth({ email, isAuthenticated, name })
       
     }catch(_){ router.push('/login') }
-  }, [])
-  useEffect(() => {
-    function onKey(e){ if (e.key === 'Escape') setAllCatOpen(false) }
-    function onOutside(e){ const el = allCatWrapRef.current; if (!el) return; if (!el.contains(e.target)) setAllCatOpen(false) }
-    document.addEventListener('keydown', onKey)
-    document.addEventListener('pointerdown', onOutside)
-    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('pointerdown', onOutside) }
-  }, [])
-  useEffect(() => {
-    async function loadCategories(){
-      try{
-        const r = await fetch('/api/v1/category')
-        const j = await r.json()
-        const tiles = (j && j.data && j.data.tiles) ? j.data.tiles : []
-        setCatTiles(Array.isArray(tiles) ? tiles : [])
-      }catch(_){ setCatTiles([]) }
-    }
-    loadCategories()
   }, [])
 
   useEffect(() => {
@@ -341,60 +318,6 @@ export default function Chat(){
   return (
     <div style={{width:'100%', padding:'0 16px'}}>
       <Header />
-
-      <div className="third__navbar" ref={allCatWrapRef} style={{position:'relative'}}>
-        <div className="select__itself"><a href="" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(v=>!v) }} ref={allCatBtnRef} aria-expanded={allCatOpen}>All Categories</a></div>
-        <div className="links" id="links" style={{display:'flex', flexWrap:'wrap', gap:16}}>
-          {(() => {
-            function slug(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') }
-            const variants = ['mobile-phones','cars','motercycles','motorcycles','house','property','property-for-sale','property-for-rent','tv-video-audio','tablets','land-plots','jobs','services','furniture']
-            const picked = []
-            for (const v of variants){
-              const f = catTiles.find(t => slug(t.k)===v)
-              if (f && !picked.find(p => slug(p.k)===slug(f.k))) picked.push(f)
-            }
-            return picked.map(c => (
-              <a key={c.k} href={'/category/' + slug(c.k)}>{c.label}</a>
-            ))
-          })()}
-        </div>
-        {(() => {
-          const seen = new Set()
-          const base = []
-          for (const t of catTiles){
-            const key = String(t.label||t.k||'').toLowerCase()
-            if (seen.has(key)) continue
-            seen.add(key)
-            base.push(t)
-          }
-          const cols = 4
-          const per = Math.ceil(base.length/cols) || 1
-          const chunks = Array.from({length:cols}, (_,i)=>base.slice(i*per,(i+1)*per))
-          return (
-            <div ref={allCatMenuRef} style={{display: allCatOpen ? 'block':'none', position:'absolute', zIndex:30, top:48, left:0, right:0, margin:'0 auto', maxWidth:1100, background:'#fff', border:'1px solid rgba(1,47,52,.2)', boxShadow:'0 6px 18px rgba(0,0,0,.08)', borderRadius:12}}>
-              <div style={{maxHeight:360, overflow:'auto', padding:16}}>
-                <div style={{display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:24}}>
-                  {chunks.map((list,ci)=> (
-                    <div key={'col:'+ci}>
-                      <ul style={{listStyle:'none', padding:0, margin:0}}>
-                        {list.map(c=>{
-                          const s = String(c.k||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
-                          return (
-                            <li key={c.k} style={{margin:'6px 0'}}>
-                              <a href={'/category/'+s} style={{textDecoration:'none', color:'rgba(0,47,52,.84)'}} onClick={(e)=>{ e.preventDefault(); setAllCatOpen(false); router.push('/category/'+s) }}>{c.label}</a>
-                            </li>
-                          )
-                        })}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )
-        })()}
-      </div>
-
       <h1 style={{fontSize:'22px', margin:'12px 0 16px', fontWeight:600}}>Inbox</h1>
       {(!auth.isAuthenticated || !auth.email) && (
         <div style={{margin:'8px 0 16px', color:'rgba(0,47,52,.64)'}}>Login to view your chats</div>

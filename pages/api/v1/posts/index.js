@@ -12,9 +12,16 @@ async function ensureTables(prisma){
       '  user_id INTEGER NOT NULL,\n'+
       '  category_id INTEGER NOT NULL,\n'+
       '  price INTEGER NULL,\n'+
-      '  location TEXT NULL\n'+
+      '  location TEXT NULL,\n'+
+      '  status TEXT DEFAULT \'pending\'\n'+
       ')'
     )
+    // Add status column if it doesn't exist
+    try {
+      await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN status TEXT DEFAULT \'pending\'')
+    } catch (_) {
+      // Column already exists, ignore
+    }
     await prisma.$executeRawUnsafe(
       'CREATE TABLE IF NOT EXISTS post_images (\n'+
       '  image_id INTEGER PRIMARY KEY AUTOINCREMENT,\n'+
@@ -70,10 +77,37 @@ export default async function handler(req, res){
       if (!prisma){ res.setHeader('Content-Type','application/json'); res.status(200).json({ data: [], status:'degraded', message:'Database unavailable', page, limit, total: 0, has_more: false, request_id: reqId }); return }
       try{
         await ensureTables(prisma)
-        const totalRows = await prisma.$queryRaw`SELECT COUNT(1) as c FROM posts`
+        // Check if this is an admin request - show all posts including pending
+        const showAll = req.query.showAll === 'true' || req.query.admin === 'true'
+        const searchQuery = String(req.query.q || req.query.search || '').trim()
+        
+        // Build WHERE clause for status filtering
+        const statusFilter = showAll ? '' : "WHERE COALESCE(status, 'pending') = 'active'"
+        
+        // Build search filter
+        let searchFilter = ''
+        if (searchQuery) {
+          const searchEscaped = searchQuery.replace(/'/g, "''") // Escape single quotes for SQL
+          const searchCondition = `(title LIKE '%${searchEscaped}%' OR content LIKE '%${searchEscaped}%' OR location LIKE '%${searchEscaped}%')`
+          if (statusFilter) {
+            searchFilter = ` AND ${searchCondition}`
+          } else {
+            searchFilter = `WHERE ${searchCondition}`
+          }
+        }
+        
+        // Build complete WHERE clause
+        const whereClause = statusFilter + searchFilter
+        
+        // Count total matching posts
+        const totalRowsQuery = `SELECT COUNT(1) as c FROM posts ${whereClause}`
+        const totalRows = await prisma.$queryRawUnsafe(totalRowsQuery)
         const total = (Array.isArray(totalRows) && totalRows.length) ? Number(totalRows[0].c||0) : 0
         const skip = (page-1) * limit
-        const rows = await prisma.$queryRaw`SELECT post_id, title, content, created_at, user_id, category_id, price, location FROM posts ORDER BY created_at DESC LIMIT ${limit} OFFSET ${skip}`
+        
+        // Fetch posts with search and status filters
+        const rowsQuery = `SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, ${showAll ? "'pending'" : "'active'"}) as status FROM posts ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${skip}`
+        const rows = await prisma.$queryRawUnsafe(rowsQuery)
         const ids = Array.isArray(rows) ? rows.map(r=>Number(r.post_id)).filter(n=>!isNaN(n)) : []
         let images = []
         if (ids.length){
@@ -164,8 +198,8 @@ export default async function handler(req, res){
       }
 
       try{
-        await prisma.$executeRaw`INSERT INTO posts (title, content, user_id, category_id, price, location, created_at) VALUES (${title}, ${content}, ${userId}, ${catId}, ${price || null}, ${location || null}, CURRENT_TIMESTAMP)`
-        const createdRows = await prisma.$queryRaw`SELECT post_id, title, content, created_at, user_id, category_id, price, location FROM posts WHERE user_id=${userId} ORDER BY post_id DESC LIMIT 1`
+        await prisma.$executeRaw`INSERT INTO posts (title, content, user_id, category_id, price, location, status, created_at) VALUES (${title}, ${content}, ${userId}, ${catId}, ${price || null}, ${location || null}, 'pending', CURRENT_TIMESTAMP)`
+        const createdRows = await prisma.$queryRaw`SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, 'pending') as status FROM posts WHERE user_id=${userId} ORDER BY post_id DESC LIMIT 1`
         const created = Array.isArray(createdRows) && createdRows.length ? createdRows[0] : null
         if (!created){ res.setHeader('Content-Type','application/json'); res.status(500).json({ status:'error', message:'Failed to create post', data:null, request_id:reqId }); return }
         for(let i=0;i<images.length;i++){

@@ -20,19 +20,27 @@ export async function resetCategories(prisma){
     { name:'Property for Sale', icon:'fa-house', children:[
       'Land & Plots','Houses','Apartments & Flats','Shops - Offices - Commercial Space','Portions & Floors'] },
     { name:'Property for Rent', icon:'fa-key', children:[
-      'Houses','Apartments & Flats','Portions & Floors','Shops - Offices - Commercial Space','Rooms','Roommates & Paying Guests','Vacation Rentals - Guest Houses','Land & Plots'] },
+      'Apartments & Flats','Houses','Portions & Floors','Shops - Offices - Commercial Space','Rooms','Roommates & Paying Guests','Vacation Rentals - Guest Houses','Land & Plots'] },
     { name:'Electronics & Home Appliances', icon:'fa-tv', children:[
-      'Computers & Accessories','Televisions & Accessories','Generators, UPS & Power Solutions','Refrigerators & Freezers','Cameras & Accessories','Kitchen Appliances','Games & Entertainment','AC & Coolers','Video-Audios','Other Home Appliances','Heaters & Geysers','Washing Machines & Dryers','Fans','Tools & DIY Equipment','Microwaves & Ovens','Sewing Machines','Irons & Steamers','Water Dispensers','Air Purifiers & Humidifiers'] },
+      'Computers & Accessories','Televisions & Accessories','Generators, UPS & Power Solutions','Games & Entertainment','Cameras & Accessories','Kitchen Appliances','Heaters & Geysers','Video-Audios','Refrigerators & Freezers','AC & Coolers','Other Home Appliances','Washing Machines & Dryers','Tools & DIY Equipment','Fans','Microwaves & Ovens','Sewing Machines','Irons & Steamers','Water Dispensers','Air Purifiers & Humidifiers'] },
     { name:'Bikes', icon:'fa-motorcycle', children:[
       'Motorcycles','Bicycles','Spare Parts','Scooters','Bikes Accessories','ATV & Quads','Bike Care'] },
     { name:'Business, Industrial & Agriculture', icon:'fa-industry', children:[
       'Other Business & Industry','Food & Restaurants','Medical & Pharma','Trade & Industrial Machinery','Business for Sale','Construction & Heavy Machinery','Agriculture'] },
-    { name:'Furniture & Home Decor', icon:'fa-chair', children:[
-      'Beds & Wardrobes','Sofa & Chairs','Other Household Items','Tables & Dining','Home Decoration','Office Furniture','Garden & Outdoor','Bathroom Accessories','Painting & Mirrors','Home DIY & Renovations','Curtains & Blinds','Rugs & Carpets','Lighting'] },
     { name:'Services', icon:'fa-paint-roller', children:[
-      'Other Services','Car Rental','Tuitions & Academies','Home & Office Repair','Domestic Help','Web Development','Event Services','Electronics & Computer Repair','Drivers & Taxi','Construction Services','Movers & Packers','Farm & Fresh Food','Travel & Visa','Consultancy Services','Architecture & Interior Design','Video & Photography','Health & Beauty','Camera Installation','Renting Services','Car Services','Catering & Restaurant','Tailor Services','Insurance Services'] },
+      'Other Services','Car Rental','Tuitions & Academies','Home & Office Repair','Domestic Help','Web Development','Event Services','Electronics & Computer Repair','Farm & Fresh Food','Construction Services','Travel & Visa','Drivers & Taxi','Consultancy Services','Movers & Packers','Video & Photography','Architecture & Interior Design','Health & Beauty','Camera Installation','Renting Services','Car Services','Insurance Services','Catering & Restaurant','Tailor Services'] },
     { name:'Jobs', icon:'fa-briefcase', children:[
-      'Other Jobs','Online','Part Time','Sales','Restaurants & Hospitality','Customer Service','Marketing','Domestic Staff','Education','Medical','Accounting & Finance','Delivery Riders','Graphic Design','IT & Networking','Hotels & Tourism','Manufacturing','Security','Clerical & Administration','Content Writing','Engineering','Human Resources','Advertising & PR','Real Estate'] }
+      'Other Jobs','Online','Part Time','Sales','Restaurants & Hospitality','Customer Service','Marketing','Domestic Staff','Medical','Education','Accounting & Finance','Delivery Riders','Graphic Design','IT & Networking','Manufacturing','Clerical & Administration','Hotels & Tourism','Engineering','Content Writing','Security','Real Estate','Human Resources','Internships','Advertising & PR','Architecture & Interior Design'] },
+    { name:'Animals', icon:'fa-dove', children:[
+      'Hens','Cats','Parrots','Pet Food & Accessories','Dogs','Livestock','Pigeons','Fish','Finches','Rabbits','Other Birds','Ducks','Fertile Eggs','Doves','Other Animals','Peacocks','Horses'] },
+    { name:'Furniture & Home Decor', icon:'fa-chair', children:[
+      'Beds & Wardrobes','Sofa & Chairs','Other Household Items','Home Decoration','Tables & Dining','Office Furniture','Garden & Outdoor','Bathroom Accessories','Painting & Mirrors','Home DIY & Renovations','Lighting','Curtains & Blinds','Rugs & Carpets','Kitchen Essentials','Home Essentials'] },
+    { name:'Fashion & Beauty', icon:'fa-person-dress', children:[
+      'Clothes','Wedding','Watches','Skin & Hair','Footwear','Jewellery','Bags','Fragrance','Fashion Accessories','Bath & Body','Makeup','Other Fashion','DIY Jewellery'] },
+    { name:'Books, Sports & Hobbies', icon:'fa-book', children:[
+      'Books & Magazines','Gym & Fitness','Sports Equipment','Arts & Crafts','Other Hobbies','Musical Instruments','Camping & Hiking','Collectables','Crafts & DIY Supplies','Calendars'] },
+    { name:'Kids', icon:'fa-child', children:[
+      'Toys','Kids Vehicles','Baby Gear','Swings & Slides','Kids Accessories','Kids Clothing','Kids Furniture','Bath & Diapers'] }
   ]
   const created = []
   for (const g of groups){

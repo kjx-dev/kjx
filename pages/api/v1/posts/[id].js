@@ -12,9 +12,16 @@ async function ensureTables(prisma){
       '  user_id INTEGER NOT NULL,\n'+
       '  category_id INTEGER NOT NULL,\n'+
       '  price INTEGER NULL,\n'+
-      '  location TEXT NULL\n'+
+      '  location TEXT NULL,\n'+
+      '  status TEXT DEFAULT \'pending\'\n'+
       ')'
     )
+    // Add status column if it doesn't exist
+    try {
+      await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN status TEXT DEFAULT \'pending\'')
+    } catch (_) {
+      // Column already exists, ignore
+    }
     await prisma.$executeRawUnsafe(
       'CREATE TABLE IF NOT EXISTS post_images (\n'+
       '  image_id INTEGER PRIMARY KEY AUTOINCREMENT,\n'+
@@ -49,10 +56,18 @@ export default async function handler(req, res){
     if (req.method === 'GET'){
       const prisma = getPrisma()
       if (!prisma){ res.setHeader('Content-Type','application/json'); res.status(503).json({ status:'error', message:'Database unavailable', data:null, request_id:reqId }); return }
-      const item = await prisma.post.findUnique({ where: { post_id: id }, include: { images: true, category: true } })
+      const showAll = req.query.showAll === 'true' || req.query.admin === 'true'
+      const rowsQuery = showAll
+        ? `SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, 'pending') as status FROM posts WHERE post_id=${id}`
+        : `SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, 'pending') as status FROM posts WHERE post_id=${id} AND COALESCE(status, 'pending') = 'active'`
+      const rows = await prisma.$queryRawUnsafe(rowsQuery)
+      const item = Array.isArray(rows) && rows.length ? rows[0] : null
       if (!item){ res.status(404).json({ status:'error', message:'Not found', data:null, request_id:reqId }); return }
+      const ims = await prisma.$queryRaw`SELECT image_id, post_id, url, mime, size, "order" FROM post_images WHERE post_id=${id} ORDER BY "order" ASC`
+      const catRows = await prisma.$queryRaw`SELECT category_id, name, description, icon FROM categories WHERE category_id=${item.category_id} LIMIT 1`
+      const category = Array.isArray(catRows) && catRows.length ? catRows[0] : null
       res.setHeader('Content-Type','application/json')
-      res.status(200).json({ data: item, request_id: reqId })
+      res.status(200).json({ data: { ...item, images: ims, category }, request_id: reqId })
       return
     }
     if (req.method === 'PATCH'){
@@ -70,7 +85,40 @@ export default async function handler(req, res){
         }
       }
       try{
-        await prisma.$executeRaw`UPDATE posts SET title=${patch.title||null}, content=${patch.content||null}, category_id=${catId||null}, price=${patch.price ?? null}, location=${patch.location ?? null} WHERE post_id=${id}`
+        const statusValue = patch.status || null
+        const updates = []
+        const values = []
+        
+        if (patch.title !== undefined) {
+          updates.push('title = ?')
+          values.push(patch.title || null)
+        }
+        if (patch.content !== undefined) {
+          updates.push('content = ?')
+          values.push(patch.content || null)
+        }
+        if (catId !== null) {
+          updates.push('category_id = ?')
+          values.push(catId)
+        }
+        if (patch.price !== undefined) {
+          updates.push('price = ?')
+          values.push(patch.price ?? null)
+        }
+        if (patch.location !== undefined) {
+          updates.push('location = ?')
+          values.push(patch.location ?? null)
+        }
+        if (statusValue !== null) {
+          updates.push('status = ?')
+          values.push(statusValue)
+        }
+        
+        if (updates.length > 0) {
+          values.push(id)
+          const sql = `UPDATE posts SET ${updates.join(', ')} WHERE post_id = ?`
+          await prisma.$executeRawUnsafe(sql, ...values)
+        }
         if (Array.isArray(patch.images)){
           for(let i=0;i<patch.images.length;i++){
             const im = patch.images[i] || {}
@@ -85,7 +133,7 @@ export default async function handler(req, res){
             await prisma.$executeRaw`INSERT INTO post_images (post_id, url, mime, size, "order") VALUES (${id}, ${String(im.url||'')}, ${String(im.mime||'')}, ${Number(im.size||0)}, ${i})`
           }
         }
-        const updatedRows = await prisma.$queryRaw`SELECT post_id, title, content, created_at, user_id, category_id, price, location FROM posts WHERE post_id=${id}`
+        const updatedRows = await prisma.$queryRaw`SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, 'pending') as status FROM posts WHERE post_id=${id}`
         const item = Array.isArray(updatedRows) && updatedRows.length ? updatedRows[0] : null
         const ims = await prisma.$queryRaw`SELECT image_id, post_id, url, mime, size, "order" FROM post_images WHERE post_id=${id} ORDER BY "order" ASC`
         if (!item){ res.setHeader('Content-Type','application/json'); res.status(404).json({ status:'error', message:'Not found', data:null, request_id:reqId }); return }

@@ -20,13 +20,7 @@ export default function Favorites(){
   const profileMenuRef = useRef(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [profileMenuPos, setProfileMenuPos] = useState({ top: 100, left: 16 })
-  const [catTiles, setCatTiles] = useState([])
   const [cards, setCards] = useState([])
-  const [allCatOpen, setAllCatOpen] = useState(false)
-  const allCatWrapRef = useRef(null)
-  const allCatBtnRef = useRef(null)
-  const allCatMenuRef = useRef(null)
-  const [catGroups, setCatGroups] = useState([])
   useEffect(() => {
     try{
       const email = localStorage.getItem('email') || ''
@@ -35,36 +29,6 @@ export default function Favorites(){
       setAuth({ email, isAuthenticated, name })
       if (!isAuthenticated || !email){ router.push('/login'); return }
     }catch(_){ router.push('/login') }
-  }, [])
-  useEffect(() => {
-    function onKey(e){ if (e.key === 'Escape') setAllCatOpen(false) }
-    function onOutside(e){ const el = allCatWrapRef.current; if (!el) return; if (!el.contains(e.target)) setAllCatOpen(false) }
-    document.addEventListener('keydown', onKey)
-    document.addEventListener('pointerdown', onOutside)
-    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('pointerdown', onOutside) }
-  }, [])
-
-  useEffect(() => {
-    async function loadCategories(){
-      try{
-        const r = await fetch('/api/v1/category')
-        const j = await r.json()
-        const tiles = (j && j.data && j.data.tiles) ? j.data.tiles : []
-        setCatTiles(Array.isArray(tiles) ? tiles : [])
-        try{ localStorage.setItem('categories_payload', JSON.stringify(j.data||{})); localStorage.setItem('categories_updated_at', String(Date.now())) }catch(_){ }
-        try{
-          const rg = await fetch('/api/v1/categories')
-          const dg = await rg.json()
-          const groups = (dg && dg.data && dg.data.groups) || []
-          setCatGroups(groups)
-          try{ localStorage.setItem('categories_groups_payload', JSON.stringify(groups)) }catch(_){ }
-        }catch(_){ setCatGroups([]) }
-      }catch(_){
-        setCatTiles([])
-        try{ const rawG = localStorage.getItem('categories_groups_payload') || '[]'; setCatGroups(JSON.parse(rawG)) }catch(_){ setCatGroups([]) }
-      }
-    }
-    loadCategories()
   }, [])
   function getUserId(){
     try{
@@ -144,60 +108,6 @@ export default function Favorites(){
   return (
     <div style={{width:'100%'}}>
       <Header />
-      <div className="third__navbar" ref={allCatWrapRef} style={{position:'relative'}}>
-        <div className="select__itself"><a href="" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(v=>!v) }} ref={allCatBtnRef} aria-expanded={allCatOpen}>All Categories</a></div>
-        <div className="links" id="links" style={{display:'flex', flexWrap:'wrap', gap:16}}>
-          {(() => {
-            function slug(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') }
-            const variants = ['mobile-phones','cars','motercycles','motorcycles','house','property','property-for-sale','property-for-rent','tv-video-audio','tablets','land-plots','jobs','services','furniture']
-            const picked = []
-            for (const v of variants){
-              const f = catTiles.find(t => slug(t.k)===v)
-              if (f && !picked.find(p => slug(p.k)===slug(f.k))) picked.push(f)
-            }
-            return picked.map(c => (
-              <a key={c.k} href={'/category/' + slug(c.k)}>{c.label}</a>
-            ))
-          })()}
-        </div>
-        {(() => {
-          const groups = Array.isArray(catGroups) ? catGroups : []
-          function byName(n){ const g = groups.find(x => String(x.parent?.name||'')===n); return g ? g : { parent:{ name:n, category_id: 'missing:'+n }, children: [] } }
-          const layout = [
-            [byName('Mobiles'), byName('Vehicles')],
-            [byName('Bikes'), byName('Business, Industrial & Agriculture')],
-            [byName('Jobs')],
-            [byName('Furniture & Home Decor')]
-          ]
-          return (
-            <div ref={allCatMenuRef} style={{display: allCatOpen ? 'block':'none', position:'absolute', zIndex:30, top:48, left:0, right:0, margin:'0 auto', maxWidth:1100, background:'#fff', border:'1px solid rgba(1,47,52,.2)', boxShadow:'0 6px 18px rgba(0,0,0,.08)', borderRadius:12}}>
-              <div style={{maxHeight:360, overflow:'auto', padding:16}}>
-                <div style={{display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:24}}>
-                  {layout.map((list,ci)=> (
-                    <div key={'col:'+ci}>
-                      {list.map(gr => (
-                        <div key={gr.parent.category_id} style={{marginBottom:12}}>
-                          <div style={{fontWeight:700, color:'#012f34', marginBottom:8}}>{gr.parent.name}</div>
-                          <ul style={{listStyle:'none', padding:0, margin:0}}>
-                            {gr.children.map(ch => {
-                              const s = String(ch.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
-                              return (
-                                <li key={ch.category_id} style={{margin:'6px 0'}}>
-                                  <a href={'/category/'+s} style={{textDecoration:'none', color:'rgba(0,47,52,.84)'}} onClick={(e)=>{ e.preventDefault(); setAllCatOpen(false); router.push('/category/'+s) }}>{ch.name}</a>
-                                </li>
-                              )
-                            })}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )
-        })()}
-      </div>
       <div style={{width:'100%', padding:'0 16px'}}>
       <h1 style={{ fontSize:'22px', margin:'12px 0 16px', fontWeight:600}}>Favorites</h1>
       {loading ? (

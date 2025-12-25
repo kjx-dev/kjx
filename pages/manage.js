@@ -6,19 +6,14 @@ export default function Manage(){
   const router = useRouter()
   const [auth, setAuth] = useState({ email:'', isAuthenticated:false, name:'' })
   const [products, setProducts] = useState([])
+  const [allPosts, setAllPosts] = useState([]) // All posts including pending for moderator
   const [userId, setUserId] = useState(null)
   const [tab, setTab] = useState('all')
   const [q, setQ] = useState('')
   const searchTimerRef = useRef(null)
   const [error, setError] = useState('')
-  const [categories, setCategories] = useState([])
-  const [catTiles, setCatTiles] = useState([])
-  const [catGroups, setCatGroups] = useState([])
+  const [approvingPost, setApprovingPost] = useState(null)
   const [hydrated, setHydrated] = useState(false)
-  const [allCatOpen, setAllCatOpen] = useState(false)
-  const allCatWrapRef = useRef(null)
-  const allCatBtnRef = useRef(null)
-  const allCatMenuRef = useRef(null)
   function getTokenUserId(){
     try{
       const tok = localStorage.getItem('auth_token')||''
@@ -61,11 +56,14 @@ export default function Manage(){
     }
     async function loadMyAds(){
       try{
-        const res = await fetch('/api/v1/posts')
+        // Use showAll=true to get all posts (including pending, inactive, active) so users can see all their own ads
+        const res = await fetch('/api/v1/posts?showAll=true&limit=100')
         const js = await res.json()
         if (res.ok && Array.isArray(js.data)){
           const uid = getTokenUserId() || userId
-          const rows = js.data.filter(r => uid ? r.user_id===uid : false)
+          if (!uid) { setProducts([]); return }
+          // Filter to get only this user's posts
+          const rows = js.data.filter(r => r.user_id === uid)
           const mapped = rows.map(r => ({
               id: r.post_id,
               name: r.title,
@@ -74,49 +72,56 @@ export default function Manage(){
               price: r.price || '',
               location: r.location || '',
               category: '',
-              status: getOverlayStatus('db:'+r.post_id) || 'active',
+              status: r.status || 'pending', // Use actual status from database, not localStorage override
               views: 0,
               source: 'db',
               updatedAt: getLastUpdate('db:'+r.post_id) || r.updated_at || r.created_at || null
             }))
           setProducts(mapped)
-          return
+        } else {
+          setProducts([])
         }
-      }catch(_){ }
+      }catch(_){ 
       setProducts([])
+      }
+      
+      // Load all posts for moderator tab
+      try{
+        const allRes = await fetch('/api/v1/posts?showAll=true&limit=100')
+        const allJs = await allRes.json()
+        if (allRes.ok && Array.isArray(allJs.data)){
+          const pendingRows = allJs.data.filter(r => (r.status || 'pending') === 'pending')
+          const mappedPending = pendingRows.map(r => ({
+              id: r.post_id,
+              name: r.title,
+              description: r.content,
+              image: (Array.isArray(r.images) && r.images.length ? r.images[0].url : 'https://picsum.photos/seed/product/300/200'),
+              price: r.price || '',
+              location: r.location || '',
+              category: '',
+              status: r.status || 'pending',
+              views: 0,
+              source: 'db',
+              user_id: r.user_id,
+              updatedAt: r.updated_at || r.created_at || null
+            }))
+          setAllPosts(mappedPending)
+        }
+      }catch(_){ setAllPosts([]) }
     }
     loadMyAds()
-    ;(async ()=>{
-      try{
-        const res = await fetch('/api/v1/category')
-        const data = await res.json()
-        const payload = data.data || {}
-        setCategories(payload.categories || [])
-        setCatTiles(payload.tiles || [])
-        try{
-          const rg = await fetch('/api/v1/categories')
-          const dg = await rg.json()
-          setCatGroups((dg && dg.data && dg.data.groups) || [])
-        }catch(_){ setCatGroups([]) }
-      }catch(e){ setCategories([]); setCatTiles([]); setCatGroups([]) }
-    })()
   }, [])
   useEffect(() => { setHydrated(true) }, [])
-  useEffect(() => {
-    function onKey(e){ if (e.key === 'Escape') setAllCatOpen(false) }
-    function onOutside(e){ const el = allCatWrapRef.current; if (!el) return; if (!el.contains(e.target)) setAllCatOpen(false) }
-    document.addEventListener('keydown', onKey)
-    document.addEventListener('pointerdown', onOutside)
-    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('pointerdown', onOutside) }
-  }, [])
   function applySearch(val){ setQ(val ? String(val) : '') }
   function clearSearch(){ setQ('') }
   function onSearchChange(e){ const v = e.target.value || ''; if (searchTimerRef.current){ clearTimeout(searchTimerRef.current) } searchTimerRef.current = setTimeout(()=>applySearch(v), 400) }
   
   function filtered(){
-    let list = products.slice()
+    // Use allPosts for moderator tab, products for user's own ads
+    let list = tab === 'moderator' ? allPosts.slice() : products.slice()
     if (tab==='active') list = list.filter(p => p.status==='active')
     if (tab==='inactive') list = list.filter(p => p.status==='inactive')
+    if (tab==='moderator') list = list.filter(p => (p.status || 'pending') === 'pending')
     if (q) {
       const qq = q.toLowerCase()
       list = list.filter(p => {
@@ -131,6 +136,77 @@ export default function Manage(){
       })
     }
     return list
+  }
+  
+  async function approvePost(postId){
+    try {
+      setApprovingPost(postId)
+      const res = await fetch(`/api/v1/posts/${postId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'active' })
+      })
+      if (!res.ok) {
+        const js = await res.json().catch(()=>null)
+        alert((js && (js.message || js.error?.message)) || 'Failed to approve')
+        return
+      }
+      // Remove from pending list and refresh
+      setAllPosts(prev => prev.filter(p => p.id !== postId))
+      if (typeof window !== 'undefined' && window.swal){
+        await window.swal('Approved', 'Ad approved successfully', 'success')
+      }
+      // Reload to refresh the list
+      const allRes = await fetch('/api/v1/posts?showAll=true&limit=100')
+      const allJs = await allRes.json()
+      if (allRes.ok && Array.isArray(allJs.data)){
+        const pendingRows = allJs.data.filter(r => (r.status || 'pending') === 'pending')
+        const mappedPending = pendingRows.map(r => ({
+            id: r.post_id,
+            name: r.title,
+            description: r.content,
+            image: (Array.isArray(r.images) && r.images.length ? r.images[0].url : 'https://picsum.photos/seed/product/300/200'),
+            price: r.price || '',
+            location: r.location || '',
+            category: '',
+            status: r.status || 'pending',
+            views: 0,
+            source: 'db',
+            user_id: r.user_id,
+            updatedAt: r.updated_at || r.created_at || null
+          }))
+        setAllPosts(mappedPending)
+      }
+    } catch(err) {
+      alert('Network error: ' + (err.message || 'Failed to approve'))
+    } finally {
+      setApprovingPost(null)
+    }
+  }
+  
+  async function rejectPost(postId){
+    try {
+      setApprovingPost(postId)
+      const res = await fetch(`/api/v1/posts/${postId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'inactive' })
+      })
+      if (!res.ok) {
+        const js = await res.json().catch(()=>null)
+        alert((js && (js.message || js.error?.message)) || 'Failed to reject')
+        return
+      }
+      // Remove from pending list
+      setAllPosts(prev => prev.filter(p => p.id !== postId))
+      if (typeof window !== 'undefined' && window.swal){
+        await window.swal('Rejected', 'Ad rejected successfully', 'success')
+      }
+    } catch(err) {
+      alert('Network error: ' + (err.message || 'Failed to reject'))
+    } finally {
+      setApprovingPost(null)
+    }
   }
   function formatRelative(ts){
     try{
@@ -197,62 +273,14 @@ export default function Manage(){
   }
   const list = filtered()
   const productsArray = Array.isArray(products) ? products : []
+  const allPostsArray = Array.isArray(allPosts) ? allPosts : []
   const cAll = productsArray.length || 0
   const cActive = productsArray.filter(p=>p.status==='active').length || 0
   const cInactive = productsArray.filter(p=>p.status==='inactive').length || 0
+  const cPending = allPostsArray.length || 0
   return (
     <>
       <Header />
-        <div className="third__navbar" ref={allCatWrapRef} style={{position:'relative'}}>
-          <div className="select__itself"><a href="" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(v=>!v) }} ref={allCatBtnRef} aria-expanded={allCatOpen}>All Categories</a></div>
-          <div className="links" id="links" style={{display:'flex', flexWrap:'wrap', gap:16}}>
-            {(() => {
-              const order = ['mobile-phones','cars','motercycles','house','tv-video-audio','tablets','land-plots','jobs','services','furniture']
-              function slug(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') }
-              const tiles = order.map(sl => catTiles.find(t => slug(t.k)===sl)).filter(Boolean)
-              return tiles.map(c => (
-                <a key={c.k} href={'/category/' + slug(c.k)} onClick={(e)=>{ e.preventDefault(); router.push('/category/'+slug(c.k)) }}>{c.label}</a>
-              ))
-            })()}
-          </div>
-          {(() => {
-            const groups = Array.isArray(catGroups) ? catGroups : []
-            function byName(n){ const g = groups.find(x => String(x.parent?.name||'')===n); return g ? g : { parent:{ name:n, category_id: 'missing:'+n }, children: [] } }
-            const layout = [
-              [byName('Mobiles'), byName('Vehicles')],
-              [byName('Bikes'), byName('Business, Industrial & Agriculture')],
-              [byName('Jobs')],
-              [byName('Furniture & Home Decor')]
-            ]
-            return (
-              <div ref={allCatMenuRef} style={{display: allCatOpen ? 'block':'none', position:'absolute', zIndex:30, top:48, left:0, right:0, margin:'0 auto', maxWidth:1100, background:'#fff', border:'1px solid rgba(1,47,52,.2)', boxShadow:'0 6px 18px rgba(0,0,0,.08)', borderRadius:12}}>
-                <div style={{maxHeight:360, overflow:'auto', padding:16}}>
-                  <div style={{display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:24}}>
-                    {layout.map((list,ci)=> (
-                      <div key={'col:'+ci}>
-                        {list.map(gr => (
-                          <div key={gr.parent.category_id} style={{marginBottom:12}}>
-                            <div style={{fontWeight:700, color:'#012f34', marginBottom:8}}>{gr.parent.name}</div>
-                            <ul style={{listStyle:'none', padding:0, margin:0}}>
-                              {gr.children.map(ch => {
-                                const s = String(ch.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
-                                return (
-                                  <li key={ch.category_id} style={{margin:'6px 0'}}>
-                                    <a href={'/category/'+s} style={{textDecoration:'none', color:'rgba(0,47,52,.84)'}} onClick={(e)=>{ e.preventDefault(); setAllCatOpen(false); router.push('/category/'+s) }}>{ch.name}</a>
-                                  </li>
-                                )
-                              })}
-                            </ul>
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )
-          })()}
-        </div>
     <div style={{width:'100%', margin:'24px 0', padding:'0 16px', textAlign:'left'}}>
       <h1 style={{fontSize:'22px', fontWeight:500, textAlign:'left', margin:'0 0 12px'}}>Manage and view your Ads</h1>
       <div style={{
@@ -262,12 +290,28 @@ export default function Manage(){
          }}>
         {error && (<div style={{color:'#b00020', marginBottom:12}}>{error}</div>)}
       <div style={{display:'flex', gap:8, alignItems:'center', justifyContent:'flex-start', flexWrap:'wrap', marginBottom:8}}>
-        {['all','active','inactive'].map(kind => {
-          const count = kind==='all'?cAll:kind==='active'?cActive:cInactive
+        {['all','active','inactive','moderator'].map(kind => {
+          const count = kind==='all'?cAll:kind==='active'?cActive:kind==='inactive'?cInactive:kind==='moderator'?cPending:0
           const isActive = tab===kind
           return (
             <button key={kind} className="manage-tab-btn" onClick={()=>setTab(kind)} aria-pressed={isActive} aria-current={isActive? 'page': undefined}>
-              {kind==='all'?'View all':(kind.charAt(0).toUpperCase()+kind.slice(1))} (<span suppressHydrationWarning={true}>{hydrated ? count : 0}</span>)
+              {kind==='all'?'View all':kind==='moderator'?'Moderator':(kind.charAt(0).toUpperCase()+kind.slice(1))} 
+              {kind==='moderator' && cPending > 0 && (
+                <span style={{
+                  marginLeft: '6px',
+                  background: '#ff9800',
+                  color: '#fff',
+                  borderRadius: '10px',
+                  padding: '2px 6px',
+                  fontSize: '10px',
+                  fontWeight: '600'
+                }}>
+                  {hydrated ? count : 0}
+                </span>
+              )}
+              {kind !== 'moderator' && (
+                <span suppressHydrationWarning={true}> ({hydrated ? count : 0})</span>
+              )}
             </button>
           )
         })}
@@ -279,9 +323,12 @@ export default function Manage(){
         {list.map((p, i) => {
           let imgSrc = p.image
           if (imgSrc === './images/img1.jpg') imgSrc = '/images/products/img1.jpg'
-          const idx = products.indexOf(p)
-          const statusBadge = p.status==='active' ? (
+          const idx = tab === 'moderator' ? -1 : products.indexOf(p)
+          const postStatus = p.status || 'pending'
+          const statusBadge = postStatus==='active' ? (
             <span style={{background:'#248f3c',color:'#fff',padding:'4px 8px',borderRadius:4,fontSize:12}}>Active</span>
+          ) : postStatus==='pending' ? (
+            <span style={{background:'#ff9800',color:'#fff',padding:'4px 8px',borderRadius:4,fontSize:12}}>Pending</span>
           ) : (
             <span style={{background:'#999',color:'#fff',padding:'4px 8px',borderRadius:4,fontSize:12}}>Inactive</span>
           )
@@ -307,7 +354,12 @@ export default function Manage(){
                 </div>
               </div>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
-                {(() => (
+                 {tab === 'moderator' ? (
+                   <button className="btn btn--outline" onClick={()=>router.push('/product/'+p.id)} title="View">
+                     <i className="fa-solid fa-eye" aria-hidden="true"></i>
+                     <span>View</span>
+                   </button>
+                 ) : (
                   <>
                     <button className="btn btn--secondary" onClick={()=>editAd(idx)} title="Edit">
                       <i className="fa-solid fa-pen" aria-hidden="true"></i>
@@ -326,7 +378,7 @@ export default function Manage(){
                       <span>Delete</span>
                     </button>
                   </>
-                ))()}
+                )}
               </div>
             </div>
           )
