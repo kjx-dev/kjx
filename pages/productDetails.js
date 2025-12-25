@@ -13,6 +13,7 @@ export default function ProductDetails(){
   })
   const [postType, setPostType] = useState('ad') // Separate state for post_type to ensure it's always tracked
   const [userCreatedAt, setUserCreatedAt] = useState(null) // Store user's account creation date
+  const [sellerUserId, setSellerUserId] = useState(null) // Store seller's user_id
   const [error, setError] = useState('')
   
   const [activeImg, setActiveImg] = useState('')
@@ -141,6 +142,10 @@ export default function ProductDetails(){
                 const productName = d.title || ''
                 const category = (d.category && d.category.name) || ''
                 const created_at = d.created_at || Date.now()
+                // Store seller's user_id
+                if (d.user_id) {
+                  setSellerUserId(d.user_id)
+                }
                 try{
                   if (d.user_id){
                     const ru = await fetch('/api/v1/users/'+encodeURIComponent(String(d.user_id)))
@@ -211,6 +216,10 @@ export default function ProductDetails(){
             console.log('API Response - post_type:', d.post_type, 'normalized:', post_type, 'full d object keys:', Object.keys(d))
             // Set post_type in separate state
             setPostType(post_type)
+            // Store seller's user_id
+            if (d.user_id) {
+              setSellerUserId(d.user_id)
+            }
             try{
               if (d.user_id){
                 const ru = await fetch('/api/v1/users/'+encodeURIComponent(String(d.user_id)))
@@ -1000,6 +1009,41 @@ export default function ProductDetails(){
                 </div>
               </div>
             </div>
+            {sellerUserId && (
+              <div style={{marginBottom:'12px'}}>
+                <button 
+                  className="btn btn--outline btn--md" 
+                  onClick={() => router.push(`/seller/${sellerUserId}`)}
+                  style={{
+                    width:'100%',
+                    padding:'12px 16px',
+                    borderRadius:'10px',
+                    fontWeight:600,
+                    fontSize:'14px',
+                    border:'2px solid #3a77ff',
+                    color:'#3a77ff',
+                    background:'#fff',
+                    cursor:'pointer',
+                    transition:'all 0.2s ease',
+                    display:'flex',
+                    alignItems:'center',
+                    justifyContent:'center',
+                    gap:'8px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f0f7ff'
+                    e.currentTarget.style.transform = 'translateY(-1px)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#fff'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                  }}
+                >
+                  <i className="fa-solid fa-list"></i>
+                  <span>View All Posts by {data.name || 'Seller'}</span>
+                </button>
+              </div>
+            )}
             <div className="profile__actions" style={{display:'grid', gap:'12px'}}>
               {(() => {
                 // Use both data.post_type and postType state for reliability
