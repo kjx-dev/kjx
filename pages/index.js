@@ -498,7 +498,7 @@ export default function Home() {
       </Head>
       <Header />
 
-        <div className="third__navbar" id="categories" ref={allCatWrapRef}>
+        <div className="third__navbar container-width" id="categories" ref={allCatWrapRef}>
           <div className="select__itself">
             <a href="#" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(v=>!v) }} ref={allCatBtnRef} aria-expanded={allCatOpen} className="all-categories-btn">
               <span>All Categories</span>
@@ -575,7 +575,7 @@ export default function Home() {
           })()}
         </div>
 
-      <section className="hero" aria-labelledby="hero-title">
+      <section className="hero home-hero" aria-labelledby="hero-title">
         <div className="hero__inner">
           <div className="hero__content">
             <h1 id="hero-title">Find great deals near you</h1>
@@ -592,6 +592,7 @@ export default function Home() {
       </section>
 
       <section className="home__categories" aria-labelledby="home-cats-title">
+        <div className='container-width'>
         <h2 id="home-cats-title">Browse by category</h2>
         <div className="home__categories-grid">
           {(() => {
@@ -673,6 +674,7 @@ export default function Home() {
             </div>
           ) : null
         })()}
+        </div>
       </section>
 
       <div className="ad" role="img" aria-label="Exclusive offers banner">
