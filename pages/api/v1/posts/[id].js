@@ -48,6 +48,42 @@ async function ensureTables(prisma){
         console.log('Error adding post_type column (may already exist):', e.message)
       }
     }
+    // Add featured column if it doesn't exist
+    try {
+      await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN featured INTEGER DEFAULT 0')
+      console.log('Added featured column to posts table')
+    } catch (e) {
+      if (e.message && !e.message.includes('duplicate column')) {
+        console.log('Error adding featured column (may already exist):', e.message)
+      }
+    }
+    // Add views column if it doesn't exist
+    try {
+      await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN views INTEGER DEFAULT 0')
+      console.log('Added views column to posts table')
+    } catch (e) {
+      if (e.message && !e.message.includes('duplicate column')) {
+        console.log('Error adding views column (may already exist):', e.message)
+      }
+    }
+    // Add phone_clicks column if it doesn't exist
+    try {
+      await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN phone_clicks INTEGER DEFAULT 0')
+      console.log('Added phone_clicks column to posts table')
+    } catch (e) {
+      if (e.message && !e.message.includes('duplicate column')) {
+        console.log('Error adding phone_clicks column (may already exist):', e.message)
+      }
+    }
+    // Add chat_clicks column if it doesn't exist
+    try {
+      await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN chat_clicks INTEGER DEFAULT 0')
+      console.log('Added chat_clicks column to posts table')
+    } catch (e) {
+      if (e.message && !e.message.includes('duplicate column')) {
+        console.log('Error adding chat_clicks column (may already exist):', e.message)
+      }
+    }
     await prisma.$executeRawUnsafe(
       'CREATE TABLE IF NOT EXISTS post_images (\n'+
       '  image_id INTEGER PRIMARY KEY AUTOINCREMENT,\n'+
@@ -84,8 +120,8 @@ export default async function handler(req, res){
       if (!prisma){ res.setHeader('Content-Type','application/json'); res.status(503).json({ status:'error', message:'Database unavailable', data:null, request_id:reqId }); return }
       const showAll = req.query.showAll === 'true' || req.query.admin === 'true'
       const rowsQuery = showAll
-        ? `SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, 'pending') as status, COALESCE(post_type, 'ad') as post_type, COALESCE(featured, 0) as featured FROM posts WHERE post_id=${id}`
-        : `SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, 'pending') as status, COALESCE(post_type, 'ad') as post_type, COALESCE(featured, 0) as featured FROM posts WHERE post_id=${id} AND COALESCE(status, 'pending') = 'active'`
+        ? `SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, 'pending') as status, COALESCE(post_type, 'ad') as post_type, COALESCE(featured, 0) as featured, COALESCE(views, 0) as views, COALESCE(phone_clicks, 0) as phone_clicks, COALESCE(chat_clicks, 0) as chat_clicks FROM posts WHERE post_id=${id}`
+        : `SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, 'pending') as status, COALESCE(post_type, 'ad') as post_type, COALESCE(featured, 0) as featured, COALESCE(views, 0) as views, COALESCE(phone_clicks, 0) as phone_clicks, COALESCE(chat_clicks, 0) as chat_clicks FROM posts WHERE post_id=${id} AND COALESCE(status, 'pending') = 'active'`
       const rows = await prisma.$queryRawUnsafe(rowsQuery)
       const item = Array.isArray(rows) && rows.length ? rows[0] : null
       if (!item){ res.status(404).json({ status:'error', message:'Not found', data:null, request_id:reqId }); return }
@@ -235,7 +271,7 @@ export default async function handler(req, res){
             await prisma.$executeRaw`INSERT INTO post_images (post_id, url, mime, size, "order") VALUES (${id}, ${String(im.url||'')}, ${String(im.mime||'')}, ${Number(im.size||0)}, ${i})`
           }
         }
-        const updatedRows = await prisma.$queryRaw`SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, 'pending') as status, COALESCE(post_type, 'ad') as post_type FROM posts WHERE post_id=${id}`
+        const updatedRows = await prisma.$queryRaw`SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, 'pending') as status, COALESCE(post_type, 'ad') as post_type, COALESCE(featured, 0) as featured, COALESCE(views, 0) as views, COALESCE(phone_clicks, 0) as phone_clicks, COALESCE(chat_clicks, 0) as chat_clicks FROM posts WHERE post_id=${id}`
         const item = Array.isArray(updatedRows) && updatedRows.length ? updatedRows[0] : null
         const ims = await prisma.$queryRaw`SELECT image_id, post_id, url, mime, size, "order" FROM post_images WHERE post_id=${id} ORDER BY "order" ASC`
         if (!item){ res.setHeader('Content-Type','application/json'); res.status(404).json({ status:'error', message:'Not found', data:null, request_id:reqId }); return }

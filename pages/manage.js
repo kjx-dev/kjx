@@ -15,6 +15,9 @@ export default function Manage(){
   const [error, setError] = useState('')
   const [approvingPost, setApprovingPost] = useState(null)
   const [hydrated, setHydrated] = useState(false)
+  const [togglingStatus, setTogglingStatus] = useState({}) // Track which posts are being toggled
+  const [chatCounts, setChatCounts] = useState({}) // Store chat counts per post
+  const [phoneNumbers, setPhoneNumbers] = useState({}) // Store phone numbers per post
   function getTokenUserId(){
     try{
       const tok = localStorage.getItem('auth_token')||''
@@ -74,7 +77,10 @@ export default function Manage(){
               location: r.location || '',
               category: '',
               status: r.status || 'pending', // Use actual status from database, not localStorage override
-              views: 0,
+              post_type: r.post_type || 'ad', // Include post_type
+              views: r.views || 0, // Use views from database
+              phone_clicks: r.phone_clicks || 0, // Use phone_clicks from database
+              chat_clicks: r.chat_clicks || 0, // Use chat_clicks from database
               source: 'db',
               updatedAt: getLastUpdate('db:'+r.post_id) || r.updated_at || r.created_at || null
             }))
@@ -251,18 +257,77 @@ export default function Manage(){
       return sec+"s"
     }catch(_){ return '' }
   }
-  function toggleStatus(idx){
+  async function toggleStatus(idx){
     const item = products[idx]
     const nextStatus = item.status==='active' ? 'inactive' : 'active'
+    
     async function apply(){
-      try{ const raw = localStorage.getItem('post_statuses') || '{}'; const map = JSON.parse(raw); map['db:'+item.id] = nextStatus; localStorage.setItem('post_statuses', JSON.stringify(map)) }catch(_){ }
-      const next = products.slice(); next[idx].status = nextStatus; setProducts(next)
-      try{ const raw = localStorage.getItem('last_updates') || '{}'; const map = JSON.parse(raw); map['db:'+item.id] = Date.now(); localStorage.setItem('last_updates', JSON.stringify(map)) }catch(_){ }
-      try{ if (typeof window !== 'undefined' && window.swal){ await window.swal('Success', 'Status updated successfully', 'success') } }catch(_){ }
+      try {
+        setTogglingStatus(prev => ({ ...prev, [item.id]: true }))
+        
+        // Make API call to update status in database
+        const res = await fetch(`/api/v1/posts/${item.id}`, {
+          method: 'PATCH',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          },
+          body: JSON.stringify({ status: nextStatus })
+        })
+        
+        if (!res.ok) {
+          const js = await res.json().catch(()=>null)
+          const errorMsg = (js && (js.message || js.error?.message)) || 'Failed to update status'
+          alert(errorMsg)
+          return
+        }
+        
+        // Update local storage
+        try{ 
+          const raw = localStorage.getItem('post_statuses') || '{}'
+          const map = JSON.parse(raw)
+          map['db:'+item.id] = nextStatus
+          localStorage.setItem('post_statuses', JSON.stringify(map))
+        }catch(_){ }
+        
+        // Update local state
+        const next = products.slice()
+        next[idx].status = nextStatus
+        setProducts(next)
+        
+        // Update last update timestamp
+        try{ 
+          const raw = localStorage.getItem('last_updates') || '{}'
+          const map = JSON.parse(raw)
+          map['db:'+item.id] = Date.now()
+          localStorage.setItem('last_updates', JSON.stringify(map))
+        }catch(_){ }
+        
+        // Show success message
+        try{ 
+          if (typeof window !== 'undefined' && window.swal){ 
+            await window.swal('Success', 'Status updated successfully', 'success') 
+          } else {
+            alert('Status updated successfully')
+          }
+        }catch(_){ }
+      } catch(err) {
+        alert('Network error: ' + (err.message || 'Failed to update status'))
+      } finally {
+        setTogglingStatus(prev => ({ ...prev, [item.id]: false }))
+      }
     }
+    
     try{
       if (typeof window !== 'undefined' && window.swal){
-        window.swal({ title:'Confirm', text:'Change status to '+(nextStatus==='active'?'Active':'Inactive')+'?', icon:'warning', buttons:['Cancel','Yes'] }).then(ok => { if (ok) apply() })
+        window.swal({ 
+          title:'Confirm', 
+          text:'Change status to '+(nextStatus==='active'?'Active':'Inactive')+'?', 
+          icon:'warning', 
+          buttons:['Cancel','Yes'] 
+        }).then(ok => { 
+          if (ok) apply() 
+        })
       } else {
         const ok = typeof window !== 'undefined' ? window.confirm('Change status to '+(nextStatus==='active'?'Active':'Inactive')+'?') : true
         if (ok) apply()
@@ -499,9 +564,11 @@ export default function Manage(){
                         borderRadius:12,
                         background: (order.status || 'pending') === 'completed' ? 'rgba(37,211,102,.1)' : 
                                    (order.status || 'pending') === 'cancelled' ? 'rgba(176,0,32,.1)' : 
+                                   (order.status || 'pending') === 'processing' ? 'rgba(58,119,255,.1)' :
                                    'rgba(245,81,0,.1)',
                         color: (order.status || 'pending') === 'completed' ? '#25D366' : 
                                (order.status || 'pending') === 'cancelled' ? '#b00020' : 
+                               (order.status || 'pending') === 'processing' ? '#3a77ff' :
                                '#f55100',
                         fontSize:'12px',
                         fontWeight:600
@@ -576,6 +643,13 @@ export default function Manage(){
           if (imgSrc === './images/img1.jpg') imgSrc = '/images/products/img1.jpg'
           const idx = tab === 'moderator' ? -1 : products.indexOf(p)
           const postStatus = p.status || 'pending'
+          const postType = String(p.post_type || 'ad').toLowerCase().trim()
+          const isProduct = postType === 'product'
+          const postTypeBadge = isProduct ? (
+            <span style={{background:'#e3f2fd', color:'#1976d2', padding:'4px 8px', borderRadius:4, fontWeight:600, textTransform:'uppercase', fontSize:11}}>Product</span>
+          ) : (
+            <span style={{background:'#f3e5f5', color:'#7b1fa2', padding:'4px 8px', borderRadius:4, fontWeight:600, textTransform:'uppercase', fontSize:11}}>Ad</span>
+          )
           const statusBadge = postStatus==='active' ? (
             <span style={{background:'#248f3c',color:'#fff',padding:'4px 8px',borderRadius:4,fontSize:12}}>Active</span>
           ) : postStatus==='pending' ? (
@@ -591,10 +665,78 @@ export default function Manage(){
                   <h3 style={{fontWeight:500}}>{p.name}</h3>
                   <p style={{color:'rgba(0,47,52,.64)'}}>{p.category || ''}</p>
                   <div style={{display:'flex',alignItems:'center',gap:12,marginTop:6, flexWrap:'wrap'}}>
+                    {postTypeBadge}
                     {statusBadge}
-                    <span style={{color:'rgba(0,47,52,.64)', fontSize:12}}>Views {p.views || 0}</span>
-                    <span style={{color:'rgba(0,47,52,.64)', fontSize:12}}>Phone {(p.phoneShow||'').toLowerCase()==='yes' ? 1 : 0}</span>
-                    <span style={{color:'rgba(0,47,52,.64)', fontSize:12}}>Chats 0</span>
+                    <span 
+                      style={{
+                        color:'rgba(0,47,52,.64)', 
+                        fontSize:12, 
+                        cursor:'pointer',
+                        textDecoration:'underline'
+                      }}
+                      onClick={() => router.push('/product/'+p.id)}
+                      title="Click to view post"
+                    >
+                      Views {p.views || 0}
+                    </span>
+                    <span 
+                      style={{
+                        color:'rgba(0,47,52,.64)', 
+                        fontSize:12,
+                        cursor: phoneNumbers[p.id] ? 'pointer' : 'default',
+                        textDecoration: phoneNumbers[p.id] ? 'underline' : 'none'
+                      }}
+                      onClick={() => {
+                        if (phoneNumbers[p.id]) {
+                          // Copy phone to clipboard or open phone dialer
+                          const phone = phoneNumbers[p.id]
+                          if (navigator.clipboard) {
+                            navigator.clipboard.writeText(phone).then(() => {
+                              try{ if (typeof window !== 'undefined' && window.swal){ window.swal('Copied!', 'Phone number copied to clipboard', 'success') } }catch(_){ }
+                            }).catch(() => {
+                              // Fallback: open phone dialer
+                              window.location.href = `tel:${phone}`
+                            })
+                          } else {
+                            // Fallback: open phone dialer
+                            window.location.href = `tel:${phone}`
+                          }
+                        } else {
+                          try{ if (typeof window !== 'undefined' && window.swal){ window.swal('No phone', 'Phone number not available', 'info') } }catch(_){ }
+                        }
+                      }}
+                      title={phoneNumbers[p.id] ? `Click to call/copy: ${phoneNumbers[p.id]}` : 'Phone number not available'}
+                    >
+                      Phone {p.phone_clicks || 0}
+                    </span>
+                    <span 
+                      style={{
+                        color:'rgba(0,47,52,.64)', 
+                        fontSize:12,
+                        cursor:'pointer',
+                        textDecoration:'underline'
+                      }}
+                      onClick={async () => {
+                        // Track chat click
+                        try {
+                          await fetch(`/api/v1/posts/${p.id}/track`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'chat' })
+                          }).catch(() => {}) // Don't block if tracking fails
+                          // Update local state
+                          setProducts(prev => prev.map(item => 
+                            item.id === p.id 
+                              ? { ...item, chat_clicks: (item.chat_clicks || 0) + 1 }
+                              : item
+                          ))
+                        } catch (_) {}
+                        router.push('/chat?post_id='+encodeURIComponent(String(p.id)))
+                      }}
+                      title="Click to view chats"
+                    >
+                      Chats {p.chat_clicks || 0}
+                    </span>
                     {p.updatedAt ? (
                       <span style={{color:'rgba(0,47,52,.8)', fontSize:12, display:'inline-flex', alignItems:'center', gap:6}}>
                         <i className="fa-regular fa-clock" aria-hidden="true"></i>
@@ -612,6 +754,10 @@ export default function Manage(){
                    </button>
                  ) : (
                   <>
+                    <button className="btn btn--outline" onClick={()=>router.push('/product/'+p.id)} title="View">
+                      <i className="fa-solid fa-eye" aria-hidden="true"></i>
+                      <span>View</span>
+                    </button>
                     <button className="btn btn--secondary" onClick={()=>editAd(idx)} title="Edit">
                       <i className="fa-solid fa-pen" aria-hidden="true"></i>
                       <span>Edit</span>
@@ -621,9 +767,18 @@ export default function Manage(){
                       <span>Chat</span>
                     </button>
                     {!(tab === 'all' && postStatus === 'pending') && (
-                      <button className="btn btn--primary" onClick={()=>toggleStatus(idx)} title={p.status==='active' ? 'Mark Inactive' : 'Mark Active'}>
+                      <button 
+                        className="btn btn--primary" 
+                        onClick={()=>toggleStatus(idx)} 
+                        disabled={togglingStatus[p.id]}
+                        title={p.status==='active' ? 'Mark Inactive' : 'Mark Active'}
+                        style={{
+                          opacity: togglingStatus[p.id] ? 0.6 : 1,
+                          cursor: togglingStatus[p.id] ? 'not-allowed' : 'pointer'
+                        }}
+                      >
                         <i className="fa-solid fa-power-off" aria-hidden="true"></i>
-                        <span>{p.status==='active' ? 'Mark Inactive' : 'Mark Active'}</span>
+                        <span>{togglingStatus[p.id] ? 'Updating...' : (p.status==='active' ? 'Mark Inactive' : 'Mark Active')}</span>
                       </button>
                     )}
                     <button className="btn btn--danger" onClick={()=>removeAd(idx)} title="Delete">

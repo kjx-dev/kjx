@@ -12,6 +12,7 @@ export default function ProductDetails(){
     phoneShow:'', phone:'', name:'', description:'', image:'', price:'', location:'', productName:'', category:'', post_type:'ad'
   })
   const [postType, setPostType] = useState('ad') // Separate state for post_type to ensure it's always tracked
+  const [userCreatedAt, setUserCreatedAt] = useState(null) // Store user's account creation date
   const [error, setError] = useState('')
   
   const [activeImg, setActiveImg] = useState('')
@@ -122,6 +123,14 @@ export default function ProductDetails(){
               const jdb = await rdb.json()
               const d = jdb.data
               if (d && d.title){
+                // Track view
+                try {
+                  await fetch(`/api/v1/posts/${idFromSlug}/track`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'view' })
+                  }).catch(() => {}) // Don't block if tracking fails
+                } catch (_) {}
                 let phoneShow = ''
                 let phone = ''
                 let profileName = ''
@@ -140,6 +149,10 @@ export default function ProductDetails(){
                     profileName = u.name || profileName
                     phone = u.phone || phone
                     phoneShow = phone ? 'yes' : ''
+                    // Store user's account creation date for "Member Since"
+                    if (u.created_at) {
+                      setUserCreatedAt(u.created_at)
+                    }
                   }
                 }catch(_){ }
                 const postTypeFromDb = String(d.post_type || 'ad').toLowerCase().trim()
@@ -206,6 +219,10 @@ export default function ProductDetails(){
                 name = u.name || name
                 phone = u.phone || phone
                 phoneShow = phone ? 'yes' : ''
+                // Store user's account creation date for "Member Since"
+                if (u.created_at) {
+                  setUserCreatedAt(u.created_at)
+                }
               }
             }catch(_){ }
             setData({ phoneShow, phone, name, description, image, price, location, productName, category, post_type, created_at })
@@ -390,10 +407,23 @@ export default function ProductDetails(){
     const msg = 'Hello! I am interested in ' + (product||'this product')
     try{ window.dispatchEvent(new CustomEvent('whatsapp:open', { detail: { number: n, message: msg } })) }catch(e){}
   }
-  function callSeller(){
+  async function callSeller(){
     const phone = (data.profilePhone||data.phone||'').replace(/\s+/g,'')
     const can = (data.phoneShow||'').toLowerCase() !== 'no' && phone.length>0
     if (!can){ setActionStatus('Phone is hidden'); return }
+    
+    // Track phone click
+    try {
+      const postId = parseInt((router.query.slug||router.query.id||'').toString().split('-').pop()||router.query.id||'', 10)
+      if (!isNaN(postId)) {
+        await fetch(`/api/v1/posts/${postId}/track`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'phone' })
+        }).catch(() => {}) // Don't block if tracking fails
+      }
+    } catch (_) {}
+    
     if (!showPhone){ setShowPhone(true); setActionStatus(''); return }
     try{ window.location.href = 'tel:' + phone }catch(_){ }
   }
@@ -412,9 +442,19 @@ export default function ProductDetails(){
   }
   function logout(){ try{ localStorage.removeItem('auth_token'); localStorage.removeItem('email'); localStorage.removeItem('username'); localStorage.removeItem('name'); localStorage.removeItem('phone'); localStorage.removeItem('gender'); localStorage.removeItem('isAuthenticated'); }catch(_){} router.replace('/') }
   function openReport(){ setReportOpen(true); setReportReason('Spam or misleading'); setReportDetails('') }
-  function openChat(){
+  async function openChat(){
     const idPart = getPostId()
     if (Number.isNaN(idPart)) return
+    
+    // Track chat click
+    try {
+      await fetch(`/api/v1/posts/${idPart}/track`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'chat' })
+      }).catch(() => {}) // Don't block if tracking fails
+    } catch (_) {}
+    
     router.push('/chat?post_id='+encodeURIComponent(String(idPart)))
   }
   async function addToCart(){
@@ -924,7 +964,21 @@ export default function ProductDetails(){
                 </div>
                 <div>
                   <div className="muted" style={{fontSize:'11px', color:'rgba(0,47,52,.6)', marginBottom:'4px', fontWeight:500}}>Member Since</div>
-                  <div className="val" style={{fontSize:'16px', fontWeight:700, color:'#012f34'}}>{new Date(data.created_at||Date.now()).getFullYear()}</div>
+                  <div className="val" style={{fontSize:'16px', fontWeight:700, color:'#012f34'}}>
+                    {(() => {
+                      try {
+                        const dateStr = userCreatedAt || data.created_at
+                        if (!dateStr) return new Date().getFullYear()
+                        const date = new Date(dateStr)
+                        if (isNaN(date.getTime())) return new Date().getFullYear()
+                        const year = date.getFullYear()
+                        if (isNaN(year)) return new Date().getFullYear()
+                        return year
+                      } catch (e) {
+                        return new Date().getFullYear()
+                      }
+                    })()}
+                  </div>
                 </div>
               </div>
               <div className="profile__stat" style={{

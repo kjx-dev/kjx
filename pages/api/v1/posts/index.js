@@ -146,8 +146,8 @@ export default async function handler(req, res){
         // Try with featured column first, fallback if column doesn't exist
         let rows = []
         try {
-          // Try query with featured column
-          const rowsQuery = `SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, ${showAll ? "'pending'" : "'active'"}) as status, COALESCE(post_type, 'ad') as post_type, COALESCE(featured, 0) as featured FROM posts ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${skip}`
+          // Try query with featured column and metrics
+          const rowsQuery = `SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, ${showAll ? "'pending'" : "'active'"}) as status, COALESCE(post_type, 'ad') as post_type, COALESCE(featured, 0) as featured, COALESCE(views, 0) as views, COALESCE(phone_clicks, 0) as phone_clicks, COALESCE(chat_clicks, 0) as chat_clicks FROM posts ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${skip}`
           rows = await prisma.$queryRawUnsafe(rowsQuery)
         } catch (e) {
           // If query fails (e.g., featured column doesn't exist), try without it
@@ -155,8 +155,8 @@ export default async function handler(req, res){
           try {
             const rowsQuery = `SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, ${showAll ? "'pending'" : "'active'"}) as status, COALESCE(post_type, 'ad') as post_type FROM posts ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${skip}`
             rows = await prisma.$queryRawUnsafe(rowsQuery)
-            // Add featured: 0 to each row
-            rows = rows.map(r => ({ ...r, featured: 0 }))
+            // Add featured: 0 and metrics: 0 to each row
+            rows = rows.map(r => ({ ...r, featured: 0, views: 0, phone_clicks: 0, chat_clicks: 0 }))
           } catch (e2) {
             console.error('Error fetching posts:', e2)
             throw e2

@@ -8,7 +8,7 @@ export default function Orders(){
   const [orders, setOrders] = useState([])
   const [auth, setAuth] = useState({ email:'', isAuthenticated:false, name:'' })
   const [hydrated, setHydrated] = useState(false)
-  const [filter, setFilter] = useState('all') // all, pending, completed, cancelled
+  const [filter, setFilter] = useState('all') // all, pending, processing, completed, cancelled
 
   useEffect(() => {
     setHydrated(true)
@@ -60,6 +60,8 @@ export default function Orders(){
         return <FaCheckCircle style={{color: '#25D366', fontSize: '16px'}} />
       case 'cancelled':
         return <FaTimesCircle style={{color: '#b00020', fontSize: '16px'}} />
+      case 'processing':
+        return <FaClock style={{color: '#3a77ff', fontSize: '16px'}} />
       default:
         return <FaClock style={{color: '#f55100', fontSize: '16px'}} />
     }
@@ -71,6 +73,8 @@ export default function Orders(){
         return '#25D366'
       case 'cancelled':
         return '#b00020'
+      case 'processing':
+        return '#3a77ff'
       default:
         return '#f55100'
     }
@@ -127,7 +131,7 @@ export default function Orders(){
               My Orders
             </h1>
             <div style={{display: 'flex', gap: '8px'}}>
-              {['all', 'pending', 'completed', 'cancelled'].map(status => (
+              {['all', 'pending', 'processing', 'completed', 'cancelled'].map(status => (
                 <button
                   key={status}
                   onClick={() => setFilter(status)}

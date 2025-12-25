@@ -195,7 +195,7 @@ export default function Header(){
                 )}
               </div>
             ) : (
-              <button className="login__btn" onClick={() => router.push('/login')}>Login / Register</button>
+              <button className="login__btn" onClick={() => router.push('/login')}>Login</button>
             )}
             <button 
               onClick={() => router.push('/cart')} 
