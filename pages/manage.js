@@ -369,10 +369,12 @@ export default function Manage(){
                       <i className="fa-regular fa-message" aria-hidden="true"></i>
                       <span>Chat</span>
                     </button>
-                    <button className="btn btn--primary" onClick={()=>toggleStatus(idx)} title={p.status==='active' ? 'Mark Inactive' : 'Mark Active'}>
-                      <i className="fa-solid fa-power-off" aria-hidden="true"></i>
-                      <span>{p.status==='active' ? 'Mark Inactive' : 'Mark Active'}</span>
-                    </button>
+                    {!(tab === 'all' && postStatus === 'pending') && (
+                      <button className="btn btn--primary" onClick={()=>toggleStatus(idx)} title={p.status==='active' ? 'Mark Inactive' : 'Mark Active'}>
+                        <i className="fa-solid fa-power-off" aria-hidden="true"></i>
+                        <span>{p.status==='active' ? 'Mark Inactive' : 'Mark Active'}</span>
+                      </button>
+                    )}
                     <button className="btn btn--danger" onClick={()=>removeAd(idx)} title="Delete">
                       <i className="fa-solid fa-trash" aria-hidden="true"></i>
                       <span>Delete</span>
