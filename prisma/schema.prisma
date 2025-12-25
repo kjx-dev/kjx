@@ -50,6 +50,8 @@ model Post {
   category    Category @relation(fields: [category_id], references: [category_id])
   price       Int?
   location    String?
+  post_type   String   @default("ad")
+  featured    Boolean  @default(false)
   images      PostImage[]
   reviews     PostReview[]
   bids        PostBid[]

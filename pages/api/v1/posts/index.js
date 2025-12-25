@@ -1,6 +1,21 @@
 import { randomUUID, createHmac } from 'crypto'
 import { getPrisma } from '../../../../db/client'
 
+// Helper function to convert BigInt values to numbers for JSON serialization
+function convertBigIntToNumber(obj) {
+  if (obj === null || obj === undefined) return obj
+  if (typeof obj === 'bigint') return Number(obj)
+  if (Array.isArray(obj)) return obj.map(convertBigIntToNumber)
+  if (typeof obj === 'object') {
+    const converted = {}
+    for (const [key, value] of Object.entries(obj)) {
+      converted[key] = convertBigIntToNumber(value)
+    }
+    return converted
+  }
+  return obj
+}
+
 async function ensureTables(prisma){
   try{
     await prisma.$executeRawUnsafe(
@@ -13,7 +28,9 @@ async function ensureTables(prisma){
       '  category_id INTEGER NOT NULL,\n'+
       '  price INTEGER NULL,\n'+
       '  location TEXT NULL,\n'+
-      '  status TEXT DEFAULT \'pending\'\n'+
+      '  status TEXT DEFAULT \'pending\',\n'+
+      '  post_type TEXT DEFAULT \'ad\',\n'+
+      '  featured INTEGER DEFAULT 0\n'+
       ')'
     )
     // Add status column if it doesn't exist
@@ -21,6 +38,26 @@ async function ensureTables(prisma){
       await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN status TEXT DEFAULT \'pending\'')
     } catch (_) {
       // Column already exists, ignore
+    }
+    // Add post_type column if it doesn't exist
+    try {
+      await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN post_type TEXT DEFAULT \'ad\'')
+      console.log('Added post_type column to posts table')
+    } catch (e) {
+      // Column already exists, ignore
+      if (e.message && !e.message.includes('duplicate column')) {
+        console.log('Error adding post_type column (may already exist):', e.message)
+      }
+    }
+    // Add featured column if it doesn't exist
+    try {
+      await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN featured INTEGER DEFAULT 0')
+      console.log('Added featured column to posts table')
+    } catch (e) {
+      // Column already exists, ignore
+      if (e.message && !e.message.includes('duplicate column')) {
+        console.log('Error adding featured column (may already exist):', e.message)
+      }
     }
     await prisma.$executeRawUnsafe(
       'CREATE TABLE IF NOT EXISTS post_images (\n'+
@@ -106,8 +143,25 @@ export default async function handler(req, res){
         const skip = (page-1) * limit
         
         // Fetch posts with search and status filters
-        const rowsQuery = `SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, ${showAll ? "'pending'" : "'active'"}) as status FROM posts ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${skip}`
-        const rows = await prisma.$queryRawUnsafe(rowsQuery)
+        // Try with featured column first, fallback if column doesn't exist
+        let rows = []
+        try {
+          // Try query with featured column
+          const rowsQuery = `SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, ${showAll ? "'pending'" : "'active'"}) as status, COALESCE(post_type, 'ad') as post_type, COALESCE(featured, 0) as featured FROM posts ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${skip}`
+          rows = await prisma.$queryRawUnsafe(rowsQuery)
+        } catch (e) {
+          // If query fails (e.g., featured column doesn't exist), try without it
+          console.log('Featured column may not exist, trying query without it:', e.message)
+          try {
+            const rowsQuery = `SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, ${showAll ? "'pending'" : "'active'"}) as status, COALESCE(post_type, 'ad') as post_type FROM posts ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${skip}`
+            rows = await prisma.$queryRawUnsafe(rowsQuery)
+            // Add featured: 0 to each row
+            rows = rows.map(r => ({ ...r, featured: 0 }))
+          } catch (e2) {
+            console.error('Error fetching posts:', e2)
+            throw e2
+          }
+        }
         const ids = Array.isArray(rows) ? rows.map(r=>Number(r.post_id)).filter(n=>!isNaN(n)) : []
         let images = []
         if (ids.length){
@@ -119,8 +173,11 @@ export default async function handler(req, res){
         for (const im of images){ const k = im.post_id; if (!byPost[k]) byPost[k] = []; byPost[k].push(im) }
         const out = (rows||[]).map(r=>({ ...r, images: (byPost[r.post_id]||[]) }))
         const hasMore = (skip + out.length) < total
+        // Convert BigInt values to numbers before JSON serialization
+        const convertedOut = convertBigIntToNumber(out)
+        const convertedTotal = typeof total === 'bigint' ? Number(total) : total
         res.setHeader('Content-Type','application/json')
-        res.status(200).json({ data: out, page, limit, total, has_more: hasMore, request_id: reqId })
+        res.status(200).json({ data: convertedOut, page, limit, total: convertedTotal, has_more: hasMore, request_id: reqId })
         return
       }catch(e){ res.setHeader('Content-Type','application/json'); res.status(500).json({ status:'error', message:String(e&&e.message||'Failed to load posts'), data:null, page, limit, request_id:reqId }); return }
     }
@@ -156,6 +213,7 @@ export default async function handler(req, res){
       const categoryId = body.category_id || null
       const price = typeof body.price === 'string' ? parseInt(body.price,10) : body.price
       const location = body.location || null
+      const postType = body.post_type || 'ad'
       const images = Array.isArray(body.images) ? body.images : []
 
       if (!title || !content){ res.status(400).json({ status:'error', message:'Missing title/content', data:null, request_id:reqId }); return }
@@ -198,17 +256,23 @@ export default async function handler(req, res){
       }
 
       try{
-        await prisma.$executeRaw`INSERT INTO posts (title, content, user_id, category_id, price, location, status, created_at) VALUES (${title}, ${content}, ${userId}, ${catId}, ${price || null}, ${location || null}, 'pending', CURRENT_TIMESTAMP)`
-        const createdRows = await prisma.$queryRaw`SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, 'pending') as status FROM posts WHERE user_id=${userId} ORDER BY post_id DESC LIMIT 1`
+        await prisma.$executeRaw`INSERT INTO posts (title, content, user_id, category_id, price, location, status, post_type, created_at) VALUES (${title}, ${content}, ${userId}, ${catId}, ${price || null}, ${location || null}, 'pending', ${postType}, CURRENT_TIMESTAMP)`
+        const createdRows = await prisma.$queryRaw`SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, 'pending') as status, COALESCE(post_type, 'ad') as post_type, COALESCE(featured, 0) as featured FROM posts WHERE user_id=${userId} ORDER BY post_id DESC LIMIT 1`
         const created = Array.isArray(createdRows) && createdRows.length ? createdRows[0] : null
         if (!created){ res.setHeader('Content-Type','application/json'); res.status(500).json({ status:'error', message:'Failed to create post', data:null, request_id:reqId }); return }
+        // Convert BigInt values to numbers
+        const convertedCreated = convertBigIntToNumber(created)
         for(let i=0;i<images.length;i++){
           const im = images[i]||{}
-          await prisma.$executeRaw`INSERT INTO post_images (post_id, url, mime, size, "order") VALUES (${created.post_id}, ${String(im.url||'')}, ${String(im.mime||'')}, ${Number(im.size||0)}, ${i})`
+          const postId = typeof convertedCreated.post_id === 'bigint' ? Number(convertedCreated.post_id) : convertedCreated.post_id
+          await prisma.$executeRaw`INSERT INTO post_images (post_id, url, mime, size, "order") VALUES (${postId}, ${String(im.url||'')}, ${String(im.mime||'')}, ${Number(im.size||0)}, ${i})`
         }
-        const ims = await prisma.$queryRaw`SELECT image_id, post_id, url, mime, size, "order" FROM post_images WHERE post_id=${created.post_id} ORDER BY "order" ASC`
+        const postId = typeof convertedCreated.post_id === 'bigint' ? Number(convertedCreated.post_id) : convertedCreated.post_id
+        const ims = await prisma.$queryRaw`SELECT image_id, post_id, url, mime, size, "order" FROM post_images WHERE post_id=${postId} ORDER BY "order" ASC`
+        // Convert BigInt values in images array
+        const convertedImages = convertBigIntToNumber(ims)
         res.setHeader('Content-Type','application/json')
-        res.status(201).json({ data: { ...created, images: ims }, request_id: reqId })
+        res.status(201).json({ data: { ...convertedCreated, images: convertedImages }, request_id: reqId })
         return
       }catch(e){ res.setHeader('Content-Type','application/json'); res.status(500).json({ status:'error', message: String(e&&e.message||'Failed to create'), data:null, request_id:reqId }); return }
     }

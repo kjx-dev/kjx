@@ -13,6 +13,7 @@ export default function AdsTab({ error, setError }) {
   const [categories, setCategories] = useState([])
   const [categoriesMap, setCategoriesMap] = useState({})
   const [togglingStatus, setTogglingStatus] = useState({})
+  const [togglingFeatured, setTogglingFeatured] = useState({})
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -110,6 +111,7 @@ export default function AdsTab({ error, setError }) {
             user_id: post.user_id,
             created_at: post.created_at,
             status: post.status || 'pending',
+            featured: post.featured || 0, // Include featured field from API
             images: post.images || []
           }))
           
@@ -220,9 +222,17 @@ export default function AdsTab({ error, setError }) {
       setTogglingStatus(prev => ({ ...prev, [ad.post_id]: true }))
       setError('')
       
-      const response = await fetch(`/api/v1/posts/${ad.post_id}`, {
+      // Get auth token for admin verification
+      const authToken = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const headers = { 'Content-Type': 'application/json' }
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`
+      }
+      
+      // Include admin parameter to ensure admin privileges
+      const response = await fetch(`/api/v1/posts/${ad.post_id}?admin=true`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify({ status: newStatus })
       })
       
@@ -251,6 +261,49 @@ export default function AdsTab({ error, setError }) {
       }
     } finally {
       setTogglingStatus(prev => ({ ...prev, [ad.post_id]: false }))
+    }
+  }, [setError])
+
+  const handleToggleFeatured = useCallback(async (ad) => {
+    // Check if currently featured (handle different formats: 1, true, "1", etc.)
+    const isCurrentlyFeatured = ad.featured === 1 || ad.featured === true || Number(ad.featured) === 1
+    const newFeatured = !isCurrentlyFeatured
+    
+    try {
+      setTogglingFeatured(prev => ({ ...prev, [ad.post_id]: true }))
+      setError('')
+      
+      const response = await fetch(`/api/v1/posts/${ad.post_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ featured: newFeatured })
+      })
+      
+      if (response.ok) {
+        // Update local state
+        setAds(prev => prev.map(a => 
+          a.post_id === ad.post_id ? { ...a, featured: newFeatured ? 1 : 0 } : a
+        ))
+        setError('')
+        if (typeof window !== 'undefined' && window.swal) {
+          window.swal('Success', `Post ${newFeatured ? 'marked as featured' : 'removed from featured'} successfully`, 'success')
+        } else {
+          alert(`Post ${newFeatured ? 'marked as featured' : 'removed from featured'} successfully`)
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || 'Failed to update featured status')
+      }
+    } catch (err) {
+      console.error('Error toggling featured status:', err)
+      setError('Error updating featured status: ' + (err.message || 'Unknown error'))
+      if (typeof window !== 'undefined' && window.swal) {
+        window.swal('Error', err.message || 'Failed to update featured status', 'error')
+      } else {
+        alert('Error updating featured status: ' + err.message)
+      }
+    } finally {
+      setTogglingFeatured(prev => ({ ...prev, [ad.post_id]: false }))
     }
   }, [setError])
 
@@ -538,6 +591,22 @@ export default function AdsTab({ error, setError }) {
                           {ad.content}
                         </p>
                         <div style={{display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '12px', color: 'rgba(0,47,52,.64)'}}>
+                          {/* Featured badge - show first if featured */}
+                          {(ad.featured === 1 || ad.featured === true || Number(ad.featured) === 1) && (
+                            <span style={{
+                              background: '#ffce32',
+                              color: '#012f34',
+                              padding: '6px 12px',
+                              borderRadius: '6px',
+                              fontWeight: '700',
+                              textTransform: 'uppercase',
+                              fontSize: '12px',
+                              boxShadow: '0 2px 4px rgba(255,206,50,.3)',
+                              border: '2px solid #ffd700'
+                            }}>
+                              ⭐ FEATURED
+                            </span>
+                          )}
                           <span style={{
                             background: ad.status === 'active' ? '#e8f5e9' : ad.status === 'pending' ? '#fff3e0' : '#ffebee',
                             color: ad.status === 'active' ? '#2e7d32' : ad.status === 'pending' ? '#e65100' : '#c62828',
@@ -610,6 +679,26 @@ export default function AdsTab({ error, setError }) {
                                 : 'Activate'}
                           </button>
                         )}
+                        <button
+                          className={(ad.featured === 1 || ad.featured === true || Number(ad.featured) === 1) ? "btn btn--primary btn--md" : "btn btn--outline btn--md"}
+                          onClick={() => handleToggleFeatured(ad)}
+                          disabled={togglingFeatured[ad.post_id]}
+                          style={{
+                            opacity: togglingFeatured[ad.post_id] ? 0.6 : 1,
+                            cursor: togglingFeatured[ad.post_id] ? 'not-allowed' : 'pointer',
+                            minWidth: '120px',
+                            background: (ad.featured === 1 || ad.featured === true || Number(ad.featured) === 1) ? '#ffce32' : undefined,
+                            borderColor: (ad.featured === 1 || ad.featured === true || Number(ad.featured) === 1) ? '#ffce32' : undefined,
+                            color: (ad.featured === 1 || ad.featured === true || Number(ad.featured) === 1) ? '#012f34' : undefined,
+                            fontWeight: (ad.featured === 1 || ad.featured === true || Number(ad.featured) === 1) ? '700' : '500'
+                          }}
+                        >
+                          {togglingFeatured[ad.post_id] 
+                            ? 'Updating...' 
+                            : (ad.featured === 1 || ad.featured === true || Number(ad.featured) === 1) 
+                              ? '⭐ FEATURED' 
+                              : 'Mark Featured'}
+                        </button>
                         <button
                           className="btn btn--outline btn--md"
                           onClick={() => router.push(`/product/${ad.post_id}`)}

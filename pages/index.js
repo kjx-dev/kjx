@@ -140,6 +140,7 @@ export default function Home() {
             phoneShow: 'no',
             category: (p.category && p.category.name) || '',
             status: p.status || 'active',
+            featured: p.featured || 0, // Include featured field from database
             created_at: p.created_at || null
           }
         })
@@ -412,34 +413,49 @@ export default function Home() {
   }
 
   function getTimeAgo(dateString) {
-    if (!dateString) return 'Recently'
+    if (!dateString || dateString === null || dateString === undefined) return 'Recently'
     try {
       const date = new Date(dateString)
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Recently'
+      }
       const now = new Date()
-      const diffInSeconds = Math.floor((now - date) / 1000)
+      const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+      
+      // Check if diffInSeconds is valid (not NaN)
+      if (isNaN(diffInSeconds) || diffInSeconds < 0) {
+        return 'Recently'
+      }
       
       if (diffInSeconds < 60) return 'Just now'
       if (diffInSeconds < 3600) {
         const minutes = Math.floor(diffInSeconds / 60)
+        if (isNaN(minutes)) return 'Recently'
         return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`
       }
       if (diffInSeconds < 86400) {
         const hours = Math.floor(diffInSeconds / 3600)
+        if (isNaN(hours)) return 'Recently'
         return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`
       }
       if (diffInSeconds < 604800) {
         const days = Math.floor(diffInSeconds / 86400)
+        if (isNaN(days)) return 'Recently'
         return `${days} ${days === 1 ? 'day' : 'days'} ago`
       }
       if (diffInSeconds < 2592000) {
         const weeks = Math.floor(diffInSeconds / 604800)
+        if (isNaN(weeks)) return 'Recently'
         return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`
       }
       if (diffInSeconds < 31536000) {
         const months = Math.floor(diffInSeconds / 2592000)
+        if (isNaN(months)) return 'Recently'
         return `${months} ${months === 1 ? 'month' : 'months'} ago`
       }
       const years = Math.floor(diffInSeconds / 31536000)
+      if (isNaN(years)) return 'Recently'
       return `${years} ${years === 1 ? 'year' : 'years'} ago`
     } catch (_) {
       return 'Recently'
@@ -714,7 +730,8 @@ export default function Home() {
                         <div className="cards__grid">
                           {pageItems.map((card, i) => {
                             const originalIndex = pageStart + i
-                            const isFeatured = originalIndex % 3 === 0
+                            // Check actual featured field from database, not index position
+                            const isFeatured = card.featured === 1 || card.featured === true || (card.featured && Number(card.featured) === 1)
                             return (
                               <article
                                 key={originalIndex}

@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
-import { FaSearch, FaUser, FaChevronDown, FaList, FaHeart, FaComment, FaKey, FaSignOutAlt, FaCar, FaHome, FaCog } from 'react-icons/fa'
+import { FaSearch, FaUser, FaChevronDown, FaList, FaHeart, FaComment, FaKey, FaSignOutAlt, FaCar, FaHome, FaCog, FaShoppingCart, FaShoppingBag } from 'react-icons/fa'
 
 export default function Header(){
   const router = useRouter()
   const [auth, setAuth] = useState({ email:'', isAuthenticated:false, name:'' })
   const [isAdmin, setIsAdmin] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
   const [q, setQ] = useState('')
   const [location, setLocation] = useState('')
   const [headerCatOpen, setHeaderCatOpen] = useState(false)
@@ -56,6 +57,32 @@ export default function Header(){
         setCatTiles(Array.isArray(tiles) ? tiles : [])
       }catch(_){ setCatTiles([]) }
     })()
+    
+    // Load cart count
+    function updateCartCount(){
+      try{
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+        setCartCount(Array.isArray(cart) ? cart.length : 0)
+      }catch(_){
+        setCartCount(0)
+      }
+    }
+    updateCartCount()
+    
+    // Listen for cart changes
+    function handleStorageChange(e){
+      if (e.key === 'cart' || !e.key){
+        updateCartCount()
+      }
+    }
+    window.addEventListener('storage', handleStorageChange)
+    // Also listen for custom events (for same-tab updates)
+    window.addEventListener('cartUpdated', updateCartCount)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('cartUpdated', updateCartCount)
+    }
   }, [])
   useEffect(() => {
     function onKey(e){ if (e.key === 'Escape'){ setProfileMenuOpen(false); setHeaderCatOpen(false); setMenuOpen(false) } }
@@ -156,6 +183,7 @@ export default function Header(){
                       </div>
                     </div>
                     <div className="menu__item" onClick={manage}><FaList /><span>My Ads</span></div>
+                    <div className="menu__item" onClick={()=>router.push('/orders')}><FaShoppingBag /><span>Orders</span></div>
                     <div className="menu__item" onClick={()=>router.push('/favorites')}><FaHeart /><span>Favorites</span></div>
                     <div className="menu__item" onClick={()=>router.push('/chat')}><FaComment /><span>Chat</span></div>
                     <div className="menu__item" onClick={()=>router.push('/change-password')}><FaKey /><span>Change Password</span></div>
@@ -169,6 +197,53 @@ export default function Header(){
             ) : (
               <button className="login__btn" onClick={() => router.push('/login')}>Login / Register</button>
             )}
+            <button 
+              onClick={() => router.push('/cart')} 
+              className="cart__btn"
+              style={{
+                position: 'relative',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#012f34',
+                fontSize: '20px',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(1,47,52,.05)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+              }}
+              aria-label={`Cart (${cartCount} items)`}
+            >
+              <FaShoppingCart />
+              {cartCount > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '4px',
+                  right: '4px',
+                  background: '#f55100',
+                  color: '#fff',
+                  borderRadius: '50%',
+                  width: '18px',
+                  height: '18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  lineHeight: '1'
+                }}>
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </button>
             <button onClick={sell} className="sell__btn">+ SELL</button>
           </div>
         </div>

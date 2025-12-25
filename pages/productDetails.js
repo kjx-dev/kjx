@@ -9,8 +9,9 @@ import { FaWhatsapp, FaUser, FaIdCard, FaList, FaHeart, FaShare, FaChevronLeft, 
 export default function ProductDetails(){
   const router = useRouter()
   const [data, setData] = useState({
-    phoneShow:'', phone:'', name:'', description:'', image:'', price:'', location:'', productName:'', category:''
+    phoneShow:'', phone:'', name:'', description:'', image:'', price:'', location:'', productName:'', category:'', post_type:'ad'
   })
+  const [postType, setPostType] = useState('ad') // Separate state for post_type to ensure it's always tracked
   const [error, setError] = useState('')
   
   const [activeImg, setActiveImg] = useState('')
@@ -141,7 +142,9 @@ export default function ProductDetails(){
                     phoneShow = phone ? 'yes' : ''
                   }
                 }catch(_){ }
-                setData({ phoneShow, phone, name: profileName, description, image, price, location, productName, category, created_at })
+                const postTypeFromDb = String(d.post_type || 'ad').toLowerCase().trim()
+                setPostType(postTypeFromDb)
+                setData({ phoneShow, phone, name: profileName, description, image, price, location, productName, category, post_type: postTypeFromDb, created_at })
                 setActiveImg(image || '/images/products/img1.jpg')
                 const g = Array.isArray(d.images) ? d.images.map(im=>im.url).filter(Boolean) : []
                 setGallery(g.length ? g : (image ? [image] : []))
@@ -190,7 +193,11 @@ export default function ProductDetails(){
             const location = d.location || ''
             const productName = d.title || ''
             const category = (d.category && d.category.name) || ''
+            const post_type = String(d.post_type || 'ad').toLowerCase().trim()
             const created_at = d.created_at || Date.now()
+            console.log('API Response - post_type:', d.post_type, 'normalized:', post_type, 'full d object keys:', Object.keys(d))
+            // Set post_type in separate state
+            setPostType(post_type)
             try{
               if (d.user_id){
                 const ru = await fetch('/api/v1/users/'+encodeURIComponent(String(d.user_id)))
@@ -201,7 +208,8 @@ export default function ProductDetails(){
                 phoneShow = phone ? 'yes' : ''
               }
             }catch(_){ }
-            setData({ phoneShow, phone, name, description, image, price, location, productName, category, created_at })
+            setData({ phoneShow, phone, name, description, image, price, location, productName, category, post_type, created_at })
+            console.log('State updated with post_type:', post_type, 'data.post_type will be:', post_type, 'postType state:', post_type)
             setActiveImg(image || '/images/products/img1.jpg')
             const g = Array.isArray(d.images) ? d.images.map(im=>im.url).filter(Boolean) : []
             setGallery(g.length ? g : (image ? [image] : []))
@@ -265,7 +273,7 @@ export default function ProductDetails(){
       if (!category) category = 'General'
       const carDesc = 'Meticulously maintained sedan with comprehensive service history and single-owner care. Fuel-efficient engine with smooth automatic transmission, responsive steering, and recently serviced suspension. Original paint with no accidental repairs; clean interior, non-smoker vehicle. Mileage around 45,000 km with brand-new tires and a fresh battery. Equipped with ABS, dual airbags, cruise control, infotainment with Bluetooth/CarPlay, reverse camera, and parking sensors. All documents are up to date including token tax, computerized transfer, and original book. Test drive available on request; serious buyers only.'
       if (!description && String(category).toLowerCase() === 'cars') description = carDesc
-      setData({ phoneShow, phone, name: profileNameLocal, description, image, price, location, productName, category, created_at })
+      setData({ phoneShow, phone, name: profileNameLocal, description, image, price, location, productName, category, post_type: 'ad', created_at })
       setActiveImg(image || '/images/products/img1.jpg')
       const g = [image || '/images/products/img1.jpg', 'https://picsum.photos/seed/phone/800/600', 'https://picsum.photos/seed/car/800/600', 'https://picsum.photos/seed/property/800/600']
       const uniq = []
@@ -347,19 +355,35 @@ export default function ProductDetails(){
   function search(){ router.push('/') }
   function sell(){ if (auth.email && auth.isAuthenticated) router.push('/sell'); else router.push('/login') }
   function manage(){ router.push('/manage') }
-  function addToCart(){
-    const item = { name: data.productName, price: data.price, image: data.image, location: data.location }
-    try {
-      const raw = localStorage.getItem('cart')
-      const list = raw ? JSON.parse(raw) : []
-      list.push(item)
-      localStorage.setItem('cart', JSON.stringify(list))
-      setActionStatus('Added to cart')
-    } catch(e){ setActionStatus('Failed to add to cart') }
-  }
   function buyNow(){
-    addToCart()
-    router.push('/manage')
+    const idPart = getPostId()
+    if (Number.isNaN(idPart)) return
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
+    if (!isAuthenticated){
+      try{ if (typeof window !== 'undefined' && window.swal){ window.swal('Login required', 'Please login to add items to cart', 'warning') } }catch(_){ }
+      router.push('/login')
+      return
+    }
+    try{
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+      const existingIndex = cart.findIndex(item => item.post_id === idPart)
+      if (existingIndex >= 0){
+        router.push('/cart')
+        return
+      }
+      const cartItem = {
+        post_id: idPart,
+        title: data.productName,
+        price: data.price,
+        image: data.image,
+        location: data.location
+      }
+      cart.push(cartItem)
+      localStorage.setItem('cart', JSON.stringify(cart))
+      router.push('/cart')
+    }catch(_){
+      try{ if (typeof window !== 'undefined' && window.swal){ window.swal('Error', 'Failed to add to cart', 'error') } }catch(_){ }
+    }
   }
   function triggerWhatsApp(number, product){
     const n = (number||'').replace(/[^0-9]/g,'')
@@ -392,6 +416,52 @@ export default function ProductDetails(){
     const idPart = getPostId()
     if (Number.isNaN(idPart)) return
     router.push('/chat?post_id='+encodeURIComponent(String(idPart)))
+  }
+  async function addToCart(){
+    const idPart = getPostId()
+    if (Number.isNaN(idPart)) return
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
+    if (!isAuthenticated){
+      try{ if (typeof window !== 'undefined' && window.swal){ window.swal('Login required', 'Please login to add items to cart', 'warning') } }catch(_){ }
+      router.push('/login')
+      return
+    }
+    try{
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+      const existingIndex = cart.findIndex(item => item.post_id === idPart)
+      if (existingIndex >= 0){
+        try{ if (typeof window !== 'undefined' && window.swal){ window.swal('Already in cart', 'This item is already in your cart', 'info') } }catch(_){ }
+        return
+      }
+      
+      // Get seller info from post data
+      let sellerId = null
+      try{
+        const res = await fetch('/api/v1/posts/'+idPart)
+        const js = await res.json()
+        if (js && js.data && js.data.user_id) {
+          sellerId = js.data.user_id
+        }
+      }catch(_){}
+      
+      const cartItem = {
+        post_id: idPart,
+        title: data.productName,
+        price: data.price,
+        image: data.image,
+        location: data.location,
+        seller_id: sellerId
+      }
+      cart.push(cartItem)
+      localStorage.setItem('cart', JSON.stringify(cart))
+      // Dispatch event to update cart count in header
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('cartUpdated'))
+      }
+      try{ if (typeof window !== 'undefined' && window.swal){ window.swal('Added to cart', 'Item added to cart successfully', 'success') } }catch(_){ }
+    }catch(_){
+      try{ if (typeof window !== 'undefined' && window.swal){ window.swal('Error', 'Failed to add to cart', 'error') } }catch(_){ }
+    }
   }
   async function submitChat(){
     if (chatLoading) return
@@ -877,33 +947,80 @@ export default function ProductDetails(){
               </div>
             </div>
             <div className="profile__actions" style={{display:'grid', gap:'12px'}}>
-              <button 
-                className="btn btn--primary btn--xl" 
-                onClick={callSeller}
-                style={{
-                  width:'100%',
-                  padding:'14px 20px',
-                  borderRadius:'12px',
-                  fontWeight:600,
-                  fontSize:'15px',
-                  background:'linear-gradient(135deg, #3a77ff 0%, #5a9fff 100%)',
-                  border:'none',
-                  color:'#fff',
-                  cursor:'pointer',
-                  boxShadow:'0 4px 12px rgba(58,119,255,.3)',
-                  transition:'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(58,119,255,.4)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(58,119,255,.3)'
-                }}
-              >
-                <i className="fa-solid fa-phone"></i>&nbsp;{showPhone ? (data.profilePhone||data.phone||'') : 'Show phone number'}
-              </button>
+              {(() => {
+                // Use both data.post_type and postType state for reliability
+                const dataPostType = String(data.post_type || postType || 'ad').toLowerCase().trim()
+                const statePostType = String(postType || 'ad').toLowerCase().trim()
+                const finalPostType = dataPostType || statePostType || 'ad'
+                const isProduct = finalPostType === 'product'
+                
+                console.log('Rendering button - Current state:', {
+                  'data.post_type': data.post_type,
+                  'postType state': postType,
+                  'dataPostType (normalized)': dataPostType,
+                  'statePostType (normalized)': statePostType,
+                  'finalPostType': finalPostType,
+                  'isProduct': isProduct,
+                  'Will show Add to Cart': isProduct
+                })
+                return isProduct
+              })() ? (
+                <button 
+                  className="btn btn--primary btn--xl" 
+                  onClick={addToCart}
+                  style={{
+                    width:'100%',
+                    padding:'14px 20px',
+                    borderRadius:'12px',
+                    fontWeight:600,
+                    fontSize:'15px',
+                    background:'linear-gradient(135deg, #f55100 0%, #ff6b2b 100%)',
+                    border:'none',
+                    color:'#fff',
+                    cursor:'pointer',
+                    boxShadow:'0 4px 12px rgba(245,81,0,.3)',
+                    transition:'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(245,81,0,.4)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(245,81,0,.3)'
+                  }}
+                >
+                  <i className="fa-solid fa-cart-plus"></i>&nbsp;Add to Cart
+                </button>
+              ) : (
+                <button 
+                  className="btn btn--primary btn--xl" 
+                  onClick={callSeller}
+                  style={{
+                    width:'100%',
+                    padding:'14px 20px',
+                    borderRadius:'12px',
+                    fontWeight:600,
+                    fontSize:'15px',
+                    background:'linear-gradient(135deg, #3a77ff 0%, #5a9fff 100%)',
+                    border:'none',
+                    color:'#fff',
+                    cursor:'pointer',
+                    boxShadow:'0 4px 12px rgba(58,119,255,.3)',
+                    transition:'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(58,119,255,.4)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(58,119,255,.3)'
+                  }}
+                >
+                  <i className="fa-solid fa-phone"></i>&nbsp;{showPhone ? (data.profilePhone||data.phone||'') : 'Show phone number'}
+                </button>
+              )}
               <button 
                 className="btn btn--secondary btn--outline btn--xl" 
                 onClick={openChat}

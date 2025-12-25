@@ -17,7 +17,7 @@ export default function Sell(){
   const [profileMenuPos, setProfileMenuPos] = useState({ top: 100, left: 16 })
   const editIndex = typeof router.query.editIndex !== 'undefined' ? parseInt(String(router.query.editIndex||''),10) : null
   const [form, setForm] = useState({
-    title:'', description:'', price:'', location:'', profileName:'', profilePhone:'', phoneShow:true, category:''
+    title:'', description:'', price:'', location:'', profileName:'', profilePhone:'', phoneShow:true, category:'', post_type:'ad'
   })
   const [categories, setCategories] = useState([])
   const [tiles, setTiles] = useState([])
@@ -202,7 +202,7 @@ export default function Sell(){
               const r = await fetch('/api/v1/posts/'+encodeURIComponent(qsId))
               const j = await r.json()
               const d = j?.data||{}
-              setForm(f=>({ ...f, title: d.title||'', description: d.content||'', price: d.price||'', location: d.location||'', profileName: f.profileName||uname, profilePhone: f.profilePhone||phone, phoneShow: f.phoneShow, category: (d.category && d.category.name) || '' }))
+              setForm(f=>({ ...f, title: d.title||'', description: d.content||'', price: d.price||'', location: d.location||'', profileName: f.profileName||uname, profilePhone: f.profilePhone||phone, phoneShow: f.phoneShow, category: (d.category && d.category.name) || '', post_type: d.post_type || 'ad' }))
               const arr = new Array(9).fill(null)
               if (Array.isArray(d.images)){
                 for (let i=0;i<Math.min(d.images.length, 9); i++){
@@ -301,7 +301,7 @@ export default function Sell(){
       const token = localStorage.getItem('auth_token') || ''
       const userId = getUserId()
       if (editing && editingSource==='db'){
-        const body = { title: obg.title, content: obg.description, category: obg.category, price: parseInt(String(obg.price||'0'),10)||null, location: obg.location||null, images: imgs.map((m,i)=>({ url: m.url, mime: m.mime, size: m.size, order: i })) }
+        const body = { title: obg.title, content: obg.description, category: obg.category, price: parseInt(String(obg.price||'0'),10)||null, location: obg.location||null, post_type: form.post_type || 'ad', images: imgs.map((m,i)=>({ url: m.url, mime: m.mime, size: m.size, order: i })) }
         const res = await fetch('/api/v1/posts/'+encodeURIComponent(String(editingId)), { method:'PATCH', headers:{ 'Content-Type':'application/json', ...(token?{ 'Authorization': 'Bearer ' + token }:{} ) }, body: JSON.stringify(body) })
         const json = await res.json()
         if (res.status === 401){ alert('Please login to update'); setSubmitting(false); router.push('/login'); return }
@@ -317,6 +317,7 @@ export default function Sell(){
         category: obg.category,
         price: parseInt(String(obg.price||'0'),10) || null,
         location: obg.location || null,
+        post_type: form.post_type || 'ad',
         images: imgs.map((m,i)=>({ url: m.url, mime: m.mime, size: m.size, order: i }))
       }
       const res = await fetch('/api/v1/posts', { method:'POST', headers:{ 'Content-Type':'application/json', ...(token?{ 'Authorization': 'Bearer ' + token }:{} ) }, body: JSON.stringify(body) })
@@ -925,6 +926,16 @@ export default function Sell(){
               <input className="form__input" style={{flex:1, height:42}} value={form.price} onChange={e=>setForm({...form, price:e.target.value})} placeholder="Enter Price" aria-invalid={!!errors.price} />
             </div>
             {errors.price ? <div className="form__error" aria-live="polite" style={{marginTop:6}}>{errors.price}</div> : null}
+          </div>
+          )}
+          {step>=2 && (
+          <div className="sell__section" style={{border:'1px solid rgba(1,47,52,.2)', borderRadius:12, padding:16, background:'#fff', boxShadow:'0 6px 18px rgba(1,47,52,.08)', marginBottom:12}}>
+            <label className="form__label">Post Type*</label>
+            <select className="form__input" value={form.post_type} onChange={e=>setForm({...form, post_type:e.target.value})} style={{height:42}}>
+              <option value="ad">Ad</option>
+              <option value="product">Product</option>
+            </select>
+            <div style={{color:'rgba(0,47,52,.64)', marginTop:6}}>Select "Product" if this item can be added to cart and purchased</div>
           </div>
           )}
           {step>=2 && (

@@ -9,6 +9,7 @@ export default function Manage(){
   const [allPosts, setAllPosts] = useState([]) // All posts including pending for moderator
   const [userId, setUserId] = useState(null)
   const [tab, setTab] = useState('all')
+  const [storeOrders, setStoreOrders] = useState([])
   const [q, setQ] = useState('')
   const searchTimerRef = useRef(null)
   const [error, setError] = useState('')
@@ -110,6 +111,32 @@ export default function Manage(){
       }catch(_){ setAllPosts([]) }
     }
     loadMyAds()
+    
+    // Load store orders (orders for seller's products)
+    function loadStoreOrders(){
+      try{
+        const ordersData = JSON.parse(localStorage.getItem('orders') || '[]')
+        const currentUserId = getTokenUserId()
+        if (!currentUserId) { setStoreOrders([]); return }
+        
+        // Filter orders where any item belongs to this seller
+        const sellerOrders = ordersData.filter(order => {
+          if (!order.items || !Array.isArray(order.items)) return false
+          return order.items.some(item => item.seller_id === currentUserId)
+        })
+        
+        // Sort by order date (newest first)
+        const sortedOrders = sellerOrders.sort((a, b) => {
+          const dateA = new Date(a.orderDate || 0)
+          const dateB = new Date(b.orderDate || 0)
+          return dateB - dateA
+        })
+        setStoreOrders(sortedOrders)
+      }catch(_){
+        setStoreOrders([])
+      }
+    }
+    loadStoreOrders()
   }, [])
   useEffect(() => { setHydrated(true) }, [])
   function applySearch(val){ setQ(val ? String(val) : '') }
@@ -271,6 +298,36 @@ export default function Manage(){
       window.location.href = '/sell?editId='+encodeURIComponent(String(item.id))+'&source=db'
     }
   }
+  
+  function updateOrderStatus(orderId, newStatus){
+    try{
+      const orders = JSON.parse(localStorage.getItem('orders') || '[]')
+      const updatedOrders = orders.map(order => {
+        if (order.orderId === orderId) {
+          return { ...order, status: newStatus }
+        }
+        return order
+      })
+      localStorage.setItem('orders', JSON.stringify(updatedOrders))
+      
+      // Update local state
+      setStoreOrders(prev => prev.map(order => 
+        order.orderId === orderId ? { ...order, status: newStatus } : order
+      ))
+      
+      try{ 
+        if (typeof window !== 'undefined' && window.swal){ 
+          window.swal('Success', 'Order status updated successfully', 'success') 
+        } 
+      }catch(_){ }
+    }catch(_){
+      try{ 
+        if (typeof window !== 'undefined' && window.swal){ 
+          window.swal('Error', 'Failed to update order status', 'error') 
+        } 
+      }catch(_){ }
+    }
+  }
   const list = filtered()
   const productsArray = Array.isArray(products) ? products : []
   const allPostsArray = Array.isArray(allPosts) ? allPosts : []
@@ -278,6 +335,31 @@ export default function Manage(){
   const cActive = productsArray.filter(p=>p.status==='active').length || 0
   const cInactive = productsArray.filter(p=>p.status==='inactive').length || 0
   const cPending = allPostsArray.length || 0
+  
+  function formatPrice(val){
+    try{
+      if (val == null) return ''
+      const num = Number(String(val).replace(/[^0-9.-]/g,''))
+      if (isNaN(num)) return String(val)
+      return 'Rs ' + num.toLocaleString('en-PK')
+    }catch(e){ return String(val||'') }
+  }
+  
+  function formatDate(dateString){
+    if (!dateString) return 'N/A'
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    } catch {
+      return dateString
+    }
+  }
   return (
     <>
       <Header />
@@ -290,12 +372,12 @@ export default function Manage(){
          }}>
         {error && (<div style={{color:'#b00020', marginBottom:12}}>{error}</div>)}
       <div style={{display:'flex', gap:8, alignItems:'center', justifyContent:'flex-start', flexWrap:'wrap', marginBottom:8}}>
-        {['all','active','inactive','moderator'].map(kind => {
-          const count = kind==='all'?cAll:kind==='active'?cActive:kind==='inactive'?cInactive:kind==='moderator'?cPending:0
+        {['all','active','inactive','moderator','store-orders'].map(kind => {
+          const count = kind==='all'?cAll:kind==='active'?cActive:kind==='inactive'?cInactive:kind==='moderator'?cPending:kind==='store-orders'?storeOrders.length:0
           const isActive = tab===kind
           return (
             <button key={kind} className="manage-tab-btn" onClick={()=>setTab(kind)} aria-pressed={isActive} aria-current={isActive? 'page': undefined}>
-              {kind==='all'?'View all':kind==='moderator'?'Moderator':(kind.charAt(0).toUpperCase()+kind.slice(1))} 
+              {kind==='all'?'View all':kind==='moderator'?'Moderator':kind==='store-orders'?'Store Orders':(kind.charAt(0).toUpperCase()+kind.slice(1))} 
               {kind==='moderator' && cPending > 0 && (
                 <span style={{
                   marginLeft: '6px',
@@ -317,10 +399,179 @@ export default function Manage(){
         })}
       </div>
       <div id="adsList" style={{display:'flex', flexDirection:'column', gap:12}}>
-        {list.length===0 && (
+        {tab === 'store-orders' ? (
+          storeOrders.length === 0 ? (
+            <div style={{textAlign:'center', color:'rgba(0,47,52,.64)', padding:'40px'}}>
+              <div style={{fontSize:'18px', marginBottom:'8px'}}>No store orders yet</div>
+              <div style={{fontSize:'14px'}}>Orders for your products will appear here</div>
+            </div>
+          ) : (
+            storeOrders.map((order, orderIndex) => {
+              // Filter items that belong to this seller
+              const sellerItems = order.items.filter(item => item.seller_id === getTokenUserId())
+              const sellerTotal = sellerItems.reduce((sum, item) => {
+                const price = Number(String(item.price||'0').replace(/[^0-9.-]/g,'')) || 0
+                return sum + price
+              }, 0)
+              
+              return (
+                <div key={order.orderId || orderIndex} style={{
+                  border:'1px solid #012f34',
+                  borderRadius:6,
+                  padding:16,
+                  background:'#fff'
+                }}>
+                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12}}>
+                    <div>
+                      <div style={{fontSize:'18px', fontWeight:600, marginBottom:4}}>
+                        Order #{order.orderId}
+                      </div>
+                      <div style={{fontSize:'14px', color:'rgba(0,47,52,.64)'}}>
+                        {formatDate(order.orderDate)}
+                      </div>
+                    </div>
+                    <div style={{textAlign:'right'}}>
+                      <div style={{fontSize:'20px', fontWeight:700, color:'#f55100'}}>
+                        {formatPrice(sellerTotal)}
+                      </div>
+                      <div style={{fontSize:'12px', color:'rgba(0,47,52,.64)'}}>
+                        {sellerItems.length} {sellerItems.length === 1 ? 'item' : 'items'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div style={{marginBottom:12, padding:12, background:'rgba(1,47,52,.05)', borderRadius:6}}>
+                    <div style={{fontSize:'12px', fontWeight:600, marginBottom:8, color:'rgba(0,47,52,.64)'}}>CUSTOMER INFO</div>
+                    <div style={{fontSize:'14px', color:'#012f34'}}>
+                      <div style={{fontWeight:600, marginBottom:4}}>{order.shipping?.fullName}</div>
+                      <div>{order.shipping?.email}</div>
+                      <div>{order.shipping?.phone}</div>
+                      <div style={{marginTop:4}}>{order.shipping?.address}, {order.shipping?.city}</div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div style={{fontSize:'12px', fontWeight:600, marginBottom:8, color:'rgba(0,47,52,.64)'}}>YOUR ITEMS IN THIS ORDER</div>
+                    <div style={{display:'flex', flexDirection:'column', gap:8}}>
+                      {sellerItems.map((item, idx) => (
+                        <div key={idx} style={{
+                          display:'flex',
+                          gap:12,
+                          padding:12,
+                          background:'#f9f9f9',
+                          borderRadius:6
+                        }}>
+                          <img 
+                            src={item.image || '/images/products/img1.jpg'} 
+                            alt={item.title}
+                            style={{
+                              width:80,
+                              height:80,
+                              borderRadius:6,
+                              objectFit:'cover'
+                            }}
+                          />
+                          <div style={{flex:1}}>
+                            <div style={{fontWeight:500, marginBottom:4}}>{item.title}</div>
+                            <div style={{fontSize:'16px', fontWeight:700, color:'#f55100'}}>
+                              {formatPrice(item.price)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    marginTop:12,
+                    padding:12,
+                    borderTop:'1px solid rgba(1,47,52,.1)',
+                    display:'flex',
+                    flexDirection:'column',
+                    gap:12
+                  }}>
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                      <div style={{fontSize:'14px', color:'rgba(0,47,52,.64)'}}>
+                        Payment: {order.paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : 'Bank Transfer'}
+                      </div>
+                      <div style={{
+                        padding:'6px 12px',
+                        borderRadius:12,
+                        background: (order.status || 'pending') === 'completed' ? 'rgba(37,211,102,.1)' : 
+                                   (order.status || 'pending') === 'cancelled' ? 'rgba(176,0,32,.1)' : 
+                                   'rgba(245,81,0,.1)',
+                        color: (order.status || 'pending') === 'completed' ? '#25D366' : 
+                               (order.status || 'pending') === 'cancelled' ? '#b00020' : 
+                               '#f55100',
+                        fontSize:'12px',
+                        fontWeight:600
+                      }}>
+                        {(order.status || 'pending').charAt(0).toUpperCase() + (order.status || 'pending').slice(1)}
+                      </div>
+                    </div>
+                    
+                    <div style={{
+                      display:'flex',
+                      alignItems:'center',
+                      gap:8,
+                      paddingTop:8,
+                      borderTop:'1px solid rgba(1,47,52,.1)'
+                    }}>
+                      <label style={{fontSize:'14px', fontWeight:600, color:'#012f34'}}>
+                        Update Status:
+                      </label>
+                      <select
+                        value={order.status || 'pending'}
+                        onChange={(e) => {
+                          const newStatus = e.target.value
+                          if (newStatus !== (order.status || 'pending')) {
+                            try{
+                              if (typeof window !== 'undefined' && window.swal){
+                                window.swal({
+                                  title: 'Update Order Status?',
+                                  text: `Change order status to "${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}"?`,
+                                  icon: 'warning',
+                                  buttons: ['Cancel', 'Update']
+                                }).then(ok => {
+                                  if (ok) updateOrderStatus(order.orderId, newStatus)
+                                })
+                              } else {
+                                const confirm = window.confirm(`Change order status to "${newStatus}"?`)
+                                if (confirm) updateOrderStatus(order.orderId, newStatus)
+                              }
+                            }catch(_){
+                              updateOrderStatus(order.orderId, newStatus)
+                            }
+                          }
+                        }}
+                        style={{
+                          padding:'8px 12px',
+                          borderRadius:6,
+                          border:'1px solid rgba(1,47,52,.2)',
+                          fontSize:'14px',
+                          fontWeight:500,
+                          color:'#012f34',
+                          background:'#fff',
+                          cursor:'pointer',
+                          outline:'none'
+                        }}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )
+            })
+          )
+        ) : list.length===0 ? (
           <div style={{textAlign:'center', color:'rgba(0,47,52,.64)'}}>No ads found</div>
-        )}
-        {list.map((p, i) => {
+        ) : (
+          list.map((p, i) => {
           let imgSrc = p.image
           if (imgSrc === './images/img1.jpg') imgSrc = '/images/products/img1.jpg'
           const idx = tab === 'moderator' ? -1 : products.indexOf(p)
@@ -384,7 +635,7 @@ export default function Manage(){
               </div>
             </div>
           )
-        })}
+        }))}
       </div>
       </div>
     </div>

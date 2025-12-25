@@ -183,6 +183,8 @@ export default function CategoryPage(){
           const slug = base.slug || (slugify(base.title || base.name)+'-'+id)
           const key = 'db:'+String(id)
           const status = String(statusMap[key]||'active')
+          // Include featured field from database
+          const featured = base.featured || p.featured || 0
           return {
             id,
             slug,
@@ -193,7 +195,8 @@ export default function CategoryPage(){
             location: base.location || '',
             profilePhone: base.profilePhone || '',
             category: catLabel,
-            status
+            status,
+            featured
           }
         })
         let merged = list.filter(p => String(p.status||'active')==='active')
@@ -694,7 +697,8 @@ export default function CategoryPage(){
               >
                 <div style={{position:'relative', width:240, height:180}}>
                   <Image src={card.image} alt={card.name} width={240} height={180} loading="lazy" sizes="(max-width: 768px) 100vw, 240px" unoptimized style={{borderRadius:10, width:'100%', height:'100%', objectFit:'cover', display:'block'}} />
-                  {(i % 10 === 0) && (
+                  {/* Check actual featured field from database, not index position */}
+                  {(card.featured === 1 || card.featured === true || (card.featured && Number(card.featured) === 1)) && (
                     <span style={{position:'absolute', top:8, left:8, background:'#ffce32', color:'#012f34', fontWeight:700, borderRadius:6, padding:'4px 8px', fontSize:12}}>Featured</span>
                   )}
                 </div>
