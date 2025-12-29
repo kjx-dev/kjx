@@ -142,8 +142,11 @@ export default async function handler(req, res){
       if (!prisma){ res.setHeader('Content-Type','application/json'); res.status(503).json({ status:'error', message:'Database unavailable', data:null, request_id:reqId }); return }
       await ensureTables(prisma)
       
-      // Check if user is admin
+      // Check if user is admin, manager, or data_entry
       let isAdmin = false
+      let isManager = false
+      let isDataEntry = false
+      let hasEditPermission = false
       try {
         const auth = req.headers['authorization'] || ''
         const token = auth.startsWith('Bearer ') ? auth.slice(7) : null
@@ -158,8 +161,18 @@ export default async function handler(req, res){
                 // Token expired
               } else if (payload.sub) {
                 const userRows = await prisma.$queryRaw`SELECT role FROM users WHERE user_id=${payload.sub} LIMIT 1`
-                if (Array.isArray(userRows) && userRows.length && userRows[0].role === 'admin') {
-                  isAdmin = true
+                if (Array.isArray(userRows) && userRows.length) {
+                  const userRole = String(userRows[0].role || 'user').toLowerCase().trim()
+                  if (userRole === 'admin') {
+                    isAdmin = true
+                    hasEditPermission = true
+                  } else if (userRole === 'manager') {
+                    isManager = true
+                    hasEditPermission = true
+                  } else if (userRole === 'data_entry' || userRole === 'dataentry') {
+                    isDataEntry = true
+                    hasEditPermission = true
+                  }
                 }
               }
             }
@@ -168,10 +181,11 @@ export default async function handler(req, res){
         // Also check query parameter for admin requests
         if (req.query.admin === 'true' || req.query.showAll === 'true') {
           isAdmin = true
+          hasEditPermission = true
         }
       } catch (e) {
-        // If we can't verify admin status, assume not admin
-        console.log('Error checking admin status:', e.message)
+        // If we can't verify user status, assume no special permissions
+        console.log('Error checking user role:', e.message)
       }
       
       let catId = patch.category_id || null
@@ -197,21 +211,21 @@ export default async function handler(req, res){
         // Handle status updates
         let statusValue = patch.status || null
         
-        // If admin is only updating status (approving/rejecting), allow it
-        if (isAdmin && !isEditingContent && statusValue !== null) {
-          // Admin is only changing status - allow it
+        // If user with edit permission (admin/manager/data_entry) is only updating status (approving/rejecting), allow it
+        if (hasEditPermission && !isEditingContent && statusValue !== null) {
+          // User with permission is only changing status - allow it
           // statusValue stays as provided
-        } else if (!isAdmin && isEditingContent) {
-          // Non-admin editing content - force status to pending
+        } else if (!hasEditPermission && isEditingContent) {
+          // Regular user editing content - force status to pending
           statusValue = 'pending'
-        } else if (!isAdmin && statusValue === 'active') {
-          // Non-admin trying to set status to active - not allowed
+        } else if (!hasEditPermission && statusValue === 'active') {
+          // Regular user trying to set status to active - not allowed
           statusValue = null // Don't update status
-        } else if (isAdmin && isEditingContent) {
-          // Admin editing content - allow status change if provided, otherwise keep current
+        } else if (hasEditPermission && isEditingContent) {
+          // User with permission editing content - allow status change if provided, otherwise keep current
           // If status is not provided, don't change it
           if (statusValue === null) {
-            // Don't update status if admin is editing content and didn't specify status
+            // Don't update status if user is editing content and didn't specify status
             statusValue = null
           }
         }

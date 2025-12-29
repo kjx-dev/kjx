@@ -30,6 +30,7 @@ function browseLabelForSlug(s){
   const key = String(s||'').toLowerCase()
   return m[key] || titleCase(key)
 }
+import { getShortCategoryName } from '../../lib/categoryNames'
 
 export default function CategoryPage(){
   const router = useRouter()
@@ -271,17 +272,33 @@ export default function CategoryPage(){
     const n = String(p.profilePhone||'').replace(/[^0-9]/g,'')
     if (n) { try{ window.location.href = 'tel:'+n }catch(_){ } }
   }
-  function provinceFor(city){
-    const c = String(city||'').toLowerCase()
-    if (c==='karachi' || c==='hyderabad') return 'Sindh'
-    if (c==='lahore' || c==='faisalabad' || c==='multan' || c==='sialkot' || c==='gujranwala') return 'Punjab'
-    if (c==='islamabad') return 'Islamabad Capital Territory'
-    if (c==='peshawar') return 'Khyber Pakhtunkhwa'
-    if (c==='quetta') return 'Balochistan'
-    return 'Northern Areas'
+  function formatLocationName(loc){
+    const city = String(loc||'').trim()
+    if (!city) return ''
+    const cityLower = city.toLowerCase()
+    // Match cities from header search (case-insensitive) and return capitalized version
+    const cityMap = {
+      'karachi': 'Karachi',
+      'lahore': 'Lahore',
+      'islamabad': 'Islamabad',
+      'rawalpindi': 'Rawalpindi',
+      'peshawar': 'Peshawar',
+      'quetta': 'Quetta',
+      'multan': 'Multan',
+      'hyderabad': 'Hyderabad',
+      'faisalabad': 'Faisalabad',
+      'sialkot': 'Sialkot',
+      'gujranwala': 'Gujranwala'
+    }
+    return cityMap[cityLower] || city
+  }
+  function matchesLocation(productLocation, filterLocation){
+    if (!filterLocation) return true
+    const productLoc = formatLocationName(productLocation)
+    return productLoc.toLowerCase() === filterLocation.toLowerCase()
   }
   const filtered = products.filter(p => {
-    const byLoc = !filterLocation || String(p.location||'') === filterLocation || provinceFor(p.location) === filterLocation
+    const byLoc = matchesLocation(p.location, filterLocation)
     const price = Number(p.price||0)
     const byMin = !priceMin || price >= Number(priceMin)
     const byMax = !priceMax || price <= Number(priceMax)
@@ -350,7 +367,7 @@ export default function CategoryPage(){
               return tiles.map((c, idx) => {
                 if (!c || !c.k) return null
                 try {
-                  const displayLabel = c.shortLabel || c.label || c.k || 'Category'
+                  const displayLabel = getShortCategoryName(c.shortLabel || c.label, c.k) || 'Category'
                   const catSlug = slug(c.k)
                   return (
                     <a 
@@ -409,16 +426,17 @@ export default function CategoryPage(){
           })()}
         </div>
         <div className="fresh__recomandation" aria-labelledby="cat-title" style={{textAlign:'left',
-          margin:'20px 0 0 0'
+          margin:'24px 0 0 0',
+          padding:'0 16px'
         }}>
-          <h1 id="cat-title" style={{fontWeight:500, textAlign:'left'}}>{label}</h1>
+          <h1 id="cat-title" style={{fontWeight:600, textAlign:'left', fontSize:28, fontFamily:'var(--font-roboto), Roboto, sans-serif', letterSpacing:'-0.01em', lineHeight:1.3, color:'#012f34', margin:'0 0 8px 0'}}>{label}</h1>
           <div style={{
             // maxWidth:1100,
              margin:'0 auto', padding:'0 0px'}}>
-          <div className="cat__layout" style={{display:'grid', gridTemplateColumns:'280px 1fr', gap:16}}>
+          <div className="cat__layout" style={{display:'grid', gridTemplateColumns:'280px 1fr', gap:20}}>
             <aside style={{position:'sticky', top:80, alignSelf:'start'}}>
-              <div className="sell__section" style={{border:'1px solid rgba(1,47,52,.2)', borderRadius:12, padding:20, background:'#fff', boxShadow:'0 2px 8px rgba(0,0,0,.04)'}}>
-                <h4 style={{margin:'0 0 16px 0', fontSize:18, fontWeight:600, color:'#012f34', letterSpacing:'-0.01em'}}>Categories</h4>
+              <div className="sell__section" style={{border:'1px solid rgba(1,47,52,.15)', borderRadius:8, padding:20, background:'#fff'}}>
+                <h4 style={{margin:'0 0 16px 0', fontSize:16, fontWeight:600, color:'#012f34', fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>Categories</h4>
                 <div style={{maxHeight:450, overflowY:'auto', overflowX:'hidden'}}>
                   <ul style={{listStyle:'none', padding:0, margin:0}}>
                     <li>
@@ -428,15 +446,16 @@ export default function CategoryPage(){
                         style={{
                           textDecoration:'none', 
                           display:'block', 
-                          padding:'12px 0', 
-                          color:'rgba(0,47,52,.84)',
-                          fontSize:15,
+                          padding:'10px 0', 
+                          color:'rgba(0,47,52,.8)',
+                          fontSize:14,
                           fontWeight:400,
+                          fontFamily:'var(--font-roboto), Roboto, sans-serif',
                           borderBottom:'1px solid rgba(1,47,52,.1)',
-                          transition:'all 0.2s ease'
+                          transition:'color 0.2s ease'
                         }}
-                        onMouseEnter={(e)=>{ e.currentTarget.style.color = '#012f34'; e.currentTarget.style.paddingLeft = '4px' }}
-                        onMouseLeave={(e)=>{ e.currentTarget.style.color = 'rgba(0,47,52,.84)'; e.currentTarget.style.paddingLeft = '0' }}
+                        onMouseEnter={(e)=>{ e.currentTarget.style.color = '#012f34' }}
+                        onMouseLeave={(e)=>{ e.currentTarget.style.color = 'rgba(0,47,52,.8)' }}
                       >
                         All categories
                       </a>
@@ -463,31 +482,30 @@ export default function CategoryPage(){
                               style={{
                                 textDecoration:'none', 
                                 display:'block', 
-                                padding:'12px 0', 
-                                color: active ? '#012f34' : 'rgba(0,47,52,.84)',
-                                fontSize:15,
+                                padding:'10px 0', 
+                                color: active ? '#012f34' : 'rgba(0,47,52,.8)',
+                                fontSize:14,
                                 fontWeight: active ? 500 : 400,
+                                fontFamily:'var(--font-roboto), Roboto, sans-serif',
                                 borderBottom:'1px solid rgba(1,47,52,.1)',
-                                transition:'all 0.2s ease',
+                                transition:'color 0.2s ease',
                                 position:'relative'
                               }}
                               onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('selectedCategory', s) }catch(_){ } router.push('/category/'+s) }}
                               onMouseEnter={(e)=>{ 
                                 if(!active) {
                                   e.currentTarget.style.color = '#012f34'
-                                  e.currentTarget.style.paddingLeft = '4px'
                                 }
                               }}
                               onMouseLeave={(e)=>{ 
                                 if(!active) {
-                                  e.currentTarget.style.color = 'rgba(0,47,52,.84)'
-                                  e.currentTarget.style.paddingLeft = '0'
+                                  e.currentTarget.style.color = 'rgba(0,47,52,.8)'
                                 }
                               }}
                               aria-current={active ? 'page' : undefined}
                             >
-                              {active && <span style={{position:'absolute', left:0, top:'50%', transform:'translateY(-50%)', width:3, height:16, background:'#3a77ff', borderRadius:'0 2px 2px 0'}}></span>}
-                              <span style={{display:'inline-block', marginLeft: active ? '8px' : '0', transition:'margin-left 0.2s ease'}}>{c.label}</span>
+                              {active && <span style={{position:'absolute', left:0, top:'50%', transform:'translateY(-50%)', width:3, height:18, background:'#012f34', borderRadius:'0 2px 2px 0'}}></span>}
+                              <span style={{display:'inline-block', marginLeft: active ? '8px' : '0', transition:'margin-left 0.2s ease'}}>{getShortCategoryName(c.shortLabel || c.label, c.k)}</span>
                             </a>
                           </li>
                         )
@@ -504,14 +522,15 @@ export default function CategoryPage(){
                         onClick={(e)=>{ e.preventDefault(); setCatExpanded(true) }}
                         style={{
                           textDecoration:'none',
-                          color:'#3a77ff',
+                          color:'rgba(0,47,52,.7)',
                           fontSize:14,
-                          fontWeight:500,
+                          fontWeight:400,
                           display:'inline-block',
-                          transition:'all 0.2s ease'
+                          transition:'color 0.2s ease',
+                          fontFamily:'var(--font-roboto), Roboto, sans-serif'
                         }}
-                        onMouseEnter={(e)=>{ e.currentTarget.style.textDecoration = 'underline'; e.currentTarget.style.color = '#2d5cdd' }}
-                        onMouseLeave={(e)=>{ e.currentTarget.style.textDecoration = 'none'; e.currentTarget.style.color = '#3a77ff' }}
+                        onMouseEnter={(e)=>{ e.currentTarget.style.color = '#012f34' }}
+                        onMouseLeave={(e)=>{ e.currentTarget.style.color = 'rgba(0,47,52,.7)' }}
                       >
                         View more
                       </a>
@@ -519,10 +538,10 @@ export default function CategoryPage(){
                   ) : null
                 })()}
               </div>
-              <div className="filter__card" style={{marginTop:12}}>
-                <div className="filter__header">
-                  <div className="filter__title"><i className="fa-solid fa-location-dot"></i><h4 style={{margin:0}}>Location</h4></div>
-                  <button className="filter__toggle" onClick={()=>setCountryOpen(v=>!v)} aria-expanded={countryOpen} style={{transform: countryOpen ? 'rotate(180deg)' : 'rotate(0deg)'}}><i className="fa-solid fa-chevron-down"></i></button>
+              <div className="filter__card" style={{marginTop:12, border:'1px solid rgba(1,47,52,.15)', borderRadius:8, padding:20, background:'#fff'}}>
+                <div className="filter__header" style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12}}>
+                  <h4 style={{margin:0, fontSize:16, fontWeight:600, color:'#012f34', fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>Location</h4>
+                  <button className="filter__toggle" onClick={()=>setCountryOpen(v=>!v)} aria-expanded={countryOpen} style={{transform: countryOpen ? 'rotate(180deg)' : 'rotate(0deg)', border:'none', background:'transparent', cursor:'pointer', padding:4, transition:'transform 0.2s ease'}}><i className="fa-solid fa-chevron-down" style={{color:'rgba(0,47,52,.6)', fontSize:12}}></i></button>
                 </div>
                 <div className="filter__meta"><i className="fa-solid fa-location-dot"></i><span>Pakistan</span></div>
                 {filterLocation && (
@@ -532,23 +551,43 @@ export default function CategoryPage(){
                   </div>
                 )}
                 {countryOpen && (
-                <ul className="filter__list">
-                  {[ 'Punjab','Sindh','Islamabad Capital Territory','Khyber Pakhtunkhwa','Balochistan','Azad Kashmir','Northern Areas' ].map(prov => (
-                    <li key={prov}>
+                <ul className="filter__list" style={{listStyle:'none', padding:0, margin:0}}>
+                  {locations.map(city => (
+                    <li key={city}>
                       <a
                         href="#"
-                        onClick={(e)=>{ e.preventDefault(); setFilterLocation(prov); setDisplayCount(12) }}
-                        className={filterLocation===prov ? 'active' : ''}
+                        onClick={(e)=>{ e.preventDefault(); setFilterLocation(city); setDisplayCount(12) }}
+                        className={filterLocation===city ? 'active' : ''}
+                        style={{
+                          display:'block',
+                          padding:'8px 0',
+                          textDecoration:'none',
+                          color: filterLocation===city ? '#012f34' : 'rgba(0,47,52,.7)',
+                          fontFamily:'var(--font-roboto), Roboto, sans-serif',
+                          fontSize:14,
+                          fontWeight: filterLocation===city ? 500 : 400,
+                          transition:'color 0.2s ease'
+                        }}
+                        onMouseEnter={(e)=>{ 
+                          if(filterLocation!==city) {
+                            e.currentTarget.style.color = '#012f34'
+                          }
+                        }}
+                        onMouseLeave={(e)=>{ 
+                          if(filterLocation!==city) {
+                            e.currentTarget.style.color = 'rgba(0,47,52,.7)'
+                          }
+                        }}
                       >
-                        <span className="label"><i className="fa-solid fa-circle"></i>{prov}</span>
+                        {city}
                       </a>
                     </li>
                   ))}
                 </ul>
                 )}
               </div>
-              <div className="sell__section" style={{border:'1px solid rgba(1,47,52,.2)', borderRadius:12, padding:12, marginTop:12, background:'#fff', boxShadow:'0 2px 8px rgba(0,0,0,.04)'}}>
-                <h4 style={{marginTop:0}}>Price</h4>
+              <div className="sell__section" style={{border:'1px solid rgba(1,47,52,.15)', borderRadius:8, padding:20, marginTop:12, background:'#fff'}}>
+                <h4 style={{margin:'0 0 16px 0', fontSize:16, fontWeight:600, color:'#012f34', fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>Price</h4>
                 <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8}}>
                   <div style={{position:'relative'}}>
                     <span aria-hidden="true" style={{position:'absolute', left:10, top:'50%', transform:'translateY(-50%)', color:'rgba(0,47,52,.64)'}}>Rs</span>
@@ -595,11 +634,13 @@ export default function CategoryPage(){
             </aside>
             <main>
           
-          <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', margin:'8px 0'}}>
-            <div style={{color:'rgba(0,47,52,.64)'}}>{products.length} results</div>
+          <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', margin:'16px 0'}}>
+            <div style={{color:'rgba(0,47,52,.7)', fontSize:14, fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>
+              {filtered.length} {filtered.length === 1 ? 'result' : 'results'} {filterLocation && `in ${filterLocation}`}
+            </div>
             <div style={{display:'flex', alignItems:'center', gap:12}}>
               <div style={{display:'inline-flex', alignItems:'center', gap:8}}>
-                <span style={{fontWeight:600, color:'#012f34'}}>View</span>
+                <span style={{fontWeight:600, color:'#012f34', fontSize:14, fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>View</span>
                 <button aria-label="List view" onClick={()=>setView('list')} style={{border:'none', background: view==='list' ? '#e6eff6' : 'transparent', borderRadius:'50%', width:28, height:28, display:'inline-flex', alignItems:'center', justifyContent:'center', color:'#012f34'}}>
                   <i className="fa-solid fa-bars"></i>
                 </button>
@@ -609,7 +650,7 @@ export default function CategoryPage(){
                 <span aria-hidden="true" style={{width:1, height:24, background:'rgba(1,47,52,.2)'}}></span>
               </div>
               <div style={{position:'relative', display:'inline-flex', alignItems:'center', gap:8}} ref={sortWrapRef}>
-                <span style={{fontWeight:600, color:'#012f34'}}>Sort by:</span>
+                <span style={{fontWeight:600, color:'#012f34', fontSize:14, fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>Sort by:</span>
                 <button 
                   ref={sortBtnRef} 
                   aria-haspopup="true" 
@@ -627,6 +668,7 @@ export default function CategoryPage(){
                     borderRadius:8,
                     fontWeight:500,
                     fontSize:14,
+                    fontFamily:'var(--font-roboto), Roboto, sans-serif',
                     transition:'all 0.2s ease'
                   }}
                   onMouseEnter={(e)=>{ if(!sortOpen) e.currentTarget.style.background = '#f5f8fa' }}
@@ -659,6 +701,7 @@ export default function CategoryPage(){
                           color: sortKey===opt.k ? '#012f34' : 'rgba(0,47,52,.84)',
                           fontWeight: sortKey===opt.k ? 600 : 400,
                           fontSize:14,
+                          fontFamily:'var(--font-roboto), Roboto, sans-serif',
                           transition:'all 0.15s ease'
                         }}
                         onMouseEnter={(e)=>{ if(sortKey!==opt.k) e.currentTarget.style.background = '#f5f8fa' }}
@@ -707,9 +750,9 @@ export default function CategoryPage(){
                     <h4 style={{margin:0, fontSize:16, color:'#012f34', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden'}}>{card.name}</h4>
                   </a>
                   <h2 aria-label={'Price ' + card.price} style={{margin:'6px 0', fontSize:18, color:'#012f34'}}>Rs {card.price}</h2>
-                  <div style={{display:'flex', alignItems:'center', gap:8, color:'rgba(0,47,52,.72)'}}>
+                  <div style={{display:'flex', alignItems:'center', gap:8, color:'rgba(0,47,52,.72)', fontSize:14, fontFamily:'var(--font-roboto), Roboto, sans-serif', lineHeight:1.4}}>
                     <i className="fa-solid fa-location-dot" aria-hidden="true"></i>
-                    <span>{card.location}</span>
+                    <span>{formatLocationName(card.location)}</span>
                     <span style={{margin:'0 4px'}}>•</span>
                     <span style={{whiteSpace:'nowrap'}}>{label}</span>
                   </div>
@@ -758,7 +801,7 @@ export default function CategoryPage(){
                   {catTiles.filter(t=>t.label!==label).slice(0,6).map(t=>{
                     const s = String(t.k||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
                     return (
-                      <a key={t.k} href={'/category/'+s} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('selectedCategory', s) }catch(_){ } router.push('/category/'+s) }} style={{textDecoration:'none', border:'1px solid rgba(1,47,52,.16)', borderRadius:9999, padding:'6px 10px', color:'rgba(0,47,52,.84)'}}>{t.label}</a>
+                      <a key={t.k} href={'/category/'+s} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('selectedCategory', s) }catch(_){ } router.push('/category/'+s) }} style={{textDecoration:'none', border:'1px solid rgba(1,47,52,.16)', borderRadius:9999, padding:'8px 14px', color:'rgba(0,47,52,.84)', fontSize:13, fontFamily:'var(--font-roboto), Roboto, sans-serif', fontWeight:400, transition:'all 0.2s ease'}} onMouseEnter={(e)=>{ e.currentTarget.style.background='rgba(1,47,52,.05)'; e.currentTarget.style.borderColor='rgba(1,47,52,.3)'}} onMouseLeave={(e)=>{ e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='rgba(1,47,52,.16)'}}>{getShortCategoryName(t.shortLabel || t.label, t.k)}</a>
                     )
                   })}
                 </div>
@@ -775,12 +818,12 @@ export default function CategoryPage(){
                 <div className="card__content" style={{padding:'10px 12px'}}>
                   <div className="card__content-gap">
                     <div className="name__heart">
-                      <h4 style={{margin:0, fontSize:16, color:'#012f34', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden'}}>{card.name}</h4>
+                      <h4 style={{margin:0, fontSize:16, color:'#012f34', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', fontFamily:'var(--font-roboto), Roboto, sans-serif', fontWeight:500, lineHeight:1.4}}>{card.name}</h4>
                       <i className="fa-solid fa-heart" aria-hidden="true"></i>
                     </div>
-                    <h2 aria-label={'Price ' + card.price} style={{margin:'6px 0', fontSize:18, color:'#012f34'}}>Rs {card.price}</h2>
+                    <h2 aria-label={'Price ' + card.price} style={{margin:'6px 0', fontSize:18, color:'#012f34', fontFamily:'var(--font-roboto), Roboto, sans-serif', fontWeight:600, lineHeight:1.3}}>Rs {card.price}</h2>
                   </div>
-                  <h5 className="card__location" style={{color:'rgba(0,47,52,.72)'}}><i className="fa-solid fa-location-dot" aria-hidden="true"></i> {card.location}</h5>
+                  <h5 className="card__location" style={{color:'rgba(0,47,52,.72)', fontSize:14, fontFamily:'var(--font-roboto), Roboto, sans-serif', fontWeight:400, lineHeight:1.4}}><i className="fa-solid fa-location-dot" aria-hidden="true"></i> {formatLocationName(card.location)}</h5>
                 </div>
               </article>
             ))}
@@ -809,7 +852,7 @@ export default function CategoryPage(){
                   {catTiles.filter(t=>t.label!==label).slice(0,6).map(t=>{
                     const s = String(t.k||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
                     return (
-                      <a key={t.k} href={'/category/'+s} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('selectedCategory', s) }catch(_){ } router.push('/category/'+s) }} style={{textDecoration:'none', border:'1px solid rgba(1,47,52,.16)', borderRadius:9999, padding:'6px 10px', color:'rgba(0,47,52,.84)'}}>{t.label}</a>
+                      <a key={t.k} href={'/category/'+s} onClick={(e)=>{ e.preventDefault(); try{ localStorage.setItem('selectedCategory', s) }catch(_){ } router.push('/category/'+s) }} style={{textDecoration:'none', border:'1px solid rgba(1,47,52,.16)', borderRadius:9999, padding:'8px 14px', color:'rgba(0,47,52,.84)', fontSize:13, fontFamily:'var(--font-roboto), Roboto, sans-serif', fontWeight:400, transition:'all 0.2s ease'}} onMouseEnter={(e)=>{ e.currentTarget.style.background='rgba(1,47,52,.05)'; e.currentTarget.style.borderColor='rgba(1,47,52,.3)'}} onMouseLeave={(e)=>{ e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='rgba(1,47,52,.16)'}}>{getShortCategoryName(t.shortLabel || t.label, t.k)}</a>
                     )
                   })}
                 </div>

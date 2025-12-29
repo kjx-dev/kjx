@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import Header from '../components/Header'
+import { FaShoppingBag, FaMapMarkerAlt, FaPhone, FaEnvelope, FaCalendar, FaCheckCircle, FaClock, FaTimesCircle, FaChevronRight, FaBox, FaCreditCard, FaUser } from 'react-icons/fa'
 
 export default function Manage(){
   const router = useRouter()
@@ -466,174 +467,395 @@ export default function Manage(){
       <div id="adsList" style={{display:'flex', flexDirection:'column', gap:12}}>
         {tab === 'store-orders' ? (
           storeOrders.length === 0 ? (
-            <div style={{textAlign:'center', color:'rgba(0,47,52,.64)', padding:'40px'}}>
-              <div style={{fontSize:'18px', marginBottom:'8px'}}>No store orders yet</div>
-              <div style={{fontSize:'14px'}}>Orders for your products will appear here</div>
+            <div style={{
+              background: '#fff',
+              borderRadius: '16px',
+              padding: '80px 20px',
+              textAlign: 'center',
+              border: '1px solid rgba(1,47,52,.1)'
+            }}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: 'rgba(1,47,52,.05)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 24px'
+              }}>
+                <FaShoppingBag style={{fontSize: '36px', color: 'rgba(1,47,52,.3)'}} />
+              </div>
+              <h2 style={{
+                fontSize: '24px', 
+                fontWeight: '600', 
+                marginBottom: '12px', 
+                color: '#012f34',
+                fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+              }}>
+                No store orders yet
+              </h2>
+              <p style={{
+                color: 'rgba(0,47,52,.64)', 
+                fontSize: '15px',
+                fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+              }}>
+                Orders for your products will appear here
+              </p>
             </div>
           ) : (
-            storeOrders.map((order, orderIndex) => {
-              // Filter items that belong to this seller
-              const sellerItems = order.items.filter(item => item.seller_id === getTokenUserId())
-              const sellerTotal = sellerItems.reduce((sum, item) => {
-                const price = Number(String(item.price||'0').replace(/[^0-9.-]/g,'')) || 0
-                return sum + price
-              }, 0)
-              
-              return (
-                <div key={order.orderId || orderIndex} style={{
-                  border:'1px solid #012f34',
-                  borderRadius:6,
-                  padding:16,
-                  background:'#fff'
-                }}>
-                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12}}>
-                    <div>
-                      <div style={{fontSize:'18px', fontWeight:600, marginBottom:4}}>
-                        Order #{order.orderId}
-                      </div>
-                      <div style={{fontSize:'14px', color:'rgba(0,47,52,.64)'}}>
-                        {formatDate(order.orderDate)}
-                      </div>
-                    </div>
-                    <div style={{textAlign:'right'}}>
-                      <div style={{fontSize:'20px', fontWeight:700, color:'#f55100'}}>
-                        {formatPrice(sellerTotal)}
-                      </div>
-                      <div style={{fontSize:'12px', color:'rgba(0,47,52,.64)'}}>
-                        {sellerItems.length} {sellerItems.length === 1 ? 'item' : 'items'}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div style={{marginBottom:12, padding:12, background:'rgba(1,47,52,.05)', borderRadius:6}}>
-                    <div style={{fontSize:'12px', fontWeight:600, marginBottom:8, color:'rgba(0,47,52,.64)'}}>CUSTOMER INFO</div>
-                    <div style={{fontSize:'14px', color:'#012f34'}}>
-                      <div style={{fontWeight:600, marginBottom:4}}>{order.shipping?.fullName}</div>
-                      <div>{order.shipping?.email}</div>
-                      <div>{order.shipping?.phone}</div>
-                      <div style={{marginTop:4}}>{order.shipping?.address}, {order.shipping?.city}</div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div style={{fontSize:'12px', fontWeight:600, marginBottom:8, color:'rgba(0,47,52,.64)'}}>YOUR ITEMS IN THIS ORDER</div>
-                    <div style={{display:'flex', flexDirection:'column', gap:8}}>
-                      {sellerItems.map((item, idx) => (
-                        <div key={idx} style={{
-                          display:'flex',
-                          gap:12,
-                          padding:12,
-                          background:'#f9f9f9',
-                          borderRadius:6
-                        }}>
-                          <img 
-                            src={item.image || '/images/products/img1.jpg'} 
-                            alt={item.title}
-                            style={{
-                              width:80,
-                              height:80,
-                              borderRadius:6,
-                              objectFit:'cover'
-                            }}
-                          />
-                          <div style={{flex:1}}>
-                            <div style={{fontWeight:500, marginBottom:4}}>{item.title}</div>
-                            <div style={{fontSize:'16px', fontWeight:700, color:'#f55100'}}>
-                              {formatPrice(item.price)}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div style={{
-                    marginTop:12,
-                    padding:12,
-                    borderTop:'1px solid rgba(1,47,52,.1)',
-                    display:'flex',
-                    flexDirection:'column',
-                    gap:12
+            <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
+              {storeOrders.map((order, orderIndex) => {
+                // Filter items that belong to this seller
+                const sellerItems = order.items.filter(item => item.seller_id === getTokenUserId())
+                const sellerTotal = sellerItems.reduce((sum, item) => {
+                  const price = Number(String(item.price||'0').replace(/[^0-9.-]/g,'')) || 0
+                  return sum + price
+                }, 0)
+                
+                function getStatusIcon(status){
+                  switch(status){
+                    case 'completed':
+                      return <FaCheckCircle style={{color: '#25D366', fontSize: '16px'}} />
+                    case 'cancelled':
+                      return <FaTimesCircle style={{color: '#b00020', fontSize: '16px'}} />
+                    case 'processing':
+                      return <FaClock style={{color: '#3a77ff', fontSize: '16px'}} />
+                    default:
+                      return <FaClock style={{color: '#f55100', fontSize: '16px'}} />
+                  }
+                }
+
+                function getStatusColor(status){
+                  switch(status){
+                    case 'completed':
+                      return '#25D366'
+                    case 'cancelled':
+                      return '#b00020'
+                    case 'processing':
+                      return '#3a77ff'
+                    default:
+                      return '#f55100'
+                  }
+                }
+                
+                return (
+                  <div key={order.orderId || orderIndex} style={{
+                    background: '#fff',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    border: '1px solid rgba(1,47,52,.1)',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 8px rgba(0,0,0,.04)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,.08)'
+                    e.currentTarget.style.borderColor = 'rgba(1,47,52,.2)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,.04)'
+                    e.currentTarget.style.borderColor = 'rgba(1,47,52,.1)'
                   }}>
-                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                      <div style={{fontSize:'14px', color:'rgba(0,47,52,.64)'}}>
-                        Payment: {order.paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : 'Bank Transfer'}
+                    {/* Order Header */}
+                    <div style={{
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'flex-start', 
+                      marginBottom: '20px',
+                      flexWrap: 'wrap',
+                      gap: '16px'
+                    }}>
+                      <div style={{flex: 1, minWidth: '200px'}}>
+                        <div style={{
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '12px', 
+                          marginBottom: '12px',
+                          flexWrap: 'wrap'
+                        }}>
+                          <h3 style={{
+                            fontSize: '20px', 
+                            fontWeight: '700', 
+                            color: '#012f34', 
+                            margin: 0,
+                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                            letterSpacing: '-0.3px'
+                          }}>
+                            Order #{order.orderId}
+                          </h3>
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '6px 14px',
+                            borderRadius: '20px',
+                            background: getStatusColor(order.status || 'pending') + '15',
+                            color: getStatusColor(order.status || 'pending'),
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                            textTransform: 'capitalize'
+                          }}>
+                            {getStatusIcon(order.status || 'pending')}
+                            {(order.status || 'pending').charAt(0).toUpperCase() + (order.status || 'pending').slice(1)}
+                          </span>
+                        </div>
+                        <div style={{
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '8px', 
+                          color: 'rgba(0,47,52,.64)', 
+                          fontSize: '14px',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                        }}>
+                          <FaCalendar style={{fontSize: '13px'}} />
+                          <span>{formatDate(order.orderDate)}</span>
+                        </div>
                       </div>
-                      <div style={{
-                        padding:'6px 12px',
-                        borderRadius:12,
-                        background: (order.status || 'pending') === 'completed' ? 'rgba(37,211,102,.1)' : 
-                                   (order.status || 'pending') === 'cancelled' ? 'rgba(176,0,32,.1)' : 
-                                   (order.status || 'pending') === 'processing' ? 'rgba(58,119,255,.1)' :
-                                   'rgba(245,81,0,.1)',
-                        color: (order.status || 'pending') === 'completed' ? '#25D366' : 
-                               (order.status || 'pending') === 'cancelled' ? '#b00020' : 
-                               (order.status || 'pending') === 'processing' ? '#3a77ff' :
-                               '#f55100',
-                        fontSize:'12px',
-                        fontWeight:600
-                      }}>
-                        {(order.status || 'pending').charAt(0).toUpperCase() + (order.status || 'pending').slice(1)}
+                      <div style={{textAlign: 'right'}}>
+                        <div style={{
+                          fontSize: '28px', 
+                          fontWeight: '700', 
+                          color: '#012f34', 
+                          marginBottom: '6px',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                        }}>
+                          {formatPrice(sellerTotal)}
+                        </div>
+                        <div style={{
+                          fontSize: '14px', 
+                          color: 'rgba(0,47,52,.64)',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                        }}>
+                          {sellerItems.length} {sellerItems.length === 1 ? 'item' : 'items'}
+                        </div>
                       </div>
                     </div>
                     
+                    {/* Divider */}
                     <div style={{
-                      display:'flex',
-                      alignItems:'center',
-                      gap:8,
-                      paddingTop:8,
-                      borderTop:'1px solid rgba(1,47,52,.1)'
+                      height: '1px',
+                      background: 'rgba(1,47,52,.1)',
+                      margin: '20px 0'
+                    }}></div>
+                    
+                    {/* Order Details Grid */}
+                    <div style={{
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                      gap: '20px', 
+                      marginBottom: '20px'
                     }}>
-                      <label style={{fontSize:'14px', fontWeight:600, color:'#012f34'}}>
-                        Update Status:
-                      </label>
-                      <select
-                        value={order.status || 'pending'}
-                        onChange={(e) => {
-                          const newStatus = e.target.value
-                          if (newStatus !== (order.status || 'pending')) {
-                            try{
-                              if (typeof window !== 'undefined' && window.swal){
-                                window.swal({
-                                  title: 'Update Order Status?',
-                                  text: `Change order status to "${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}"?`,
-                                  icon: 'warning',
-                                  buttons: ['Cancel', 'Update']
-                                }).then(ok => {
-                                  if (ok) updateOrderStatus(order.orderId, newStatus)
-                                })
-                              } else {
-                                const confirm = window.confirm(`Change order status to "${newStatus}"?`)
-                                if (confirm) updateOrderStatus(order.orderId, newStatus)
+                      <div>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          fontSize: '12px', 
+                          color: 'rgba(0,47,52,.64)', 
+                          marginBottom: '10px', 
+                          fontWeight: '600',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          <FaUser style={{fontSize: '11px'}} />
+                          Customer Info
+                        </div>
+                        <div style={{
+                          fontSize: '14px', 
+                          color: '#012f34', 
+                          lineHeight: '1.6',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                        }}>
+                          <div style={{fontWeight: '600', marginBottom: '4px'}}>{order.shipping?.fullName}</div>
+                          <div style={{display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px'}}>
+                            <FaEnvelope style={{fontSize: '11px', color: 'rgba(0,47,52,.5)'}} />
+                            <span>{order.shipping?.email}</span>
+                          </div>
+                          <div style={{display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px'}}>
+                            <FaPhone style={{fontSize: '11px', color: 'rgba(0,47,52,.5)'}} />
+                            <span>{order.shipping?.phone}</span>
+                          </div>
+                          <div style={{display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px'}}>
+                            <FaMapMarkerAlt style={{fontSize: '11px', color: 'rgba(0,47,52,.5)'}} />
+                            <span>{order.shipping?.address}, {order.shipping?.city}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          fontSize: '12px', 
+                          color: 'rgba(0,47,52,.64)', 
+                          marginBottom: '10px', 
+                          fontWeight: '600',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          <FaCreditCard style={{fontSize: '11px'}} />
+                          Payment Method
+                        </div>
+                        <div style={{
+                          fontSize: '14px', 
+                          color: '#012f34', 
+                          fontWeight: '500',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                        }}>
+                          {order.paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : 'Bank Transfer'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Order Items */}
+                    <div>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '12px', 
+                        color: 'rgba(0,47,52,.64)', 
+                        marginBottom: '12px', 
+                        fontWeight: '600',
+                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <FaBox style={{fontSize: '11px'}} />
+                        Your Items in This Order
+                      </div>
+                      <div style={{
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        gap: '12px'
+                      }}>
+                        {sellerItems.map((item, idx) => (
+                          <div key={idx} style={{
+                            display: 'flex',
+                            gap: '16px',
+                            padding: '16px',
+                            background: 'rgba(1,47,52,.02)',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(1,47,52,.08)'
+                          }}>
+                            <img 
+                              src={item.image || '/images/products/img1.jpg'} 
+                              alt={item.title}
+                              style={{
+                                width: '100px',
+                                height: '100px',
+                                borderRadius: '10px',
+                                objectFit: 'cover',
+                                flexShrink: 0
+                              }}
+                            />
+                            <div style={{flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+                              <div style={{
+                                fontWeight: '600', 
+                                marginBottom: '8px',
+                                fontSize: '15px',
+                                color: '#012f34',
+                                fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                              }}>
+                                {item.title}
+                              </div>
+                              <div style={{
+                                fontSize: '18px', 
+                                fontWeight: '700', 
+                                color: '#012f34',
+                                fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                              }}>
+                                {formatPrice(item.price)}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Status Update Section */}
+                    <div style={{
+                      marginTop: '24px',
+                      paddingTop: '24px',
+                      borderTop: '1px solid rgba(1,47,52,.1)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '16px'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        flexWrap: 'wrap'
+                      }}>
+                        <label style={{
+                          fontSize: '14px', 
+                          fontWeight: '600', 
+                          color: '#012f34',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                        }}>
+                          Update Order Status:
+                        </label>
+                        <select
+                          value={order.status || 'pending'}
+                          onChange={(e) => {
+                            const newStatus = e.target.value
+                            if (newStatus !== (order.status || 'pending')) {
+                              try{
+                                if (typeof window !== 'undefined' && window.swal){
+                                  window.swal({
+                                    title: 'Update Order Status?',
+                                    text: `Change order status to "${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}"?`,
+                                    icon: 'warning',
+                                    buttons: ['Cancel', 'Update']
+                                  }).then(ok => {
+                                    if (ok) updateOrderStatus(order.orderId, newStatus)
+                                  })
+                                } else {
+                                  const confirm = window.confirm(`Change order status to "${newStatus}"?`)
+                                  if (confirm) updateOrderStatus(order.orderId, newStatus)
+                                }
+                              }catch(_){
+                                updateOrderStatus(order.orderId, newStatus)
                               }
-                            }catch(_){
-                              updateOrderStatus(order.orderId, newStatus)
                             }
-                          }
-                        }}
-                        style={{
-                          padding:'8px 12px',
-                          borderRadius:6,
-                          border:'1px solid rgba(1,47,52,.2)',
-                          fontSize:'14px',
-                          fontWeight:500,
-                          color:'#012f34',
-                          background:'#fff',
-                          cursor:'pointer',
-                          outline:'none'
-                        }}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="processing">Processing</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
+                          }}
+                          style={{
+                            padding: '10px 16px',
+                            borderRadius: '10px',
+                            border: '1px solid rgba(1,47,52,.2)',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            color: '#012f34',
+                            background: '#fff',
+                            cursor: 'pointer',
+                            outline: 'none',
+                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                            transition: 'all 0.2s ease',
+                            minWidth: '180px'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = 'rgba(1,47,52,.3)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = 'rgba(1,47,52,.2)'
+                          }}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="processing">Processing</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="completed">Completed</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )
-            })
+                )
+              })}
+            </div>
           )
         ) : list.length===0 ? (
           <div style={{textAlign:'center', color:'rgba(0,47,52,.64)'}}>No ads found</div>

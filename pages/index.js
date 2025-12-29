@@ -5,7 +5,10 @@ import { useRouter } from 'next/router'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 import CategorySlider from '../components/CategorySlider'
-import { FaTags, FaHeart, FaRegHeart, FaWhatsapp, FaMapMarkerAlt, FaArrowUp, FaChevronDown, FaChevronLeft, FaChevronRight, FaMobileAlt, FaCar, FaMotorcycle, FaHome, FaTv, FaTabletAlt, FaMapMarker, FaBriefcase, FaPaintRoller, FaChair, FaLaptop, FaHeadphones, FaCamera, FaGamepad, FaBook, FaDumbbell, FaShirt, FaBaby, FaDog, FaIndustry, FaTools, FaClock, FaRegClock } from 'react-icons/fa'
+import { FaTags, FaHeart, FaRegHeart, FaWhatsapp, FaMapMarkerAlt, FaArrowUp, FaChevronDown, FaChevronLeft, FaChevronRight, FaMobileAlt, FaCar, FaMotorcycle, FaHome, FaTv, FaTabletAlt, FaMapMarker, FaBriefcase, FaPaintRoller, FaChair, FaLaptop, FaHeadphones, FaCamera, FaGamepad, FaBook, FaDumbbell, FaUser, FaBaby, FaDog, FaIndustry, FaTools, FaClock, FaRegClock } from 'react-icons/fa'
+import { getShortCategoryName } from '../lib/categoryNames'
+import { getCategoryIcon } from '../lib/categoryIcons'
+import { getOrderedCategories, getCategoryIconComponent } from '../lib/categoryUtils'
 
 export default function Home() {
   const router = useRouter()
@@ -532,7 +535,7 @@ export default function Home() {
               return tiles.map((c, idx) => {
                 if (!c || !c.k) return null
                 try {
-                  const displayLabel = c.shortLabel || c.label || c.k || 'Category'
+                  const displayLabel = getShortCategoryName(c.shortLabel || c.label, c.k) || 'Category'
                   const catSlug = slug(c.k)
                   return (
                     <a 
@@ -613,64 +616,28 @@ export default function Home() {
         <div className="home__categories-grid">
           {(() => {
             try {
-              if (!Array.isArray(catTiles) || catTiles.length === 0) {
+              const orderedCats = getOrderedCategories(catTiles, catGroups)
+              const displayCats = catsExpanded ? orderedCats : orderedCats.slice(0, 21)
+              if (displayCats.length === 0) {
                 return <div className="loading-categories">Loading categories...</div>
               }
-              const seen = new Set()
-              const uniq = []
-              for (const t of catTiles){
-                if (!t || !t.k) continue
-                const key = String(t.label||t.k||'').toLowerCase()
-                if (seen.has(key)) continue
-                seen.add(key)
-                uniq.push(t)
-              }
-              const tiles = catsExpanded ? uniq : uniq.slice(0, 21)
-              if (tiles.length === 0) return null
               
-              function getCategoryIcon(category) {
-                if (!category) return FaTags
-                const cat = String(category.k || category.label || category || '').toLowerCase()
-                if (cat.includes('mobile') || cat.includes('phone')) return FaMobileAlt
-                if (cat.includes('car') || cat.includes('vehicle')) return FaCar
-                if (cat.includes('motor') || cat.includes('moter') || cat.includes('bike')) return FaMotorcycle
-                if (cat.includes('house') || cat.includes('property')) return FaHome
-                if (cat.includes('tv') || cat.includes('video') || cat.includes('audio') || cat.includes('electronics')) return FaTv
-                if (cat.includes('tablet')) return FaTabletAlt
-                if (cat.includes('land') || cat.includes('plot')) return FaMapMarker
-                if (cat.includes('job')) return FaBriefcase
-                if (cat.includes('service')) return FaPaintRoller
-                if (cat.includes('furniture')) return FaChair
-                if (cat.includes('laptop') || cat.includes('computer')) return FaLaptop
-                if (cat.includes('headphone') || cat.includes('audio')) return FaHeadphones
-                if (cat.includes('camera')) return FaCamera
-                if (cat.includes('game') || cat.includes('console')) return FaGamepad
-                if (cat.includes('book') || cat.includes('hobby')) return FaBook
-                if (cat.includes('sport') || cat.includes('fitness')) return FaDumbbell
-                if (cat.includes('fashion') || cat.includes('beauty') || cat.includes('clothing')) return FaShirt
-                if (cat.includes('kid') || cat.includes('children') || cat.includes('baby')) return FaBaby
-                if (cat.includes('animal') || cat.includes('pet')) return FaDog
-                if (cat.includes('business') || cat.includes('industrial')) return FaIndustry
-                if (cat.includes('tool')) return FaTools
-                return FaTags
-              }
-              
-              return tiles.map((c,i) => {
+              return displayCats.map((c, i) => {
                 if (!c || !c.k) return null
-                const slug = String(c.k||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
-                const IconComponent = getCategoryIcon(c)
+                const slug = String(c.k || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+                const IconComponent = getCategoryIconComponent(c)
                 return (
                   <a
-                    key={(c.label||c.k||'')+':'+i}
+                    key={(c.label || c.k || '') + ':' + i}
                     className="cat__card"
-                    href={'/category/'+slug}
-                    aria-label={c.label || c.k}
-                    onClick={(e)=>{ e.preventDefault(); router.push('/category/'+slug) }}
+                    href={'/category/' + slug}
+                    aria-label={c.displayLabel || c.label || c.k}
+                    onClick={(e) => { e.preventDefault(); router.push('/category/' + slug) }}
                   >
                     <div className="cat__icon">
-                      <IconComponent />
+                      {IconComponent ? <IconComponent /> : null}
                     </div>
-                    <div className="cat__label">{c.label || c.k}</div>
+                    <div className="cat__label">{c.displayLabel || c.k}</div>
                   </a>
                 )
               })

@@ -1,6 +1,9 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/router'
-import { FaBars, FaUser, FaList, FaHeart, FaComment, FaKey, FaSignOutAlt, FaChevronDown, FaChevronUp, FaTags, FaPlus, FaTimes, FaArrowLeft, FaArrowUp, FaCog, FaMobileAlt, FaCar, FaMotorcycle, FaHome, FaTv, FaTabletAlt, FaMapMarkerAlt, FaBriefcase, FaPaintRoller, FaChair, FaCamera, FaChevronRight } from 'react-icons/fa'
+import { FaBars, FaUser, FaList, FaHeart, FaComment, FaKey, FaSignOutAlt, FaChevronDown, FaChevronUp, FaTags, FaPlus, FaTimes, FaArrowLeft, FaArrowUp, FaCog, FaMobileAlt, FaCar, FaMotorcycle, FaHome, FaTv, FaTabletAlt, FaMapMarkerAlt, FaBriefcase, FaPaintRoller, FaChair, FaCamera, FaChevronRight, FaDog, FaBook, FaBaby, FaIndustry } from 'react-icons/fa'
+import { getShortCategoryName } from '../lib/categoryNames'
+import { getCategoryIcon } from '../lib/categoryIcons'
+import { getOrderedCategories, getCategoryIconComponent } from '../lib/categoryUtils'
 
 export default function Sell(){
   const router = useRouter()
@@ -33,45 +36,6 @@ export default function Sell(){
   const [editingId, setEditingId] = useState(null)
   const [editingSource, setEditingSource] = useState('')
   const [step, setStep] = useState(1)
-  function getCategoryIcon(category) {
-    if (!category) return FaTags
-    const iconName = String(category.icon || '').toLowerCase()
-    const label = String(category.label || '').toLowerCase()
-    const key = String(category.k || '').toLowerCase()
-    
-    // Check icon name first
-    if (iconName.includes('mobile') || iconName.includes('phone')) return FaMobileAlt
-    if (iconName.includes('car') || iconName.includes('vehicle')) return FaCar
-    if (iconName.includes('motor') || iconName.includes('moter') || iconName.includes('bike')) return FaMotorcycle
-    if (iconName.includes('house') || iconName.includes('home')) {
-      // Property for Rent uses key icon, Property for Sale uses house
-      if (label.includes('rent')) return FaKey
-      return FaHome
-    }
-    if (iconName.includes('key') || label.includes('rent')) return FaKey
-    if (iconName.includes('tv') || iconName.includes('video') || iconName.includes('audio') || iconName.includes('electronics') || iconName.includes('camera')) return FaCamera
-    if (iconName.includes('tablet')) return FaTabletAlt
-    if (iconName.includes('map') || iconName.includes('location') || iconName.includes('land') || iconName.includes('plot')) return FaMapMarkerAlt
-    if (iconName.includes('briefcase') || iconName.includes('job')) return FaBriefcase
-    if (iconName.includes('paint') || iconName.includes('service')) return FaPaintRoller
-    if (iconName.includes('chair') || iconName.includes('furniture')) return FaChair
-    
-    // Fallback to label/key matching
-    if (label.includes('mobile') || label.includes('phone') || key.includes('mobile') || key.includes('phone')) return FaMobileAlt
-    if (label.includes('vehicle') || label.includes('car') || key.includes('vehicle') || key.includes('car')) return FaCar
-    if (label.includes('bike') || label.includes('motor') || key.includes('bike') || key.includes('motor')) return FaMotorcycle
-    if (label.includes('property') && label.includes('rent')) return FaKey
-    if (label.includes('property') && label.includes('sale')) return FaHome
-    if (label.includes('property') || key.includes('house') || key.includes('property')) return FaHome
-    if (label.includes('electronics') || key.includes('tv') || key.includes('video') || key.includes('audio')) return FaCamera
-    if (label.includes('tablet') || key.includes('tablet')) return FaTabletAlt
-    if (label.includes('land') || label.includes('plot') || key.includes('land') || key.includes('plot')) return FaMapMarkerAlt
-    if (label.includes('job') || key.includes('job')) return FaBriefcase
-    if (label.includes('service') || key.includes('service')) return FaPaintRoller
-    if (label.includes('furniture') || key.includes('furniture')) return FaChair
-    
-    return FaTags
-  }
   async function compressImage(file){
     return await new Promise((resolve,reject)=>{
       const img = new Image()
@@ -254,14 +218,45 @@ export default function Sell(){
   }, [profileOpen])
   useEffect(() => {
     function onKey(e){ if (e.key === 'Escape') setHeaderCatOpen(false) }
-    function onOutside(e){ if (!catWrapRef.current) return; if (!catWrapRef.current.contains(e.target)) setHeaderCatOpen(false) }
     document.addEventListener('keydown', onKey)
-    document.addEventListener('pointerdown', onOutside)
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.removeEventListener('pointerdown', onOutside)
-    }
+    return () => { document.removeEventListener('keydown', onKey) }
   }, [])
+  
+  // State for modal category selection
+  const [modalSelectedParent, setModalSelectedParent] = useState(null)
+  const [modalSelectedSub, setModalSelectedSub] = useState(null)
+  
+  // Reset modal selection when opening
+  useEffect(() => {
+    if (headerCatOpen) {
+      setModalSelectedParent(null)
+      setModalSelectedSub(null)
+      // Try to find current category in hierarchy
+      if (form.category && groups.length > 0) {
+        let foundParent = groups.find(g => g.parent.name === form.category)
+        if (foundParent) {
+          setModalSelectedParent(foundParent.parent)
+        } else {
+          for (const group of groups) {
+            const foundChild = group.children?.find(c => c.name === form.category)
+            if (foundChild) {
+              setModalSelectedParent(group.parent)
+              setModalSelectedSub(foundChild)
+              break
+            }
+            for (const child of group.children || []) {
+              const foundSubChild = child.subchildren?.find(sc => sc.name === form.category)
+              if (foundSubChild) {
+                setModalSelectedParent(group.parent)
+                setModalSelectedSub(child)
+                break
+              }
+            }
+          }
+        }
+      }
+    }
+  }, [headerCatOpen])
   async function addProduct(){
     const nextErrors = {}
     const title = String(form.title||'').trim()
@@ -434,117 +429,177 @@ export default function Sell(){
           <FaArrowUp />
         </button>
       )}
-    <div className="sell__main" style={step === 1 ? {maxWidth: '1200px', marginTop: '16px', marginBottom: '40px'} : {}}>
-      <h1 style={{color: '#012f34', fontSize: step === 1 ? '32px' : '22px', fontWeight: 600, marginBottom: step === 1 ? '24px' : '12px', marginTop: '0'}}>Post Your Ad</h1>
+    <div className="sell__main" style={step === 1 ? {maxWidth: '1200px', margin: '24px auto 40px', padding: '0 16px'} : {maxWidth: '1200px', margin: '24px auto 40px', padding: '0 16px'}}>
+      <div style={{marginBottom: step === 1 ? '20px' : '16px'}}>
+        <h1 style={{color: '#012f34', fontSize: '24px', fontWeight: 600, marginBottom: '0', marginTop: '0', fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>Post Your Ad</h1>
+      </div>
       <div className="sell__grid" style={step === 1 ? {gridTemplateColumns: '1fr'} : {}}>
-        <div className="sell__card" style={step === 1 ? {border: 'none', boxShadow: 'none', padding: '0', background: 'transparent'} : {}}>
+        <div className="sell__card" style={step === 1 ? {border: 'none', boxShadow: 'none', padding: '0', background: 'transparent'} : {border: '1px solid rgba(1,47,52,.2)', borderRadius: '10px', padding: '20px', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,.06)'}}>
           {step !== 1 && (
-          <div style={{marginBottom:12}}>
-            <div style={{position:'relative', height:16, borderRadius:8, background:'rgba(1,47,52,.12)'}}>
-              <div style={{height:16, borderRadius:8, background:'#012f34', width: (step===2?'66%':'100%')}}></div>
-              <div style={{position:'absolute', top:'50%', left:'50%', transform:'translate(-50%, -50%)'}}>
-                <span style={{display:'inline-block', padding:'2px 8px', borderRadius:9999, background:'rgba(255,255,255,.85)', color:'#012f34', fontSize:12, fontWeight:600}}>Step {step} of 3</span>
-              </div>
+          <div style={{marginBottom:16}}>
+            <div style={{display:'flex', alignItems:'center', gap:8, marginBottom:8}}>
+              <span style={{fontSize:14, color:'rgba(0,47,52,.64)', fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>Step {step} of 3</span>
+            </div>
+            <div style={{height:4, borderRadius:2, background:'rgba(1,47,52,.12)'}}>
+              <div style={{height:4, borderRadius:2, background:'#012f34', width: (step===2?'66%':'100%'), transition:'width 0.3s ease'}}></div>
             </div>
           </div>
           )}
           {step === 1 ? (
             <div style={{marginTop:0}}>
-              <h2 style={{color: '#012f34', fontSize: '20px', fontWeight: 600, marginBottom: '24px', textAlign: 'left'}}>Choose a Category</h2>
               {!showCategoryColumns ? (
                 // Grid View - Initial main categories
                 <div className="home__categories-grid" style={{transition:'opacity 200ms ease', opacity:1, marginBottom: 0}}>
-                  {(groups.length > 0 ? groups.map(g => {
-                    const tileMatch = tiles.find(t => t.k === g.parent.name || t.label === g.parent.name)
-                    return {
-                      ...g.parent,
-                      displayLabel: tileMatch ? tileMatch.label : g.parent.name,
-                      icon: tileMatch ? tileMatch.icon : g.parent.icon
-                    }
-                  }) : (tiles.length ? tiles.map(t => ({name: t.k || t.label, displayLabel: t.label || t.k, icon: t.icon})) : categories.filter(c => !c.parent_id).map(c => ({name: c.name, displayLabel: c.name, icon: c.icon})))).map((parent, idx) => {
-                    const group = groups.find(g => (g.parent.category_id === parent.category_id || g.parent.name === parent.name))
-                    const hasChildren = group && group.children && group.children.length > 0
-                    const iconData = {icon: parent.icon || 'fa-tags', label: parent.displayLabel || parent.name}
-                    const IconComponent = getCategoryIcon(iconData)
-                    return (
-                      <a 
-                        key={parent.category_id || parent.name || idx} 
-                        className="cat__card" 
-                        href="#" 
-                        onClick={(e)=>{ 
-                          e.preventDefault()
-                          if (hasChildren) {
-                            setSelectedParentCategory(parent)
-                            setSelectedSubCategory(null)
-                            setShowCategoryColumns(true)
-                          } else {
-                            setForm({...form, category: parent.name})
-                            setStep(2)
-                          }
-                        }}
-                      >
-                        <div className="cat__icon"><IconComponent /></div>
-                        <div className="cat__label">{parent.displayLabel || parent.name}</div>
-                      </a>
-                    )
-                  })}
+                  {(() => {
+                    const orderedCats = getOrderedCategories(tiles, groups)
+                    return orderedCats.map((parent, idx) => {
+                      const group = groups.find(g => (g.parent.category_id === parent.category_id || g.parent.name === parent.name || g.parent.name === parent.k))
+                      const hasChildren = group && group.children && group.children.length > 0
+                      const IconComponent = getCategoryIconComponent(parent) || FaTags
+                      return (
+                        <a 
+                          key={parent.category_id || parent.k || parent.name || idx} 
+                          className="cat__card" 
+                          href="#" 
+                          onClick={(e)=>{ 
+                            e.preventDefault()
+                            if (hasChildren) {
+                              setSelectedParentCategory({...parent, name: parent.k || parent.name})
+                              setSelectedSubCategory(null)
+                              setShowCategoryColumns(true)
+                            } else {
+                              setForm({...form, category: parent.k || parent.name})
+                              setStep(2)
+                            }
+                          }}
+                          style={{
+                            textDecoration: 'none',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '16px',
+                            background: '#fff',
+                            border: '1px solid rgba(1,47,52,.12)',
+                            borderRadius: '12px',
+                            transition: 'box-shadow .2s ease, transform .2s ease, border-color .2s ease',
+                            cursor: 'pointer',
+                            color: '#012f34',
+                            gap: '10px'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = 'rgba(1,47,52,.3)'
+                            e.currentTarget.style.background = 'rgba(1,47,52,.02)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = 'rgba(1,47,52,.12)'
+                            e.currentTarget.style.background = '#fff'
+                          }}
+                        >
+                          <div style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '8px',
+                            background: 'rgba(1,47,52,.03)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#012f34'
+                          }}>
+                            {IconComponent ? <IconComponent style={{fontSize: '20px', color: '#012f34'}} /> : <FaTags style={{fontSize: '20px', color: '#012f34'}} />}
+                          </div>
+                          <div style={{
+                            color: '#012f34',
+                            fontSize: '14px',
+                            fontWeight: 500,
+                            textAlign: 'center',
+                            fontFamily:'var(--font-roboto), Roboto, sans-serif',
+                            lineHeight: 1.3
+                          }}>{parent.displayLabel || parent.k}</div>
+                        </a>
+                      )
+                    })
+                  })()}
                 </div>
               ) : (
                 // Column View - After selecting a main category
-                <div style={{display: 'flex', gap: '0', border: '1px solid rgba(1,47,52,.15)', borderRadius: '8px', overflow: 'hidden', minHeight: '400px'}}>
+                <div>
+                  <button
+                    onClick={() => {
+                      setShowCategoryColumns(false)
+                      setSelectedParentCategory(null)
+                      setSelectedSubCategory(null)
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      marginBottom: 12,
+                      padding: '6px 12px',
+                      border: '1px solid rgba(1,47,52,.2)',
+                      background: '#fff',
+                      color: '#012f34',
+                      borderRadius: 8,
+                      fontSize: 14,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                    }}
+                  >
+                    <FaArrowLeft style={{fontSize: 12}} /> Back to Categories
+                  </button>
+                  <div style={{display: 'flex', gap: '0', border: '1px solid rgba(1,47,52,.2)', borderRadius: '10px', overflow: 'hidden', minHeight: '300px', background: '#fff'}}>
                 {/* First Column - Main Categories */}
-                <div style={{flex: '0 0 280px', borderRight: '1px solid rgba(1,47,52,.15)', background: '#fff', overflowY: 'auto', maxHeight: '600px'}}>
-                  {(groups.length > 0 ? groups.map(g => {
-                    const tileMatch = tiles.find(t => t.k === g.parent.name || t.label === g.parent.name)
-                    return {
-                      ...g.parent,
-                      displayLabel: tileMatch ? tileMatch.label : g.parent.name,
-                      icon: tileMatch ? tileMatch.icon : g.parent.icon
-                    }
-                  }) : (tiles.length ? tiles.map(t => ({name: t.k || t.label, displayLabel: t.label || t.k, icon: t.icon})) : categories.filter(c => !c.parent_id).map(c => ({name: c.name, displayLabel: c.name, icon: c.icon})))).map((parent, idx) => {
-                    const group = groups.find(g => (g.parent.category_id === parent.category_id || g.parent.name === parent.name))
-                    const isSelected = selectedParentCategory && (selectedParentCategory.category_id === parent.category_id || (selectedParentCategory.name === parent.name && !selectedParentCategory.category_id))
-                    const iconData = {icon: parent.icon || 'fa-tags', label: parent.displayLabel || parent.name}
-                    const IconComponent = getCategoryIcon(iconData)
-                    const hasChildren = group && group.children && group.children.length > 0
-                    return (
-                      <div
-                        key={parent.category_id || parent.name || idx}
-                        onClick={() => {
-                          setSelectedParentCategory(parent)
-                          setSelectedSubCategory(null)
-                          if (!hasChildren) {
-                            setForm({...form, category: parent.name})
-                            setStep(2)
-                          }
-                        }}
-                        style={{
-                          padding: '14px 16px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          background: isSelected ? 'rgba(58,119,255,0.1)' : '#fff',
-                          borderBottom: '1px solid rgba(1,47,52,.08)',
-                          transition: 'background 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isSelected) e.currentTarget.style.background = 'rgba(1,47,52,.04)'
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isSelected) e.currentTarget.style.background = '#fff'
-                        }}
-                      >
-                        <div style={{display: 'flex', alignItems: 'center', gap: '12px', flex: 1}}>
-                          <div style={{width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3c3c3c'}}>
-                            <IconComponent style={{fontSize: '20px'}} />
-                          </div>
-                          <span style={{fontSize: '15px', fontWeight: 500, color: '#012f34'}}>{parent.displayLabel || parent.name}</span>
+                <div style={{flex: '0 0 280px', borderRight: '1px solid rgba(1,47,52,.15)', background: '#fff', overflowY: 'auto', maxHeight: '500px'}}>
+                  {(() => {
+                    const orderedCats = getOrderedCategories(tiles, groups)
+                    return orderedCats.map((parent, idx) => {
+                      const group = groups.find(g => (g.parent.category_id === parent.category_id || g.parent.name === parent.name || g.parent.name === parent.k))
+                      const isSelected = selectedParentCategory && (selectedParentCategory.category_id === parent.category_id || (selectedParentCategory.name === parent.name && !selectedParentCategory.category_id) || (selectedParentCategory.name === parent.k && !selectedParentCategory.category_id))
+                      const hasChildren = group && group.children && group.children.length > 0
+                      return (
+                        <div
+                          key={parent.category_id || parent.k || parent.name || idx}
+                          onClick={() => {
+                            const categoryName = parent.k || parent.name
+                            setSelectedParentCategory({...parent, name: categoryName})
+                            setSelectedSubCategory(null)
+                            if (!hasChildren) {
+                              setForm({...form, category: categoryName})
+                              setStep(2)
+                            }
+                          }}
+                          style={{
+                            padding: '10px 0',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            background: isSelected ? 'rgba(230,239,246,0.7)' : 'transparent',
+                            borderLeft: isSelected ? '3px solid #3a77ff' : '3px solid transparent',
+                            borderBottom: '1px solid rgba(1,47,52,.1)',
+                            transition: 'background 0.15s ease',
+                            paddingLeft: isSelected ? '13px' : '16px',
+                            paddingRight: '16px'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) e.currentTarget.style.background = 'rgba(1,47,52,.03)'
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) e.currentTarget.style.background = 'transparent'
+                          }}
+                        >
+                          <span style={{
+                            fontSize: '14px',
+                            fontWeight: isSelected ? 500 : 400,
+                            color: '#012f34',
+                            fontFamily:'var(--font-roboto), Roboto, sans-serif'
+                          }}>{parent.displayLabel || parent.k}</span>
+                          {hasChildren && <FaChevronRight style={{fontSize: '12px', color: '#012f34'}} />}
                         </div>
-                        {hasChildren && <FaChevronRight style={{fontSize: '14px', color: '#3c3c3c'}} />}
-                      </div>
-                    )
-                  })}
+                      )
+                    })
+                  })()}
                 </div>
                 
                 {/* Second Column - Subcategories */}
@@ -553,7 +608,7 @@ export default function Sell(){
                   const subcategories = group ? group.children : []
                   if (subcategories.length === 0) return null
                   return (
-                    <div style={{flex: '0 0 280px', borderRight: '1px solid rgba(1,47,52,.15)', background: '#fff', overflowY: 'auto', maxHeight: '600px'}}>
+                      <div style={{flex: '0 0 280px', borderRight: '1px solid rgba(1,47,52,.15)', background: '#fff', overflowY: 'auto', maxHeight: '600px'}}>
                       {subcategories.map((subcat, idx) => {
                         const isSelected = selectedSubCategory && (selectedSubCategory.category_id === subcat.category_id || selectedSubCategory.name === subcat.name)
                         const hasSubChildren = subcat.subchildren && subcat.subchildren.length > 0
@@ -568,24 +623,32 @@ export default function Sell(){
                               }
                             }}
                             style={{
-                              padding: '14px 16px',
+                              padding: '10px 0',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'space-between',
-                              background: isSelected ? 'rgba(58,119,255,0.1)' : '#fff',
-                              borderBottom: '1px solid rgba(1,47,52,.08)',
-                              transition: 'background 0.2s ease'
+                              background: isSelected ? 'rgba(230,239,246,0.7)' : 'transparent',
+                              borderLeft: isSelected ? '3px solid #3a77ff' : '3px solid transparent',
+                              borderBottom: '1px solid rgba(1,47,52,.1)',
+                              transition: 'background 0.15s ease',
+                              paddingLeft: isSelected ? '13px' : '16px',
+                              paddingRight: '16px'
                             }}
                             onMouseEnter={(e) => {
-                              if (!isSelected) e.currentTarget.style.background = 'rgba(1,47,52,.04)'
+                              if (!isSelected) e.currentTarget.style.background = 'rgba(1,47,52,.03)'
                             }}
                             onMouseLeave={(e) => {
-                              if (!isSelected) e.currentTarget.style.background = '#fff'
+                              if (!isSelected) e.currentTarget.style.background = 'transparent'
                             }}
                           >
-                            <span style={{fontSize: '15px', fontWeight: 400, color: '#012f34'}}>{subcat.name}</span>
-                            {hasSubChildren && <FaChevronRight style={{fontSize: '14px', color: '#3c3c3c'}} />}
+                            <span style={{
+                              fontSize: '14px',
+                              fontWeight: isSelected ? 500 : 400,
+                              color: '#012f34',
+                              fontFamily:'var(--font-roboto), Roboto, sans-serif'
+                            }}>{subcat.name}</span>
+                            {hasSubChildren && <FaChevronRight style={{fontSize: '12px', color: '#012f34'}} />}
                           </div>
                         )
                       })}
@@ -607,233 +670,63 @@ export default function Sell(){
                             setStep(2)
                           }}
                           style={{
-                            padding: '14px 16px',
+                            padding: '10px 16px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             background: '#fff',
-                            borderBottom: '1px solid rgba(1,47,52,.08)',
-                            transition: 'background 0.2s ease'
+                            borderBottom: '1px solid rgba(1,47,52,.1)',
+                            transition: 'background 0.15s ease'
                           }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(1,47,52,.04)'}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(1,47,52,.03)'}
                           onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
                         >
-                          <span style={{fontSize: '15px', fontWeight: 400, color: '#012f34'}}>{subsubcat.name}</span>
+                          <span style={{
+                            fontSize: '14px',
+                            fontWeight: 400,
+                            color: '#012f34',
+                            fontFamily:'var(--font-roboto), Roboto, sans-serif'
+                          }}>{subsubcat.name}</span>
                         </div>
                       ))}
-                    </div>
-                  )
-                })()}
+                      </div>
+                    )
+                  })()}
+                  </div>
                 </div>
               )}
             </div>
           ) : (
-          <div className="sell__section" style={{border:'1px solid rgba(1,47,52,.2)', borderRadius:12, padding:16, background:'#fff', boxShadow:'0 6px 18px rgba(1,47,52,.08)', marginBottom:12}}>
-            <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:12}}>
-              <div style={{flex:1}}>
-                <div className="form__label" style={{marginBottom:6}}>Category</div>
-                <div style={{display:'flex', alignItems:'center', gap:10, flexWrap:'wrap'}}>
-                  <span style={{display:'inline-flex', alignItems:'center', gap:8, padding:'8px 12px', border:'1px solid rgba(1,47,52,.2)', borderRadius:9999, background:'rgba(1,47,52,.06)'}}>
-                    <FaList aria-hidden="true" />
-                    <span style={{fontWeight:600}}>{form.category || 'Select Category'}</span>
-                  </span>
-                  <span style={{color:'rgba(0,47,52,.64)'}}>{form.category ? 'Selected' : 'Choose a category to continue'}</span>
+          <div className="sell__section" style={{border:'1px solid rgba(1,47,52,.2)', borderRadius:10, padding:20, background:'#fff', marginBottom:16}}>
+            <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap'}}>
+              <div style={{flex:1, minWidth:200}}>
+                <div className="form__label" style={{marginBottom:6, fontSize:14, color:'rgba(0,47,52,.64)', fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>Category</div>
+                <div style={{fontSize:16, fontWeight:500, color:'#012f34', fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>
+                  {form.category || 'No category selected'}
                 </div>
               </div>
               {step>=2 ? (
                 <button
-                  className="login__btn"
-                  onClick={()=>{ 
-                    setHeaderCatOpen(v=>!v)
-                    if (!headerCatOpen) {
-                      // When opening, try to find the currently selected category in the hierarchy
-                      const currentCategoryName = form.category
-                      if (currentCategoryName && groups.length > 0) {
-                        // Try to find if it's a parent category
-                        let foundParent = groups.find(g => g.parent.name === currentCategoryName)
-                        if (foundParent) {
-                          setSelectedParentCategory(foundParent.parent)
-                          setSelectedSubCategory(null)
-                        } else {
-                          // Try to find if it's a child or subchild
-                          for (const group of groups) {
-                            const foundChild = group.children.find(c => c.name === currentCategoryName)
-                            if (foundChild) {
-                              setSelectedParentCategory(group.parent)
-                              setSelectedSubCategory(foundChild)
-                              break
-                            }
-                            // Try subchildren
-                            for (const child of group.children) {
-                              const foundSubChild = child.subchildren?.find(sc => sc.name === currentCategoryName)
-                              if (foundSubChild) {
-                                setSelectedParentCategory(group.parent)
-                                setSelectedSubCategory(child)
-                                break
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
+                  onClick={()=>{ setHeaderCatOpen(true) }}
+                  style={{
+                    border:'1px solid rgba(1,47,52,.2)', 
+                    background:'#fff', 
+                    color:'#012f34', 
+                    borderRadius:8, 
+                    padding:'8px 16px',
+                    fontSize:14,
+                    fontWeight:500,
+                    cursor:'pointer',
+                    fontFamily:'var(--font-roboto), Roboto, sans-serif',
+                    display:'inline-flex',
+                    alignItems:'center',
+                    gap:6
                   }}
-                  style={{border:'1px solid rgba(1,47,52,.2)', background:'#fff', color:'#012f34', borderRadius:20, padding:'6px 12px'}}
                 >
-                  {headerCatOpen ? 'Close' : 'Change'} {headerCatOpen ? <FaChevronUp style={{marginLeft:6}} /> : <FaChevronDown style={{marginLeft:6}} />}
+                  Change Category
                 </button>
               ) : null}
             </div>
-            {headerCatOpen && (
-              <div style={{marginTop:10}}>
-                <div style={{display: 'flex', gap: '0', border: '1px solid rgba(1,47,52,.15)', borderRadius: '8px', overflow: 'hidden', minHeight: '400px', background: '#fff'}}>
-                  {/* First Column - Main Categories */}
-                  <div style={{flex: '0 0 280px', borderRight: '1px solid rgba(1,47,52,.15)', background: '#fff', overflowY: 'auto', maxHeight: '600px'}}>
-                    {(groups.length > 0 ? groups.map(g => {
-                      const tileMatch = tiles.find(t => 
-                        t.k === g.parent.name || 
-                        t.label === g.parent.name ||
-                        t.k.toLowerCase() === g.parent.name.toLowerCase() ||
-                        t.label.toLowerCase() === g.parent.name.toLowerCase()
-                      )
-                      return {
-                        ...g.parent,
-                        displayLabel: tileMatch ? tileMatch.label : g.parent.name,
-                        icon: tileMatch ? tileMatch.icon : (g.parent.icon || 'fa-tags'),
-                        tileData: tileMatch
-                      }
-                    }) : (tiles.length ? tiles.map(t => ({name: t.k || t.label, displayLabel: t.label || t.k, icon: t.icon, tileData: t})) : categories.filter(c => !c.parent_id).map(c => ({name: c.name, displayLabel: c.name, icon: c.icon || 'fa-tags', tileData: null})))).map((parent, idx) => {
-                      const group = groups.find(g => (g.parent.category_id === parent.category_id || g.parent.name === parent.name))
-                      const isSelected = selectedParentCategory && (selectedParentCategory.category_id === parent.category_id || (selectedParentCategory.name === parent.name && !selectedParentCategory.category_id))
-                      const iconData = parent.tileData || {
-                        icon: parent.icon || 'fa-tags', 
-                        label: parent.displayLabel || parent.name,
-                        k: parent.name
-                      }
-                      const IconComponent = getCategoryIcon(iconData)
-                      const hasChildren = group && group.children && group.children.length > 0
-                      return (
-                        <div
-                          key={parent.category_id || parent.name || idx}
-                          onClick={() => {
-                            setSelectedParentCategory(parent)
-                            setSelectedSubCategory(null)
-                            if (!hasChildren) {
-                              setForm({...form, category: parent.name})
-                              setErrors(err=>({ ...err, category:'' }))
-                              setHeaderCatOpen(false)
-                            }
-                          }}
-                          style={{
-                            padding: '14px 16px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            background: isSelected ? 'rgba(230, 240, 255, 1)' : '#fff',
-                            borderBottom: '1px solid rgba(1,47,52,.08)',
-                            transition: 'background 0.15s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!isSelected) e.currentTarget.style.background = 'rgba(1,47,52,.03)'
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!isSelected) e.currentTarget.style.background = '#fff'
-                          }}
-                        >
-                          <div style={{display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0}}>
-                            <div style={{width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3c3c3c', flexShrink: 0}}>
-                              <IconComponent style={{fontSize: '20px'}} />
-                            </div>
-                            <span style={{fontSize: '15px', fontWeight: 500, color: '#012f34', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{parent.displayLabel || parent.name}</span>
-                          </div>
-                          {hasChildren && <FaChevronRight style={{fontSize: '14px', color: '#3c3c3c', flexShrink: 0, marginLeft: '8px'}} />}
-                        </div>
-                      )
-                    })}
-                  </div>
-                  
-                  {/* Second Column - Subcategories */}
-                  {selectedParentCategory && (() => {
-                    const group = groups.find(g => (g.parent.category_id === selectedParentCategory.category_id || g.parent.name === selectedParentCategory.name))
-                    const subcategories = group ? group.children : []
-                    if (subcategories.length === 0) return null
-                    return (
-                      <div style={{flex: '0 0 280px', borderRight: '1px solid rgba(1,47,52,.15)', background: '#fff', overflowY: 'auto', maxHeight: '600px'}}>
-                        {subcategories.map((subcat, idx) => {
-                          const isSelected = selectedSubCategory && (selectedSubCategory.category_id === subcat.category_id || selectedSubCategory.name === subcat.name)
-                          const hasSubChildren = subcat.subchildren && subcat.subchildren.length > 0
-                          return (
-                            <div
-                              key={subcat.category_id || subcat.name || idx}
-                              onClick={() => {
-                                setSelectedSubCategory(subcat)
-                                if (!hasSubChildren) {
-                                  setForm({...form, category: subcat.name})
-                                  setErrors(err=>({ ...err, category:'' }))
-                                  setHeaderCatOpen(false)
-                                }
-                              }}
-                              style={{
-                                padding: '14px 16px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                background: isSelected ? 'rgba(230, 240, 255, 1)' : '#fff',
-                                borderBottom: '1px solid rgba(1,47,52,.08)',
-                                transition: 'background 0.15s ease'
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!isSelected) e.currentTarget.style.background = 'rgba(1,47,52,.03)'
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!isSelected) e.currentTarget.style.background = '#fff'
-                              }}
-                            >
-                              <span style={{fontSize: '15px', fontWeight: 400, color: '#012f34', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{subcat.name}</span>
-                              {hasSubChildren && <FaChevronRight style={{fontSize: '14px', color: '#3c3c3c', flexShrink: 0, marginLeft: '8px'}} />}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )
-                  })()}
-                  
-                  {/* Third Column - Sub-subcategories */}
-                  {selectedSubCategory && (() => {
-                    const subSubcategories = selectedSubCategory.subchildren || []
-                    if (subSubcategories.length === 0) return null
-                    return (
-                      <div style={{flex: '1', background: '#fff', overflowY: 'auto', maxHeight: '600px'}}>
-                        {subSubcategories.map((subsubcat, idx) => (
-                          <div
-                            key={subsubcat.category_id || subsubcat.name || idx}
-                            onClick={() => {
-                              setForm({...form, category: subsubcat.name})
-                              setErrors(err=>({ ...err, category:'' }))
-                              setHeaderCatOpen(false)
-                            }}
-                            style={{
-                              padding: '14px 16px',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              background: '#fff',
-                              borderBottom: '1px solid rgba(1,47,52,.08)',
-                              transition: 'background 0.15s ease'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(1,47,52,.03)'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
-                          >
-                            <span style={{fontSize: '15px', fontWeight: 400, color: '#012f34', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{subsubcat.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )
-                  })()}
-                </div>
-              </div>
-            )}
             {errors.category ? <div className="form__error" aria-live="polite" style={{marginTop:6}}>{errors.category}</div> : null}
           </div>
           )}
@@ -961,19 +854,349 @@ export default function Sell(){
           )}
         </div>
         {step !== 1 && (
-        <div className="sell__card sell__aside">
-          <div className="sell__section" style={{border:'1px solid rgba(1,47,52,.2)', borderRadius:12, padding:16, background:'#fff', boxShadow:'0 6px 18px rgba(1,47,52,.08)'}}>
-            <h4>Need help getting started?</h4>
-            <p>Review these resource to learn how to create a great ad and increase your selling chances</p>
-            <ul style={{textAlign:'left'}}>
-              <li><a href="/tips">Tips for improving your ads and your chances of selling</a></li>
-              <li><a href="/posting-ads">All you need to know about Posting Ads</a></li>
-            </ul>
-            <p>You can always come back to change your ad</p>
+        <div className="sell__card sell__aside" style={{border: '1px solid rgba(1,47,52,.2)', borderRadius: '10px', padding: '20px', background: '#fff'}}>
+          <div style={{marginBottom: 20}}>
+            <h4 style={{margin: '0 0 12px 0', fontSize: '18px', fontWeight: 600, color: '#012f34', fontFamily: 'var(--font-roboto), Roboto, sans-serif'}}>Tips for Better Ads</h4>
+            <p style={{margin: '0 0 16px 0', fontSize: '14px', color: 'rgba(0,47,52,.64)', lineHeight: 1.5, fontFamily: 'var(--font-roboto), Roboto, sans-serif'}}>Create a great ad to increase your chances of selling</p>
+          </div>
+          
+          <div style={{marginBottom: 20}}>
+            <div style={{display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12, padding: '12px', background: 'rgba(1,47,52,.02)', borderRadius: '8px', border: '1px solid rgba(1,47,52,.1)'}}>
+              <div style={{width: 24, height: 24, borderRadius: '50%', background: 'rgba(58,119,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2}}>
+                <span style={{fontSize: 12, fontWeight: 600, color: '#3a77ff'}}>1</span>
+              </div>
+              <div style={{flex: 1}}>
+                <div style={{fontSize: '14px', fontWeight: 500, color: '#012f34', marginBottom: 4, fontFamily: 'var(--font-roboto), Roboto, sans-serif'}}>Clear Title</div>
+                <div style={{fontSize: '13px', color: 'rgba(0,47,52,.64)', lineHeight: 1.4, fontFamily: 'var(--font-roboto), Roboto, sans-serif'}}>Use a descriptive title with key features</div>
+              </div>
+            </div>
+            
+            <div style={{display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12, padding: '12px', background: 'rgba(1,47,52,.02)', borderRadius: '8px', border: '1px solid rgba(1,47,52,.1)'}}>
+              <div style={{width: 24, height: 24, borderRadius: '50%', background: 'rgba(58,119,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2}}>
+                <span style={{fontSize: 12, fontWeight: 600, color: '#3a77ff'}}>2</span>
+              </div>
+              <div style={{flex: 1}}>
+                <div style={{fontSize: '14px', fontWeight: 500, color: '#012f34', marginBottom: 4, fontFamily: 'var(--font-roboto), Roboto, sans-serif'}}>Good Photos</div>
+                <div style={{fontSize: '13px', color: 'rgba(0,47,52,.64)', lineHeight: 1.4, fontFamily: 'var(--font-roboto), Roboto, sans-serif'}}>Add clear, well-lit photos from different angles</div>
+              </div>
+            </div>
+            
+            <div style={{display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px', background: 'rgba(1,47,52,.02)', borderRadius: '8px', border: '1px solid rgba(1,47,52,.1)'}}>
+              <div style={{width: 24, height: 24, borderRadius: '50%', background: 'rgba(58,119,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2}}>
+                <span style={{fontSize: 12, fontWeight: 600, color: '#3a77ff'}}>3</span>
+              </div>
+              <div style={{flex: 1}}>
+                <div style={{fontSize: '14px', fontWeight: 500, color: '#012f34', marginBottom: 4, fontFamily: 'var(--font-roboto), Roboto, sans-serif'}}>Honest Description</div>
+                <div style={{fontSize: '13px', color: 'rgba(0,47,52,.64)', lineHeight: 1.4, fontFamily: 'var(--font-roboto), Roboto, sans-serif'}}>Include condition, features, and reason for selling</div>
+              </div>
+            </div>
+          </div>
+          
+          <div style={{padding: '12px', background: 'rgba(1,47,52,.03)', borderRadius: '8px', border: '1px solid rgba(1,47,52,.1)'}}>
+            <div style={{fontSize: '13px', color: 'rgba(0,47,52,.64)', lineHeight: 1.5, fontFamily: 'var(--font-roboto), Roboto, sans-serif'}}>
+              <strong style={{color: '#012f34'}}>Note:</strong> You can always edit or delete your ad later from the Manage page.
+            </div>
           </div>
         </div>
         )}
       </div>
+      
+      {/* Category Selection Modal */}
+      {headerCatOpen && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 5000,
+            padding: '16px'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setHeaderCatOpen(false)
+              setModalSelectedParent(null)
+              setModalSelectedSub(null)
+            }
+          }}
+        >
+          <div 
+            style={{
+              background: '#fff',
+              width: '100%',
+              maxWidth: '600px',
+              borderRadius: '12px',
+              boxShadow: '0 10px 24px rgba(0,0,0,.18)',
+              padding: '24px',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px'}}>
+              <div>
+                <h3 style={{margin: 0, fontSize: '20px', fontWeight: 600, color: '#012f34', fontFamily: 'var(--font-roboto), Roboto, sans-serif'}}>
+                  Select Category
+                </h3>
+                {modalSelectedParent && (
+                  <button
+                    onClick={() => {
+                      setModalSelectedParent(null)
+                      setModalSelectedSub(null)
+                    }}
+                    style={{
+                      marginTop: '8px',
+                      border: 'none',
+                      background: 'transparent',
+                      color: '#3a77ff',
+                      cursor: 'pointer',
+                      padding: '4px 0',
+                      fontSize: '14px',
+                      fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <FaArrowLeft style={{fontSize: '12px'}} /> Back to Main Categories
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  setHeaderCatOpen(false)
+                  setModalSelectedParent(null)
+                  setModalSelectedSub(null)
+                }}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  color: '#012f34',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '4px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(1,47,52,.1)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent'
+                }}
+              >
+                <FaTimes style={{fontSize: '20px'}} />
+              </button>
+            </div>
+            
+            <div style={{flex: 1, overflow: 'auto', minHeight: '300px'}}>
+              {!modalSelectedParent ? (
+                // Main Categories
+                <div>
+                  <label className="form__label" style={{display: 'block', marginBottom: '12px', fontSize: '14px', color: 'rgba(0,47,52,.64)', fontFamily: 'var(--font-roboto), Roboto, sans-serif'}}>
+                    Select Main Category
+                  </label>
+                  <div style={{display: 'grid', gap: '8px'}}>
+                    {(() => {
+                      const orderedCats = getOrderedCategories(tiles, groups)
+                      return orderedCats.map((parent, idx) => {
+                        const group = groups.find(g => (g.parent.category_id === parent.category_id || g.parent.name === parent.name || g.parent.name === parent.k))
+                        const hasChildren = group && group.children && group.children.length > 0
+                      return (
+                        <button
+                          key={parent.category_id || parent.name || idx}
+                          onClick={() => {
+                            if (!hasChildren) {
+                              setForm({...form, category: parent.name})
+                              setErrors(err => ({ ...err, category: '' }))
+                              setHeaderCatOpen(false)
+                              setModalSelectedParent(null)
+                            } else {
+                              setModalSelectedParent(parent)
+                            }
+                          }}
+                          style={{
+                            padding: '12px 16px',
+                            border: '1px solid rgba(1,47,52,.2)',
+                            borderRadius: '8px',
+                            background: '#fff',
+                            color: '#012f34',
+                            fontSize: '15px',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                            textAlign: 'left',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = '#3a77ff'
+                            e.currentTarget.style.background = 'rgba(58,119,255,.05)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = 'rgba(1,47,52,.2)'
+                            e.currentTarget.style.background = '#fff'
+                          }}
+                        >
+                          <span>{parent.displayLabel || parent.k}</span>
+                          {hasChildren && <FaChevronRight style={{fontSize: '12px', color: 'rgba(0,47,52,.64)'}} />}
+                        </button>
+                      )
+                    })})()}
+                  </div>
+                </div>
+              ) : (
+                // Subcategories
+                <div>
+                  <label className="form__label" style={{display: 'block', marginBottom: '12px', fontSize: '14px', color: 'rgba(0,47,52,.64)', fontFamily: 'var(--font-roboto), Roboto, sans-serif'}}>
+                    Select Subcategory
+                  </label>
+                  {(() => {
+                    const group = groups.find(g => (g.parent.category_id === modalSelectedParent.category_id || g.parent.name === modalSelectedParent.name))
+                    const subcategories = group ? group.children : []
+                    if (subcategories.length === 0) {
+                      return (
+                        <div style={{padding: '20px', textAlign: 'center', color: 'rgba(0,47,52,.64)'}}>
+                          No subcategories available
+                        </div>
+                      )
+                    }
+                    return (
+                      <div style={{display: 'grid', gap: '8px'}}>
+                        {subcategories.map((subcat, idx) => {
+                          const hasSubChildren = subcat.subchildren && subcat.subchildren.length > 0
+                          return (
+                            <div key={subcat.category_id || subcat.name || idx}>
+                              <button
+                                onClick={() => {
+                                  if (!hasSubChildren) {
+                                    setForm({...form, category: subcat.name})
+                                    setErrors(err => ({ ...err, category: '' }))
+                                    setHeaderCatOpen(false)
+                                    setModalSelectedParent(null)
+                                    setModalSelectedSub(null)
+                                  } else {
+                                    setModalSelectedSub(subcat)
+                                  }
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: '12px 16px',
+                                  border: '1px solid rgba(1,47,52,.2)',
+                                  borderRadius: '8px',
+                                  background: '#fff',
+                                  color: '#012f34',
+                                  fontSize: '15px',
+                                  fontWeight: 500,
+                                  cursor: 'pointer',
+                                  fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                  textAlign: 'left',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.borderColor = '#3a77ff'
+                                  e.currentTarget.style.background = 'rgba(58,119,255,.05)'
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.borderColor = 'rgba(1,47,52,.2)'
+                                  e.currentTarget.style.background = '#fff'
+                                }}
+                              >
+                                <span>{subcat.name}</span>
+                                {hasSubChildren && <FaChevronRight style={{fontSize: '12px', color: 'rgba(0,47,52,.64)'}} />}
+                              </button>
+                              
+                              {/* Sub-subcategories */}
+                              {hasSubChildren && modalSelectedSub && modalSelectedSub.category_id === subcat.category_id && (
+                                <div style={{marginTop: '8px', marginLeft: '16px', display: 'grid', gap: '6px'}}>
+                                  {subcat.subchildren.map((subsubcat, subIdx) => (
+                                    <button
+                                      key={subsubcat.category_id || subsubcat.name || subIdx}
+                                      onClick={() => {
+                                        setForm({...form, category: subsubcat.name})
+                                        setErrors(err => ({ ...err, category: '' }))
+                                        setHeaderCatOpen(false)
+                                        setModalSelectedParent(null)
+                                        setModalSelectedSub(null)
+                                      }}
+                                      style={{
+                                        width: '100%',
+                                        padding: '10px 14px',
+                                        border: '1px solid rgba(1,47,52,.15)',
+                                        borderRadius: '6px',
+                                        background: '#fff',
+                                        color: '#012f34',
+                                        fontSize: '14px',
+                                        fontWeight: 400,
+                                        cursor: 'pointer',
+                                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                        textAlign: 'left',
+                                        transition: 'all 0.2s ease'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.borderColor = '#3a77ff'
+                                        e.currentTarget.style.background = 'rgba(58,119,255,.05)'
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.borderColor = 'rgba(1,47,52,.15)'
+                                        e.currentTarget.style.background = '#fff'
+                                      }}
+                                    >
+                                      {subsubcat.name}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+            </div>
+            
+            <div style={{display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(1,47,52,.1)'}}>
+              <button
+                onClick={() => {
+                  setHeaderCatOpen(false)
+                  setModalSelectedParent(null)
+                  setModalSelectedSub(null)
+                }}
+                style={{
+                  border: '1px solid rgba(1,47,52,.2)',
+                  background: '#fff',
+                  color: '#012f34',
+                  borderRadius: '8px',
+                  padding: '10px 20px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(1,47,52,.05)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#fff'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </>
   )

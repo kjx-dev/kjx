@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import { FaSearch, FaUser, FaChevronDown, FaList, FaHeart, FaComment, FaKey, FaSignOutAlt, FaCar, FaHome, FaCog, FaShoppingCart, FaShoppingBag } from 'react-icons/fa'
+import { getShortCategoryName } from '../lib/categoryNames'
 
 export default function Header(){
   const router = useRouter()
@@ -298,7 +299,7 @@ export default function Header(){
               const tiles = [...picked, ...rest].slice(0,12)
               return tiles.map(c => {
                   const s = String(c.k||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
-                  const displayLabel = c.shortLabel || c.label || c.k
+                  const displayLabel = getShortCategoryName(c.shortLabel || c.label, c.k)
                   return (
                     <a
                       role="menuitem"

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Header from '../components/Header'
-import { FaShoppingBag, FaMapMarkerAlt, FaPhone, FaEnvelope, FaCalendar, FaCheckCircle, FaClock, FaTimesCircle } from 'react-icons/fa'
+import { FaShoppingBag, FaMapMarkerAlt, FaPhone, FaEnvelope, FaCalendar, FaCheckCircle, FaClock, FaTimesCircle, FaChevronRight, FaBox, FaCreditCard } from 'react-icons/fa'
 
 export default function Orders(){
   const router = useRouter()
@@ -123,7 +123,7 @@ export default function Orders(){
   return (
     <>
       <Header />
-      <div style={{minHeight: '100vh', padding: '20px', background: '#f5f5f5'}}>
+      <div style={{minHeight: '100vh', padding: '20px', background: '#f8f9fa'}}>
         <div style={{maxWidth: '1200px', margin: '0 auto'}}>
           <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px'}}>
             <h1 style={{fontSize: '28px', fontWeight: '600', color: '#012f34', display: 'flex', alignItems: 'center', gap: '12px'}}>
@@ -156,14 +156,38 @@ export default function Orders(){
           {filteredOrders.length === 0 ? (
             <div style={{
               background: '#fff',
-              borderRadius: '12px',
-              padding: '60px 20px',
+              borderRadius: '16px',
+              padding: '80px 20px',
               textAlign: 'center',
               border: '1px solid rgba(1,47,52,.1)'
             }}>
-              <FaShoppingBag style={{fontSize: '64px', color: 'rgba(1,47,52,.3)', marginBottom: '20px'}} />
-              <h2 style={{fontSize: '24px', fontWeight: '600', marginBottom: '12px', color: '#012f34'}}>No orders found</h2>
-              <p style={{color: 'rgba(0,47,52,.64)', marginBottom: '24px'}}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: 'rgba(1,47,52,.05)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 24px'
+              }}>
+                <FaShoppingBag style={{fontSize: '36px', color: 'rgba(1,47,52,.3)'}} />
+              </div>
+              <h2 style={{
+                fontSize: '24px', 
+                fontWeight: '600', 
+                marginBottom: '12px', 
+                color: '#012f34',
+                fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+              }}>
+                No orders found
+              </h2>
+              <p style={{
+                color: 'rgba(0,47,52,.64)', 
+                marginBottom: '32px',
+                fontSize: '15px',
+                fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+              }}>
                 {filter === 'all' 
                   ? "You haven't placed any orders yet"
                   : `You don't have any ${filter} orders`
@@ -172,119 +196,231 @@ export default function Orders(){
               <button 
                 onClick={() => router.push('/')}
                 style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  background: '#f55100',
+                  padding: '14px 32px',
+                  borderRadius: '10px',
+                  background: '#012f34',
                   color: '#fff',
                   border: 'none',
                   fontWeight: '600',
                   cursor: 'pointer',
-                  fontSize: '16px'
+                  fontSize: '15px',
+                  fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#014a52'
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#012f34'
+                  e.currentTarget.style.transform = 'translateY(0)'
                 }}
               >
                 Start Shopping
               </button>
             </div>
           ) : (
-            <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+            <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
               {filteredOrders.map((order, index) => (
                 <div
                   key={order.orderId || index}
                   style={{
                     background: '#fff',
-                    borderRadius: '12px',
+                    borderRadius: '16px',
                     padding: '24px',
                     border: '1px solid rgba(1,47,52,.1)',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 8px rgba(0,0,0,.04)'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,.1)'
-                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,.08)'
+                    e.currentTarget.style.borderColor = 'rgba(1,47,52,.2)'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = 'none'
-                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,.04)'
+                    e.currentTarget.style.borderColor = 'rgba(1,47,52,.1)'
                   }}
                   onClick={() => router.push('/order-confirmation?orderId=' + encodeURIComponent(order.orderId))}
                 >
-                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px'}}>
-                    <div>
-                      <div style={{display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px'}}>
-                        <h3 style={{fontSize: '18px', fontWeight: '600', color: '#012f34', margin: 0}}>
+                  {/* Order Header */}
+                  <div style={{
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'flex-start', 
+                    marginBottom: '20px',
+                    flexWrap: 'wrap',
+                    gap: '16px'
+                  }}>
+                    <div style={{flex: 1, minWidth: '200px'}}>
+                      <div style={{
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '12px', 
+                        marginBottom: '12px',
+                        flexWrap: 'wrap'
+                      }}>
+                        <h3 style={{
+                          fontSize: '20px', 
+                          fontWeight: '700', 
+                          color: '#012f34', 
+                          margin: 0,
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          letterSpacing: '-0.3px'
+                        }}>
                           Order #{order.orderId}
                         </h3>
                         <span style={{
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '6px',
-                          padding: '4px 12px',
-                          borderRadius: '12px',
+                          padding: '6px 14px',
+                          borderRadius: '20px',
                           background: getStatusColor(order.status || 'pending') + '15',
                           color: getStatusColor(order.status || 'pending'),
                           fontSize: '12px',
-                          fontWeight: '600'
+                          fontWeight: '600',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          textTransform: 'capitalize'
                         }}>
                           {getStatusIcon(order.status || 'pending')}
                           {(order.status || 'pending').charAt(0).toUpperCase() + (order.status || 'pending').slice(1)}
                         </span>
                       </div>
-                      <div style={{display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(0,47,52,.64)', fontSize: '14px'}}>
-                        <FaCalendar style={{fontSize: '12px'}} />
+                      <div style={{
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px', 
+                        color: 'rgba(0,47,52,.64)', 
+                        fontSize: '14px',
+                        fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                      }}>
+                        <FaCalendar style={{fontSize: '13px'}} />
                         <span>{formatDate(order.orderDate)}</span>
                       </div>
                     </div>
                     <div style={{textAlign: 'right'}}>
-                      <div style={{fontSize: '24px', fontWeight: '700', color: '#f55100', marginBottom: '4px'}}>
+                      <div style={{
+                        fontSize: '28px', 
+                        fontWeight: '700', 
+                        color: '#012f34', 
+                        marginBottom: '6px',
+                        fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                      }}>
                         {formatPrice(order.total)}
                       </div>
-                      <div style={{fontSize: '14px', color: 'rgba(0,47,52,.64)'}}>
+                      <div style={{
+                        fontSize: '14px', 
+                        color: 'rgba(0,47,52,.64)',
+                        fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                      }}>
                         {order.items?.length || 0} {order.items?.length === 1 ? 'item' : 'items'}
                       </div>
                     </div>
                   </div>
                   
+                  {/* Divider */}
                   <div style={{
                     height: '1px',
                     background: 'rgba(1,47,52,.1)',
-                    margin: '16px 0'
+                    margin: '20px 0'
                   }}></div>
                   
-                  <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px'}}>
+                  {/* Order Details Grid */}
+                  <div style={{
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                    gap: '20px', 
+                    marginBottom: '20px'
+                  }}>
                     <div>
-                      <div style={{fontSize: '12px', color: 'rgba(0,47,52,.64)', marginBottom: '8px', fontWeight: '500'}}>
-                        SHIPPING ADDRESS
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '12px', 
+                        color: 'rgba(0,47,52,.64)', 
+                        marginBottom: '10px', 
+                        fontWeight: '600',
+                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <FaMapMarkerAlt style={{fontSize: '11px'}} />
+                        Shipping Address
                       </div>
-                      <div style={{fontSize: '14px', color: '#012f34', lineHeight: '1.6'}}>
+                      <div style={{
+                        fontSize: '14px', 
+                        color: '#012f34', 
+                        lineHeight: '1.6',
+                        fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                      }}>
                         <div style={{fontWeight: '600', marginBottom: '4px'}}>{order.shipping?.fullName}</div>
                         <div>{order.shipping?.address}</div>
                         <div>{order.shipping?.city}, {order.shipping?.postalCode}</div>
                       </div>
                     </div>
                     <div>
-                      <div style={{fontSize: '12px', color: 'rgba(0,47,52,.64)', marginBottom: '8px', fontWeight: '500'}}>
-                        PAYMENT METHOD
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '12px', 
+                        color: 'rgba(0,47,52,.64)', 
+                        marginBottom: '10px', 
+                        fontWeight: '600',
+                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <FaCreditCard style={{fontSize: '11px'}} />
+                        Payment Method
                       </div>
-                      <div style={{fontSize: '14px', color: '#012f34', fontWeight: '500'}}>
+                      <div style={{
+                        fontSize: '14px', 
+                        color: '#012f34', 
+                        fontWeight: '500',
+                        fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                      }}>
                         {order.paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : 'Bank Transfer'}
                       </div>
                     </div>
                   </div>
                   
+                  {/* Order Items */}
                   <div>
-                    <div style={{fontSize: '12px', color: 'rgba(0,47,52,.64)', marginBottom: '8px', fontWeight: '500'}}>
-                      ORDER ITEMS
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px', 
+                      color: 'rgba(0,47,52,.64)', 
+                      marginBottom: '12px', 
+                      fontWeight: '600',
+                      fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <FaBox style={{fontSize: '11px'}} />
+                      Order Items
                     </div>
-                    <div style={{display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px'}}>
+                    <div style={{
+                      display: 'flex', 
+                      gap: '12px', 
+                      overflowX: 'auto', 
+                      paddingBottom: '8px',
+                      scrollbarWidth: 'thin'
+                    }}>
                       {order.items?.slice(0, 5).map((item, idx) => (
                         <div key={idx} style={{
                           flexShrink: 0,
-                          width: '80px',
-                          height: '80px',
-                          borderRadius: '8px',
+                          width: '90px',
+                          height: '90px',
+                          borderRadius: '10px',
                           overflow: 'hidden',
                           background: '#f0f0f0',
-                          position: 'relative'
+                          position: 'relative',
+                          border: '1px solid rgba(1,47,52,.08)'
                         }}>
                           <img 
                             src={item.image || '/images/products/img1.jpg'} 
@@ -300,20 +436,45 @@ export default function Orders(){
                       {order.items?.length > 5 && (
                         <div style={{
                           flexShrink: 0,
-                          width: '80px',
-                          height: '80px',
-                          borderRadius: '8px',
-                          background: 'rgba(1,47,52,.1)',
+                          width: '90px',
+                          height: '90px',
+                          borderRadius: '10px',
+                          background: 'rgba(1,47,52,.05)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontSize: '14px',
                           fontWeight: '600',
-                          color: '#012f34'
+                          color: '#012f34',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          border: '1px solid rgba(1,47,52,.1)'
                         }}>
                           +{order.items.length - 5}
                         </div>
                       )}
+                    </div>
+                  </div>
+
+                  {/* View Details Link */}
+                  <div style={{
+                    marginTop: '20px',
+                    paddingTop: '20px',
+                    borderTop: '1px solid rgba(1,47,52,.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      color: '#012f34',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                    }}>
+                      View Details
+                      <FaChevronRight style={{fontSize: '12px'}} />
                     </div>
                   </div>
                 </div>
