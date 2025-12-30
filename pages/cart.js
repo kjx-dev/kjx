@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Header from '../components/Header'
-import Footer from '../components/Footer'
-import Image from 'next/image'
-import { FaTrash, FaShoppingCart, FaArrowRight, FaMapMarkerAlt, FaPlus, FaMinus } from 'react-icons/fa'
+import { FaTrash, FaShoppingCart, FaArrowRight } from 'react-icons/fa'
 
 export default function Cart(){
   const router = useRouter()
@@ -69,231 +67,109 @@ export default function Cart(){
   return (
     <>
       <Header />
-      <div style={{minHeight: '100vh', padding: '20px', background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)'}}>
-        <div style={{maxWidth: '1400px', margin: '0 auto'}}>
-          <div style={{marginBottom: '32px'}}>
-            <h1 style={{
-              fontSize: '32px', 
-              fontWeight: '700', 
-              marginBottom: '8px', 
-              color: '#012f34',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px'
-            }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #f55100 0%, #ff6b2b 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(245,81,0,.25)'
-              }}>
-                <FaShoppingCart style={{color: '#fff', fontSize: '20px'}} />
-              </div>
-              Shopping Cart
-            </h1>
-            <p style={{color: 'rgba(0,47,52,.64)', fontSize: '15px', marginLeft: '60px'}}>
-              {cart.length} {cart.length === 1 ? 'item' : 'items'} in your cart
-            </p>
-          </div>
+      <div style={{minHeight: '100vh', padding: '20px', background: '#f5f5f5'}}>
+        <div style={{maxWidth: '1200px', margin: '0 auto'}}>
+          <h1 style={{fontSize: '28px', fontWeight: '600', marginBottom: '24px', color: '#012f34'}}>
+            <FaShoppingCart style={{marginRight: '10px', display: 'inline'}} />
+            Shopping Cart
+          </h1>
           
           {cart.length === 0 ? (
             <div style={{
               background: '#fff',
-              borderRadius: '20px',
-              padding: '80px 40px',
+              borderRadius: '12px',
+              padding: '60px 20px',
               textAlign: 'center',
-              border: '1px solid rgba(1,47,52,.08)',
-              boxShadow: '0 4px 20px rgba(0,0,0,.04)',
-              maxWidth: '600px',
-              margin: '0 auto'
+              border: '1px solid rgba(1,47,52,.1)'
             }}>
-              <div style={{
-                width: '120px',
-                height: '120px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, rgba(245,81,0,.1) 0%, rgba(255,107,43,.1) 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 24px',
-                border: '3px solid rgba(245,81,0,.15)'
-              }}>
-                <FaShoppingCart style={{fontSize: '48px', color: 'rgba(245,81,0,.4)'}} />
-              </div>
-              <h2 style={{fontSize: '28px', fontWeight: '700', marginBottom: '12px', color: '#012f34'}}>
-                Your cart is empty
-              </h2>
-              <p style={{color: 'rgba(0,47,52,.64)', marginBottom: '32px', fontSize: '16px', lineHeight: '1.6'}}>
-                Looks like you haven't added anything to your cart yet.<br />
-                Start shopping to fill it up!
-              </p>
+              <FaShoppingCart style={{fontSize: '64px', color: 'rgba(1,47,52,.3)', marginBottom: '20px'}} />
+              <h2 style={{fontSize: '24px', fontWeight: '600', marginBottom: '12px', color: '#012f34'}}>Your cart is empty</h2>
+              <p style={{color: 'rgba(0,47,52,.64)', marginBottom: '24px'}}>Add items to your cart to continue shopping</p>
               <button 
                 onClick={() => router.push('/')}
                 style={{
-                  padding: '14px 32px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #f55100 0%, #ff6b2b 100%)',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  background: '#f55100',
                   color: '#fff',
                   border: 'none',
                   fontWeight: '600',
                   cursor: 'pointer',
-                  fontSize: '16px',
-                  boxShadow: '0 4px 12px rgba(245,81,0,.3)',
-                  transition: 'all 0.2s ease',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(245,81,0,.4)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(245,81,0,.3)'
+                  fontSize: '16px'
                 }}
               >
-                Continue Shopping <FaArrowRight />
+                Continue Shopping
               </button>
             </div>
           ) : (
-            <div style={{
-              display: 'grid', 
-              gridTemplateColumns: '1fr 420px', 
-              gap: '28px', 
-              alignItems: 'start'
-            }}
-            className="cart-grid"
-            >
+            <div style={{display: 'grid', gridTemplateColumns: '1fr 400px', gap: '24px'}}>
               <div>
                 <div style={{
                   background: '#fff',
-                  borderRadius: '20px',
-                  padding: '24px',
-                  border: '1px solid rgba(1,47,52,.08)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,.04)'
+                  borderRadius: '12px',
+                  padding: '20px',
+                  border: '1px solid rgba(1,47,52,.1)'
                 }}>
                   {cart.map((item, index) => (
-                    <div 
-                      key={item.post_id || index} 
-                      style={{
-                        display: 'flex',
-                        gap: '20px',
-                        padding: '24px 0',
-                        borderBottom: index < cart.length - 1 ? '1px solid rgba(1,47,52,.08)' : 'none',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(245,81,0,.02)'
-                        e.currentTarget.style.borderRadius = '12px'
-                        e.currentTarget.style.paddingLeft = '28px'
-                        e.currentTarget.style.paddingRight = '28px'
-                        e.currentTarget.style.marginLeft = '-4px'
-                        e.currentTarget.style.marginRight = '-4px'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.paddingLeft = '0'
-                        e.currentTarget.style.paddingRight = '0'
-                        e.currentTarget.style.marginLeft = '0'
-                        e.currentTarget.style.marginRight = '0'
-                      }}
-                    >
+                    <div key={item.post_id || index} style={{
+                      display: 'flex',
+                      gap: '16px',
+                      padding: '20px 0',
+                      borderBottom: index < cart.length - 1 ? '1px solid rgba(1,47,52,.1)' : 'none'
+                    }}>
                       <div style={{
-                        width: '140px',
-                        height: '140px',
-                        borderRadius: '16px',
+                        width: '120px',
+                        height: '120px',
+                        borderRadius: '8px',
                         overflow: 'hidden',
-                        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-                        flexShrink: 0,
-                        position: 'relative',
-                        boxShadow: '0 2px 8px rgba(0,0,0,.08)',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => router.push('/product/' + item.post_id)}
-                      >
-                        <Image 
+                        background: '#f0f0f0',
+                        flexShrink: 0
+                      }}>
+                        <img 
                           src={item.image || '/images/products/img1.jpg'} 
                           alt={item.title}
-                          fill
-                          style={{objectFit: 'cover'}}
-                          sizes="140px"
-                          unoptimized
+                          style={{width: '100%', height: '100%', objectFit: 'cover'}}
                         />
                       </div>
-                      <div style={{flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
-                        <div>
-                          <h3 style={{
-                            fontSize: '20px',
-                            fontWeight: '700',
-                            marginBottom: '8px',
-                            color: '#012f34',
-                            cursor: 'pointer',
-                            lineHeight: '1.3',
-                            transition: 'color 0.2s ease'
-                          }}
-                          onClick={() => router.push('/product/' + item.post_id)}
-                          onMouseEnter={(e) => e.currentTarget.style.color = '#f55100'}
-                          onMouseLeave={(e) => e.currentTarget.style.color = '#012f34'}
-                          >
-                            {item.title}
-                          </h3>
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            color: 'rgba(0,47,52,.64)',
-                            marginBottom: '12px',
-                            fontSize: '14px'
-                          }}>
-                            <FaMapMarkerAlt style={{fontSize: '12px'}} />
-                            <span>{item.location || 'Location not specified'}</span>
-                          </div>
-                          <div style={{
-                            fontSize: '24px',
-                            fontWeight: '700',
-                            color: '#f55100',
-                            marginBottom: '16px',
-                            display: 'flex',
-                            alignItems: 'baseline',
-                            gap: '4px'
-                          }}>
-                            {formatPrice(item.price)}
-                          </div>
+                      <div style={{flex: 1}}>
+                        <h3 style={{
+                          fontSize: '18px',
+                          fontWeight: '600',
+                          marginBottom: '8px',
+                          color: '#012f34',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => router.push('/product/' + item.post_id)}
+                        >
+                          {item.title}
+                        </h3>
+                        <p style={{color: 'rgba(0,47,52,.64)', marginBottom: '8px', fontSize: '14px'}}>
+                          {item.location || 'Location not specified'}
+                        </p>
+                        <div style={{
+                          fontSize: '20px',
+                          fontWeight: '700',
+                          color: '#f55100',
+                          marginBottom: '12px'
+                        }}>
+                          {formatPrice(item.price)}
                         </div>
                         <button
                           onClick={() => removeFromCart(item.post_id)}
                           style={{
-                            padding: '10px 18px',
-                            borderRadius: '10px',
+                            padding: '8px 16px',
+                            borderRadius: '6px',
                             background: 'transparent',
-                            border: '2px solid rgba(176,0,32,.2)',
+                            border: '1px solid rgba(1,47,52,.2)',
                             color: '#b00020',
                             cursor: 'pointer',
                             fontSize: '14px',
-                            fontWeight: '600',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '8px',
-                            width: 'fit-content',
-                            transition: 'all 0.2s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(176,0,32,.08)'
-                            e.currentTarget.style.borderColor = '#b00020'
-                            e.currentTarget.style.transform = 'translateY(-1px)'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent'
-                            e.currentTarget.style.borderColor = 'rgba(176,0,32,.2)'
-                            e.currentTarget.style.transform = 'translateY(0)'
+                            gap: '6px'
                           }}
                         >
-                          <FaTrash style={{fontSize: '12px'}} /> Remove Item
+                          <FaTrash /> Remove
                         </button>
                       </div>
                     </div>
@@ -303,113 +179,73 @@ export default function Cart(){
               
               <div style={{
                 background: '#fff',
-                borderRadius: '20px',
-                padding: '28px',
-                border: '1px solid rgba(1,47,52,.08)',
-                boxShadow: '0 4px 20px rgba(0,0,0,.04)',
+                borderRadius: '12px',
+                padding: '24px',
+                border: '1px solid rgba(1,47,52,.1)',
                 height: 'fit-content',
                 position: 'sticky',
                 top: '20px'
               }}>
                 <h2 style={{
-                  fontSize: '24px',
-                  fontWeight: '700',
-                  marginBottom: '24px',
-                  color: '#012f34',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px'
+                  fontSize: '20px',
+                  fontWeight: '600',
+                  marginBottom: '20px',
+                  color: '#012f34'
                 }}>
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #f55100 0%, #ff6b2b 100%)'
-                  }}></div>
                   Order Summary
                 </h2>
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '16px',
+                  marginBottom: '12px',
                   fontSize: '16px',
-                  color: 'rgba(0,47,52,.8)',
-                  padding: '12px 0'
+                  color: 'rgba(0,47,52,.8)'
                 }}>
-                  <span style={{fontWeight: '500'}}>Subtotal ({cart.length} {cart.length === 1 ? 'item' : 'items'})</span>
-                  <span style={{fontWeight: '600', color: '#012f34'}}>{formatPrice(total)}</span>
+                  <span>Subtotal ({cart.length} {cart.length === 1 ? 'item' : 'items'})</span>
+                  <span>{formatPrice(total)}</span>
                 </div>
                 <div style={{
-                  height: '2px',
-                  background: 'linear-gradient(90deg, transparent 0%, rgba(1,47,52,.1) 50%, transparent 100%)',
-                  margin: '20px 0'
+                  height: '1px',
+                  background: 'rgba(1,47,52,.1)',
+                  margin: '16px 0'
                 }}></div>
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '28px',
-                  padding: '16px',
-                  background: 'linear-gradient(135deg, rgba(245,81,0,.05) 0%, rgba(255,107,43,.05) 100%)',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(245,81,0,.1)'
+                  marginBottom: '24px',
+                  fontSize: '20px',
+                  fontWeight: '700',
+                  color: '#012f34'
                 }}>
-                  <span style={{fontSize: '18px', fontWeight: '700', color: '#012f34'}}>Total</span>
-                  <span style={{fontSize: '28px', fontWeight: '800', color: '#f55100'}}>{formatPrice(total)}</span>
+                  <span>Total</span>
+                  <span style={{color: '#f55100'}}>{formatPrice(total)}</span>
                 </div>
                 <button
                   onClick={() => router.push('/checkout')}
                   style={{
                     width: '100%',
-                    padding: '18px',
-                    borderRadius: '12px',
+                    padding: '16px',
+                    borderRadius: '8px',
                     background: 'linear-gradient(135deg, #f55100 0%, #ff6b2b 100%)',
                     color: '#fff',
                     border: 'none',
-                    fontWeight: '700',
+                    fontWeight: '600',
                     cursor: 'pointer',
-                    fontSize: '17px',
+                    fontSize: '16px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '10px',
-                    boxShadow: '0 6px 20px rgba(245,81,0,.35)',
-                    transition: 'all 0.2s ease',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(245,81,0,.45)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(245,81,0,.35)'
+                    gap: '8px',
+                    boxShadow: '0 4px 12px rgba(245,81,0,.3)'
                   }}
                 >
                   Proceed to Checkout <FaArrowRight />
                 </button>
-                <div style={{
-                  marginTop: '20px',
-                  padding: '16px',
-                  background: 'rgba(1,47,52,.03)',
-                  borderRadius: '12px',
-                  fontSize: '13px',
-                  color: 'rgba(0,47,52,.64)',
-                  lineHeight: '1.6',
-                  textAlign: 'center'
-                }}>
-                  <p style={{margin: 0}}>
-                    🔒 Secure checkout • Free returns • 24/7 support
-                  </p>
-                </div>
               </div>
             </div>
           )}
         </div>
       </div>
-      <Footer />
     </>
   )
 }
