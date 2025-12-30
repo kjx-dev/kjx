@@ -5,6 +5,7 @@ import UsersTab from './components/UsersTab'
 import PermissionsTab from './components/PermissionsTab'
 import AdsTab from './components/AdsTab'
 import CategoriesTab from './components/CategoriesTab'
+import SettingsTab from './components/SettingsTab'
 
 export default function Admin(){
   const router = useRouter()
@@ -107,6 +108,12 @@ export default function Admin(){
             >
               Categories
             </button>
+            <button
+              className={`tab ${activeTab === 'settings' ? 'tab--active' : ''}`}
+              onClick={() => setActiveTab('settings')}
+            >
+              Settings
+            </button>
           </div>
 
           {error && (
@@ -126,6 +133,9 @@ export default function Admin(){
 
           {/* Categories Tab */}
           {activeTab === 'categories' && <CategoriesTab error={error} setError={setError} />}
+
+          {/* Settings Tab */}
+          {activeTab === 'settings' && <SettingsTab error={error} setError={setError} />}
         </div>
       </div>
     </>

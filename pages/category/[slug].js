@@ -718,22 +718,24 @@ export default function CategoryPage(){
                     style={{
                       padding: '12px 24px',
                       borderRadius: '8px',
-                      background: 'linear-gradient(135deg, #f55100 0%, #ff6b2b 100%)',
+                      background: '#e44c00',
                       color: '#fff',
                       border: 'none',
                       fontWeight: '400',
                       cursor: 'pointer',
                       fontSize: '16px',
-                      boxShadow: '0 4px 12px rgba(245,81,0,.3)',
+                      boxShadow: '0 4px 12px rgba(228,76,0,.3)',
                       transition: 'all 0.2s ease'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-2px)'
-                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(245,81,0,.4)'
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(228,76,0,.4)'
+                      e.currentTarget.style.background = '#c94300'
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'translateY(0)'
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(245,81,0,.3)'
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(228,76,0,.3)'
+                      e.currentTarget.style.background = '#e44c00'
                     }}
                   >
                     Post now
@@ -805,22 +807,24 @@ export default function CategoryPage(){
                     style={{
                       padding: '12px 24px',
                       borderRadius: '8px',
-                      background: 'linear-gradient(135deg, #f55100 0%, #ff6b2b 100%)',
+                      background: '#e44c00',
                       color: '#fff',
                       border: 'none',
                       fontWeight: '400',
                       cursor: 'pointer',
                       fontSize: '16px',
-                      boxShadow: '0 4px 12px rgba(245,81,0,.3)',
+                      boxShadow: '0 4px 12px rgba(228,76,0,.3)',
                       transition: 'all 0.2s ease'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-2px)'
-                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(245,81,0,.4)'
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(228,76,0,.4)'
+                      e.currentTarget.style.background = '#c94300'
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'translateY(0)'
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(245,81,0,.3)'
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(228,76,0,.3)'
+                      e.currentTarget.style.background = '#e44c00'
                     }}
                   >
                     Post now

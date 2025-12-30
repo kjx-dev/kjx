@@ -76,7 +76,7 @@ export default function SellerHero({ seller, totalPosts, activePosts, totalViews
           <div style={{flex:1, minWidth:'200px'}}>
             <h1 style={{
               fontSize:'32px',
-              fontWeight:700,
+              fontWeight:400,
               color:'#fff',
               marginBottom:'8px',
               textShadow:'0 2px 10px rgba(0,0,0,0.2)'
@@ -132,7 +132,7 @@ export default function SellerHero({ seller, totalPosts, activePosts, totalViews
               marginBottom:'8px'
             }}>
               <FaBox style={{fontSize:'20px', color:'#fff'}} />
-              <span style={{fontSize:'14px', color:'rgba(255,255,255,0.9)', fontWeight:500}}>Total Posts</span>
+              <span style={{fontSize:'14px', color:'rgba(255,255,255,0.9)', fontWeight:400}}>Total Posts</span>
             </div>
             <div style={{fontSize:'28px', fontWeight:700, color:'#fff'}}>{totalPosts}</div>
           </div>
@@ -150,7 +150,7 @@ export default function SellerHero({ seller, totalPosts, activePosts, totalViews
               marginBottom:'8px'
             }}>
               <FaShoppingBag style={{fontSize:'20px', color:'#fff'}} />
-              <span style={{fontSize:'14px', color:'rgba(255,255,255,0.9)', fontWeight:500}}>Active</span>
+              <span style={{fontSize:'14px', color:'rgba(255,255,255,0.9)', fontWeight:400}}>Active</span>
             </div>
             <div style={{fontSize:'28px', fontWeight:700, color:'#fff'}}>{activePosts}</div>
           </div>
@@ -168,7 +168,7 @@ export default function SellerHero({ seller, totalPosts, activePosts, totalViews
               marginBottom:'8px'
             }}>
               <FaEye style={{fontSize:'20px', color:'#fff'}} />
-              <span style={{fontSize:'14px', color:'rgba(255,255,255,0.9)', fontWeight:500}}>Total Views</span>
+              <span style={{fontSize:'14px', color:'rgba(255,255,255,0.9)', fontWeight:400}}>Total Views</span>
             </div>
             <div style={{fontSize:'28px', fontWeight:700, color:'#fff'}}>{totalViews.toLocaleString()}</div>
           </div>

@@ -302,7 +302,7 @@ export default function CategoriesTab({ error, setError }) {
             borderRadius: '6px',
             cursor: 'pointer',
             fontSize: '14px',
-            fontWeight: '500',
+            fontWeight: '400',
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
@@ -419,7 +419,7 @@ export default function CategoriesTab({ error, setError }) {
                   borderRadius: '6px',
                   cursor: updating.submitting ? 'not-allowed' : 'pointer',
                   fontSize: '14px',
-                  fontWeight: '500',
+                  fontWeight: '400',
                   opacity: updating.submitting ? 0.6 : 1
                 }}
               >
@@ -437,7 +437,7 @@ export default function CategoriesTab({ error, setError }) {
                   borderRadius: '6px',
                   cursor: updating.submitting ? 'not-allowed' : 'pointer',
                   fontSize: '14px',
-                  fontWeight: '500'
+                  fontWeight: '400'
                 }}
               >
                 Cancel
@@ -594,7 +594,7 @@ export default function CategoriesTab({ error, setError }) {
                     borderRadius: '6px',
                     cursor: updating.editing ? 'not-allowed' : 'pointer',
                     fontSize: '14px',
-                    fontWeight: '500'
+                    fontWeight: '400'
                   }}
                 >
                   Cancel
@@ -610,7 +610,7 @@ export default function CategoriesTab({ error, setError }) {
                     borderRadius: '6px',
                     cursor: updating.editing ? 'not-allowed' : 'pointer',
                     fontSize: '14px',
-                    fontWeight: '500',
+                    fontWeight: '400',
                     opacity: updating.editing ? 0.6 : 1
                   }}
                 >

@@ -135,7 +135,7 @@ export default function SellerPosts() {
               }}>
                 <h2 style={{
                   fontSize:'24px',
-                  fontWeight:700,
+                  fontWeight:400,
                   color:'#012f34',
                   margin:0
                 }}>

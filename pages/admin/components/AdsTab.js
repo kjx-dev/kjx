@@ -690,7 +690,7 @@ export default function AdsTab({ error, setError }) {
                             background: (ad.featured === 1 || ad.featured === true || Number(ad.featured) === 1) ? '#ffce32' : undefined,
                             borderColor: (ad.featured === 1 || ad.featured === true || Number(ad.featured) === 1) ? '#ffce32' : undefined,
                             color: (ad.featured === 1 || ad.featured === true || Number(ad.featured) === 1) ? '#012f34' : undefined,
-                            fontWeight: (ad.featured === 1 || ad.featured === true || Number(ad.featured) === 1) ? '700' : '500'
+                            fontWeight: '400'
                           }}
                         >
                           {togglingFeatured[ad.post_id] 

@@ -59,6 +59,33 @@ async function ensureTables(prisma){
         console.log('Error adding featured column (may already exist):', e.message)
       }
     }
+    // Add expiration_date column if it doesn't exist
+    try {
+      await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN expiration_date DATETIME NULL')
+      console.log('Added expiration_date column to posts table')
+    } catch (e) {
+      // Column already exists, ignore
+      if (e.message && !e.message.includes('duplicate column')) {
+        console.log('Error adding expiration_date column (may already exist):', e.message)
+      }
+    }
+    // Create settings table for admin configuration
+    try {
+      await prisma.$executeRawUnsafe(
+        'CREATE TABLE IF NOT EXISTS settings (\n'+
+        '  setting_key TEXT PRIMARY KEY,\n'+
+        '  setting_value TEXT NOT NULL,\n'+
+        '  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP\n'+
+        ')'
+      )
+      // Set default expiration days to 30 if not exists
+      const existing = await prisma.$queryRawUnsafe("SELECT setting_value FROM settings WHERE setting_key = 'ad_expiration_days' LIMIT 1")
+      if (!existing || !Array.isArray(existing) || existing.length === 0) {
+        await prisma.$executeRawUnsafe("INSERT INTO settings (setting_key, setting_value) VALUES ('ad_expiration_days', '30')")
+      }
+    } catch (e) {
+      console.log('Error ensuring settings table:', e.message)
+    }
     await prisma.$executeRawUnsafe(
       'CREATE TABLE IF NOT EXISTS post_images (\n'+
       '  image_id INTEGER PRIMARY KEY AUTOINCREMENT,\n'+
@@ -118,23 +145,22 @@ export default async function handler(req, res){
         const showAll = req.query.showAll === 'true' || req.query.admin === 'true'
         const searchQuery = String(req.query.q || req.query.search || '').trim()
         
-        // Build WHERE clause for status filtering
-        const statusFilter = showAll ? '' : "WHERE COALESCE(status, 'pending') = 'active'"
+        // Build WHERE clause conditions
+        const conditions = []
+        if (!showAll) {
+          conditions.push("COALESCE(status, 'pending') = 'active'")
+        }
+        // Filter expired posts (exclude expired posts from results)
+        conditions.push("(expiration_date IS NULL OR expiration_date > datetime('now'))")
         
         // Build search filter
-        let searchFilter = ''
         if (searchQuery) {
           const searchEscaped = searchQuery.replace(/'/g, "''") // Escape single quotes for SQL
-          const searchCondition = `(title LIKE '%${searchEscaped}%' OR content LIKE '%${searchEscaped}%' OR location LIKE '%${searchEscaped}%')`
-          if (statusFilter) {
-            searchFilter = ` AND ${searchCondition}`
-          } else {
-            searchFilter = `WHERE ${searchCondition}`
-          }
+          conditions.push(`(title LIKE '%${searchEscaped}%' OR content LIKE '%${searchEscaped}%' OR location LIKE '%${searchEscaped}%')`)
         }
         
         // Build complete WHERE clause
-        const whereClause = statusFilter + searchFilter
+        const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
         
         // Count total matching posts
         const totalRowsQuery = `SELECT COUNT(1) as c FROM posts ${whereClause}`
@@ -255,8 +281,29 @@ export default async function handler(req, res){
         if (size > 10*1024*1024){ res.status(400).json({ status:'error', message:'Image must be <= 10MB', field:'images', data:null, request_id:reqId }); return }
       }
 
+      // Get expiration days from settings (default 30)
+      let expirationDays = 30
+      try {
+        const settingRow = await prisma.$queryRawUnsafe("SELECT setting_value FROM settings WHERE setting_key = 'ad_expiration_days' LIMIT 1")
+        if (settingRow && Array.isArray(settingRow) && settingRow.length) {
+          expirationDays = parseInt(settingRow[0].setting_value || '30', 10) || 30
+        }
+      } catch (e) {
+        console.log('Error reading expiration days setting:', e.message)
+      }
+      
+      // Calculate expiration date
+      const expirationDate = new Date()
+      expirationDate.setDate(expirationDate.getDate() + expirationDays)
+      const expirationDateStr = expirationDate.toISOString().slice(0, 19).replace('T', ' ')
+
       try{
-        await prisma.$executeRaw`INSERT INTO posts (title, content, user_id, category_id, price, location, status, post_type, created_at) VALUES (${title}, ${content}, ${userId}, ${catId}, ${price || null}, ${location || null}, 'pending', ${postType}, CURRENT_TIMESTAMP)`
+        const titleEscaped = String(title).replace(/'/g, "''")
+        const contentEscaped = String(content).replace(/'/g, "''")
+        const locationEscaped = location ? String(location).replace(/'/g, "''") : null
+        const priceVal = price || 'NULL'
+        const locationVal = locationEscaped ? `'${locationEscaped}'` : 'NULL'
+        await prisma.$executeRawUnsafe(`INSERT INTO posts (title, content, user_id, category_id, price, location, status, post_type, created_at, expiration_date) VALUES ('${titleEscaped}', '${contentEscaped}', ${userId}, ${catId}, ${priceVal}, ${locationVal}, 'pending', '${postType}', CURRENT_TIMESTAMP, '${expirationDateStr}')`)
         const createdRows = await prisma.$queryRaw`SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, 'pending') as status, COALESCE(post_type, 'ad') as post_type, COALESCE(featured, 0) as featured FROM posts WHERE user_id=${userId} ORDER BY post_id DESC LIMIT 1`
         const created = Array.isArray(createdRows) && createdRows.length ? createdRows[0] : null
         if (!created){ res.setHeader('Content-Type','application/json'); res.status(500).json({ status:'error', message:'Failed to create post', data:null, request_id:reqId }); return }

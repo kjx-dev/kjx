@@ -799,18 +799,26 @@ margin-left: 0; }
 }
 
 .load__more-btn {
-    background: none;
-    color: #000000;
-    border: 2px solid #012f34;
+    background: #e44c00;
+    color: #ffffff;
+    border: 2px solid #e44c00;
     padding: 15px 30px;
     border-radius: 4px;
     font-size: 15px;
     cursor: pointer;
     font-weight: 400;
+    transition: background 0.2s, border-color 0.2s;
 }
 
 .load__more-btn:hover {
-    border: 3px solid #012f34;
+    background: #c94300;
+    border-color: #c94300;
+}
+
+.load__more-btn:disabled {
+    background: #ccc;
+    border-color: #ccc;
+    cursor: not-allowed;
 }
 
 footer {
