@@ -79,7 +79,7 @@ export default function Admin(){
       <Header />
       <div style={{minHeight: '100vh', padding: '20px'}}>
         <div style={{maxWidth: '1400px', margin: '0 auto'}}>
-          <h1 style={{fontSize: '32px', fontWeight: '600', marginBottom: '20px'}}>Admin Panel</h1>
+          <h1 style={{fontSize: '32px', fontWeight: '500', marginBottom: '20px'}}>Admin Panel</h1>
           
           {/* Tabs */}
           <div className="tabs" style={{marginBottom: '20px'}}>

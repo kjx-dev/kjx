@@ -321,7 +321,7 @@ export default function CategoriesTab({ error, setError }) {
 
       {showAddForm && !showEditModal && (
         <div style={{padding: '20px', borderBottom: '1px solid rgba(1,47,52,.1)', background: '#f5f8fa'}}>
-          <h3 style={{fontSize: '16px', fontWeight: '600', marginBottom: '16px'}}>
+          <h3 style={{fontSize: '16px', fontWeight: '500', marginBottom: '16px'}}>
             Add New Category
           </h3>
           <form onSubmit={handleSubmit}>
@@ -478,7 +478,7 @@ export default function CategoriesTab({ error, setError }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
-              <h3 style={{fontSize: '18px', fontWeight: '600', margin: 0}}>Edit Category</h3>
+              <h3 style={{fontSize: '18px', fontWeight: '500', margin: 0}}>Edit Category</h3>
               <button
                 onClick={closeEditModal}
                 style={{

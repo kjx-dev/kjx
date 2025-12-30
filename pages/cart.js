@@ -69,7 +69,7 @@ export default function Cart(){
       <Header />
       <div style={{minHeight: '100vh', padding: '20px', background: '#f5f5f5'}}>
         <div style={{maxWidth: '1200px', margin: '0 auto'}}>
-          <h1 style={{fontSize: '28px', fontWeight: '600', marginBottom: '24px', color: '#012f34'}}>
+          <h1 style={{fontSize: '28px', fontWeight: '500', marginBottom: '24px', color: '#012f34'}}>
             <FaShoppingCart style={{marginRight: '10px', display: 'inline'}} />
             Shopping Cart
           </h1>
@@ -83,7 +83,7 @@ export default function Cart(){
               border: '1px solid rgba(1,47,52,.1)'
             }}>
               <FaShoppingCart style={{fontSize: '64px', color: 'rgba(1,47,52,.3)', marginBottom: '20px'}} />
-              <h2 style={{fontSize: '24px', fontWeight: '600', marginBottom: '12px', color: '#012f34'}}>Your cart is empty</h2>
+              <h2 style={{fontSize: '24px', fontWeight: '500', marginBottom: '12px', color: '#012f34'}}>Your cart is empty</h2>
               <p style={{color: 'rgba(0,47,52,.64)', marginBottom: '24px'}}>Add items to your cart to continue shopping</p>
               <button 
                 onClick={() => router.push('/')}
@@ -134,7 +134,7 @@ export default function Cart(){
                       <div style={{flex: 1}}>
                         <h3 style={{
                           fontSize: '18px',
-                          fontWeight: '600',
+                          fontWeight: '500',
                           marginBottom: '8px',
                           color: '#012f34',
                           cursor: 'pointer'
@@ -188,7 +188,7 @@ export default function Cart(){
               }}>
                 <h2 style={{
                   fontSize: '20px',
-                  fontWeight: '600',
+                  fontWeight: '500',
                   marginBottom: '20px',
                   color: '#012f34'
                 }}>
@@ -229,7 +229,7 @@ export default function Cart(){
                     background: 'linear-gradient(135deg, #f55100 0%, #ff6b2b 100%)',
                     color: '#fff',
                     border: 'none',
-                    fontWeight: '600',
+                    fontWeight: '400',
                     cursor: 'pointer',
                     fontSize: '16px',
                     display: 'flex',

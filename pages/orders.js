@@ -126,7 +126,7 @@ export default function Orders(){
       <div style={{minHeight: '100vh', padding: '20px', background: '#f8f9fa'}}>
         <div style={{maxWidth: '1200px', margin: '0 auto'}}>
           <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px'}}>
-            <h1 style={{fontSize: '28px', fontWeight: '600', color: '#012f34', display: 'flex', alignItems: 'center', gap: '12px'}}>
+            <h1 style={{fontSize: '28px', fontWeight: '500', color: '#012f34', display: 'flex', alignItems: 'center', gap: '12px'}}>
               <FaShoppingBag style={{color: '#f55100'}} />
               My Orders
             </h1>
@@ -175,7 +175,7 @@ export default function Orders(){
               </div>
               <h2 style={{
                 fontSize: '24px', 
-                fontWeight: '600', 
+                fontWeight: '500', 
                 marginBottom: '12px', 
                 color: '#012f34',
                 fontFamily: 'var(--font-roboto), Roboto, sans-serif'
@@ -262,7 +262,7 @@ export default function Orders(){
                       }}>
                         <h3 style={{
                           fontSize: '20px', 
-                          fontWeight: '700', 
+                          fontWeight: '500', 
                           color: '#012f34', 
                           margin: 0,
                           fontFamily: 'var(--font-roboto), Roboto, sans-serif',

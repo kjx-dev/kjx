@@ -12,6 +12,11 @@
     box-sizing: border-box;
     outline: none;
 }
+
+/* Make all headings lighter by default */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 500;
+}
 img { max-width: 100%; height: auto; }
 
 nav {
@@ -474,6 +479,7 @@ b {
     text-decoration: none;
     color: white;
     border-radius: 100px;
+    font-weight: 400;
 }
 .sell__btn:hover {
      background: var(--primary-color-dark);
@@ -519,7 +525,7 @@ b {
     padding: 10px 16px;
     height: 44px;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 400;
     text-decoration: none;
 }
 .btn:hover { background: var(--primary-color-dark); }
@@ -627,7 +633,7 @@ b {
 }
 
 .fresh__recomandation h1 {
-    font-weight: 600;
+    font-weight: 500;
     margin: 0 0 20px;
     text-align: left;
     color: black;
@@ -680,7 +686,7 @@ b {
 }
 .hero__inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 16px; align-items: center; padding: 0 20px; }
 .hero__content { display: block; }
-.hero__content h1 { font-size: 28px; font-weight: 700; color: #3c3c3c; text-align: left; margin: 0 0 16px; }
+.hero__content h1 { font-size: 28px; font-weight: 500; color: #3c3c3c; text-align: left; margin: 0 0 16px; }
 .hero__content p { font-size: 18px; color: rgba(0,47,52,.84); margin-bottom: 24px; line-height: 1.7;
 margin-left: 0; }
 .hero__actions { display: flex; gap: 12px; }
@@ -800,7 +806,7 @@ margin-left: 0; }
     border-radius: 4px;
     font-size: 15px;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 400;
 }
 
 .load__more-btn:hover {
@@ -908,7 +914,7 @@ footer {
 
 .footer__content ul h4 {
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 500;
         color: #000000;
     margin-bottom: 12px;
     text-transform: uppercase;
@@ -1025,6 +1031,7 @@ color: #3c3c3c;
     background: #fff;
     padding: 10px 30px;
     text-decoration: none;
+    font-weight: 400;
     color: #000000;
     border: 2px solid #012f34;
     width: 80%;
@@ -1078,13 +1085,13 @@ color: #3c3c3c;
 .chat__layout { display:grid; grid-template-columns:320px 1fr; gap:16px; }
 .chat__sidebar { border:1px solid rgba(1,47,52,.2); border-radius:12px; background:#fff; }
 .chat__filters { padding:12px 12px 6px; border-bottom:1px solid rgba(1,47,52,.12); }
-.chat__filter-btn { border:2px solid rgba(1,47,52,.3); background:#fff; color:#012f34; border-radius:20px; padding:8px 14px; font-weight:600; cursor:pointer; }
+.chat__filter-btn { border:2px solid rgba(1,47,52,.3); background:#fff; color:#012f34; border-radius:20px; padding:8px 14px; font-weight:400; cursor:pointer; }
 .chat__filter-btn.active { border-color:#012f34; background:#012f34; color:#fff; }
 .chat__list { display:grid; gap:8px; padding:12px; max-height:520px; overflow:auto; }
 .chat__item { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px; border:1px solid rgba(1,47,52,.16); border-radius:10px; padding:8px 10px; background:#fff; text-align:left; cursor:pointer; }
 .chat__item--active { background:#eef7ff; border-color: rgba(1,47,52,.24); }
 .chat__avatar { width:36px; height:36px; border-radius:18px; background:#eef7ff; display:grid; place-items:center; color:#012f34; }
-.chat__title { color:#012f34; font-weight:700; }
+.chat__title { color:#012f34; font-weight:500; }
 .chat__subtitle { color:rgba(0,47,52,.64); }
 .chat__meta { display:grid; justify-items:end; gap:6px; }
 .chat__badge { width:22px; height:22px; border-radius:11px; background:#eef7ff; color:#012f34; font-weight:700; font-size:12px; display:grid; place-items:center; }
@@ -1145,6 +1152,7 @@ color: #3c3c3c;
     font-size: 17px;
     border-radius: 5px;
     cursor: pointer;
+    font-weight: 400;
 }
 
 .email_login p {
@@ -1201,7 +1209,7 @@ color: #3c3c3c;
     border-radius: 5px;
     cursor: pointer;
     margin-top: 10px;
-    font-weight: 600;
+    font-weight: 400;
     transition: background-color 0.2s, border-color 0.2s;
 }
 
@@ -1236,6 +1244,7 @@ color: #3c3c3c;
     font-size: 17px;
     border-radius: 5px;
     cursor: pointer;
+    font-weight: 400;
 }
 
 .phone_login p {
@@ -1268,6 +1277,7 @@ color: #3c3c3c;
     font-size: 17px;
     border-radius: 5px;
     cursor: pointer;
+    font-weight: 400;
 }
 
 .signUp input {
@@ -1379,7 +1389,7 @@ p {
     /* max-width: 1200px; */
      margin: 24px auto;
       padding: 0 30px; }
-.home__categories h2 { font-size: 22px; font-weight: 600; margin-bottom: 20px; color: #012f34; }
+.home__categories h2 { font-size: 22px; font-weight: 500; margin-bottom: 20px; color: #012f34; }
 .home__categories-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 16px; }
 /* Ensure category grid on sell page responds to the left column width, not viewport */
 .sell__section .home__categories-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
@@ -1389,9 +1399,9 @@ p {
 .cat__card.active { background: #fff; border-color: #012f34; box-shadow: 0 10px 24px rgba(0,0,0,.12); }
 .cat__card:focus-visible { outline: none; box-shadow: 0 10px 24px rgba(58,119,255,.18); border-color: #3a77ff; transform: translateY(-2px); }
 .cat__icon { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; background: rgba(1,47,52,.08); border-radius: 50%; border: none; }
-.cat__icon i, .cat__icon svg { font-size: 32px; color: #3c3c3c; }
+.cat__icon i, .cat__icon svg { font-size: 32px; color: rgba(0,47,52,.7); }
 .cat__card:hover .cat__icon i, .cat__card:hover .cat__icon svg { color: var(--primary-color); }
-.cat__label { font-size: 16px; font-weight: 500; text-align: center; color: black; }
+.cat__label { font-size: 16px; font-weight: 400; text-align: center; color: #012f34; }
 
 @media (max-width: 1200px) {
   .home__categories-grid { grid-template-columns: repeat(5, 1fr); }
@@ -1455,13 +1465,13 @@ p {
 .summary__side { display: grid; grid-template-rows: auto auto; gap: 12px; }
 .summary__price h1 { margin: 0; text-align: left; font-size: 36px; }
 .details__head { display: flex; align-items: flex-start; justify-content: space-between; }
-.details__title { font-size: 24px; font-weight: 700; color: #012f34; }
+.details__title { font-size: 24px; font-weight: 500; color: #012f34; }
 .details__time { color: #012f34; }
-.section__heading { font-size: 20px; font-weight: 700; color: #012f34; }
+.section__heading { font-size: 20px; font-weight: 500; color: #012f34; }
 .kv__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .kv__item { display: grid; grid-template-columns: 1fr 1fr; align-items: center; background: #f5f7fa; border: 1px solid rgba(1,47,52,.12); border-radius: 6px; }
 .kv__label { padding: 10px 12px; color: rgba(0,47,52,.64); }
-.kv__value { padding: 10px 12px; font-weight: 700; color: #012f34; }
+.kv__value { padding: 10px 12px; font-weight: 500; color: #012f34; }
 .price__card { border: 1px solid rgba(1,47,52,.2); border-radius: 12px; padding: 14px 18px; background: #fff; display: grid; grid-template-columns: 1fr; gap: 6px; }
 .summary__desc { border: none; border-radius: 8px; padding: 12px 16px; background: #fff; margin-top: 12px; }
 .summary__desc h3 { font-size: 18px; font-weight: 500; margin: 0 0 8px; }
@@ -1469,8 +1479,8 @@ p {
 .price__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .price__titleblock { display: grid; gap: 2px; }
 .price__label { font-size: 12px; color: rgba(1,47,52,.6); text-transform: uppercase; letter-spacing: .08em; }
-.price__value { font-size: 36px; font-weight: 700; color: #012f34; text-align: left; }
-.price__title { font-size: 20px; font-weight: 700; margin: 2px 0 2px; }
+.price__value { font-size: 36px; font-weight: 500; color: #012f34; text-align: left; }
+.price__title { font-size: 20px; font-weight: 500; margin: 2px 0 2px; }
 .price__location { color: rgba(0,47,52,.84); display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px; }
 .price__location i { color: #3a77ff; }
 .price__line { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -1516,7 +1526,7 @@ p {
 .social__row--compact .social__likes, .social__row--compact .social__views { font-size: 12px; }
 .social__views { color: rgba(0,47,52,.84); }
 .social__likes { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 1px solid rgba(1,47,52,.2); color: #012f34; border-radius: 20px; padding: 6px 10px; cursor: pointer; }
-.btn--xl { height: 52px; padding: 0 22px; font-size: 16px; font-weight: 700; }
+.btn--xl { height: 52px; padding: 0 22px; font-size: 16px; font-weight: 400; }
 .desc__bullets { display: grid; gap: 6px; margin-top: 12px; padding-left: 18px; }
 .desc__bullets li { list-style: disc; color: rgba(0,47,52,.84); }
 .price__card .desc__bullets { margin-top: 10px; }
@@ -1527,12 +1537,12 @@ p {
 .badge--hot { background: #ffefe0; color: #b95000; border-color: #ffd0a6; }
 .badge--stock { background: #fff8e0; color: #5a4a00; border-color: #ffce32; }
 .tabs { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(1,47,52,.15); }
-.tab { height: 36px; padding: 0 12px; border-radius: 18px 18px 0 0; background: transparent; border: 1px solid transparent; cursor: pointer; color: #012f34; }
+.tab { height: 36px; padding: 0 12px; border-radius: 18px 18px 0 0; background: transparent; border: 1px solid transparent; cursor: pointer; color: #012f34; font-weight: 400; }
 .tab--active { background: #fff; border-color: rgba(1,47,52,.2); border-bottom-color: #fff; }
 .tab__content { padding: 12px 0; }
 .rating__summary { display: grid; grid-template-columns: 180px 1fr; gap: 16px; align-items: start; }
 .rating__avg { display: grid; gap: 6px; justify-items: start; }
-.rating__value { font-size: 28px; font-weight: 700; color: #012f34; }
+.rating__value { font-size: 28px; font-weight: 500; color: #012f34; }
 .rating__count { color: rgba(0,47,52,.64); }
 .rating__dist { display: grid; gap: 6px; }
 .rating__bar { display: grid; grid-template-columns: 36px 1fr 40px; align-items: center; gap: 8px; }
@@ -1541,7 +1551,7 @@ p {
 .rating__bar .stars, .rating__bar .count { font-size: 12px; color: rgba(0,47,52,.84); }
 .bid__card { border: 1px solid rgba(1,47,52,.16); border-radius: 12px; padding: 16px; background: #fff; width: 100%; max-width: none; margin: 0; box-shadow: 0 6px 18px rgba(0,0,0,.06); }
 .bid__card--featured { border-color: rgba(1,47,52,.22); box-shadow: 0 8px 20px rgba(0,0,0,.08); border-radius: 12px; }
-.bid__header h3 { margin: 0; font-size: 20px; font-weight: 700; color: #012f34; }
+.bid__header h3 { margin: 0; font-size: 20px; font-weight: 500; color: #012f34; }
 .bid__sub { color: rgba(0,47,52,.64); margin-top: 4px; }
 .bid__header { display: flex; align-items: center; justify-content: space-between; }
 .bid__status { display: inline-flex; align-items: center; gap: 8px; background: #fffbdd; border: 1px solid #ffce32; color: #012f34; border-radius: 20px; padding: 6px 10px; font-size: 12px; font-weight: 600; }
@@ -1576,7 +1586,7 @@ p {
 .ribbon { position: absolute; top: 12px; left: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: #3a77ff; color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,.12); z-index: 5; }
 .ribbon i { font-size: 14px; }
 .bid__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.bid__header h3 { margin: 0; font-size: 18px; font-weight: 600; }
+.bid__header h3 { margin: 0; font-size: 18px; font-weight: 500; }
 .bid__status { display: inline-flex; align-items: center; gap: 8px; background: #fffbdd; border: 1px solid #ffce32; color: #012f34; border-radius: 20px; padding: 6px 10px; font-size: 12px; font-weight: 600; }
 .bid__status .fa-bolt { color: #f59f00; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #fff1a8; }
 .bid__status .time { color: rgba(1,47,52,.84); }
@@ -2247,7 +2257,7 @@ body {
      overflow: visible; }
 /* .fresh__recomandation h1 { text-align: left; color:black; } */
 .category-slider-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 16px; }
-.category-slider-header h1 { margin: 0; flex: 1; }
+.category-slider-header h1 { margin: 0; flex: 1; font-weight: 500; }
 .view-more-btn { display: inline-flex; align-items: center; padding: 8px 16px; background: var(--primary-color); color: #fff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 500; transition: all 0.2s ease; white-space: nowrap; }
 .view-more-btn:hover { background: var(--primary-color-dark); transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,.15); }
 .view-more-btn:active { transform: translateY(0); }
@@ -2413,7 +2423,7 @@ body {
     border: 2px solid var(--primary-color);
     padding: 8px 16px;
     border-radius: 8px;
-    font-weight: 600;
+    font-weight: 400;
     background: transparent;
     color: var(--primary-color);
     transition: all 0.3s ease;
@@ -2431,3 +2441,102 @@ body {
     color: #fff;
 }
 
+/* Make buttons smaller and better styled in manage page */
+#adsList .btn {
+    padding: 8px 14px;
+    height: 38px;
+    font-size: 14px;
+    gap: 6px;
+    border-radius: 8px;
+    font-weight: 400;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+#adsList .btn i {
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+#adsList .btn span {
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+#adsList .btn--outline {
+    border: 1.5px solid rgba(1,47,52,.2);
+    color: #012f34;
+}
+
+#adsList .btn--outline:hover {
+    background: rgba(1,47,52,.05);
+    border-color: rgba(1,47,52,.3);
+}
+
+#adsList .btn--secondary {
+    border: 1.5px solid var(--primary-color);
+    color: var(--primary-color);
+    background: #fff;
+}
+
+#adsList .btn--secondary:hover {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+#adsList .btn--primary {
+    background: var(--primary-color);
+    color: #fff;
+    border: 1.5px solid var(--primary-color);
+}
+
+#adsList .btn--primary:hover {
+    background: var(--primary-color-dark);
+    border-color: var(--primary-color-dark);
+}
+
+#adsList .btn--danger {
+    background: #d11a2a;
+    color: #fff;
+    border: 1.5px solid #d11a2a;
+}
+
+#adsList .btn--danger:hover {
+    background: #b01422;
+    border-color: #b01422;
+}
+
+/* Improve button container in manage page */
+#adsList > div > div:last-child {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    #adsList .btn {
+        padding: 7px 12px;
+        height: 36px;
+        font-size: 13px;
+    }
+    
+    #adsList .btn span {
+        font-size: 13px;
+    }
+    
+    #adsList > div > div:last-child {
+        gap: 6px;
+    }
+}

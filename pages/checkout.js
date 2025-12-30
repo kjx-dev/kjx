@@ -190,7 +190,7 @@ export default function Checkout(){
         <Header />
         <div style={{minHeight: '100vh', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
           <div style={{textAlign: 'center'}}>
-            <h2>Your cart is empty</h2>
+            <h2 style={{fontWeight: '500'}}>Your cart is empty</h2>
             <button onClick={() => router.push('/cart')} style={{marginTop: '20px', padding: '12px 24px', background: '#f55100', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer'}}>
               Go to Cart
             </button>
@@ -207,7 +207,7 @@ export default function Checkout(){
         <div style={{maxWidth: '1200px', margin: '0 auto'}}>
           <div style={{marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px'}}>
             <FaLock style={{color: '#f55100', fontSize: '24px'}} />
-            <h1 style={{fontSize: '28px', fontWeight: '600', color: '#012f34', margin: 0}}>Secure Checkout</h1>
+            <h1 style={{fontSize: '28px', fontWeight: '500', color: '#012f34', margin: 0}}>Secure Checkout</h1>
           </div>
           
           <div style={{display: 'grid', gridTemplateColumns: '1fr 400px', gap: '24px'}}>
@@ -222,7 +222,7 @@ export default function Checkout(){
               }}>
                 <h2 style={{
                   fontSize: '20px',
-                  fontWeight: '600',
+                  fontWeight: '500',
                   marginBottom: '20px',
                   color: '#012f34',
                   display: 'flex',
@@ -394,7 +394,7 @@ export default function Checkout(){
               }}>
                 <h2 style={{
                   fontSize: '20px',
-                  fontWeight: '600',
+                  fontWeight: '500',
                   marginBottom: '20px',
                   color: '#012f34',
                   display: 'flex',
@@ -463,7 +463,7 @@ export default function Checkout(){
               }}>
                 <h2 style={{
                   fontSize: '20px',
-                  fontWeight: '600',
+                  fontWeight: '500',
                   marginBottom: '16px',
                   color: '#012f34'
                 }}>
@@ -500,7 +500,7 @@ export default function Checkout(){
             }}>
               <h2 style={{
                 fontSize: '20px',
-                fontWeight: '600',
+                fontWeight: '500',
                 marginBottom: '20px',
                 color: '#012f34'
               }}>
@@ -573,7 +573,7 @@ export default function Checkout(){
                   background: submitting ? 'rgba(245,81,0,.5)' : 'linear-gradient(135deg, #f55100 0%, #ff6b2b 100%)',
                   color: '#fff',
                   border: 'none',
-                  fontWeight: '600',
+                  fontWeight: '400',
                   cursor: submitting ? 'not-allowed' : 'pointer',
                   fontSize: '16px',
                   display: 'flex',

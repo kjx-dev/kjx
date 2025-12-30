@@ -933,7 +933,7 @@ export default function ProductDetails(){
                   }}
                 >
                   <i className="fa-solid fa-list"></i>
-                  <span>View All Posts by {data.name || 'Seller'}</span>
+                  <span>View {data.name || 'Owner'}'s Store</span>
                 </button>
               </div>
             )}
@@ -1130,7 +1130,7 @@ export default function ProductDetails(){
                   border:'none',
                   borderBottom: activeTab==='details' ? '3px solid #3a77ff' : '3px solid transparent',
                   color: activeTab==='details' ? '#3a77ff' : 'rgba(0,47,52,.6)',
-                  fontWeight: activeTab==='details' ? 600 : 500,
+                  fontWeight: 400,
                   fontSize:'15px',
                   cursor:'pointer',
                   transition:'all 0.2s ease',
@@ -1160,7 +1160,7 @@ export default function ProductDetails(){
                   border:'none',
                   borderBottom: activeTab==='reviews' ? '3px solid #3a77ff' : '3px solid transparent',
                   color: activeTab==='reviews' ? '#3a77ff' : 'rgba(0,47,52,.6)',
-                  fontWeight: activeTab==='reviews' ? 600 : 500,
+                  fontWeight: 400,
                   fontSize:'15px',
                   cursor:'pointer',
                   transition:'all 0.2s ease',

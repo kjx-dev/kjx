@@ -122,7 +122,7 @@ export default function PermissionsTab({ error, setError }) {
   return (
     <div style={{background: '#fff', borderRadius: '8px', border: '1px solid rgba(1,47,52,.2)', overflow: 'hidden'}}>
       <div style={{padding: '24px', borderBottom: '1px solid rgba(1,47,52,.1)', background: 'rgba(1,47,52,.02)'}}>
-        <h2 style={{fontSize: '24px', fontWeight: '600', margin: '0 0 8px 0', color: '#012f34'}}>Role Permissions</h2>
+        <h2 style={{fontSize: '24px', fontWeight: '500', margin: '0 0 8px 0', color: '#012f34'}}>Role Permissions</h2>
         <p style={{fontSize: '14px', color: 'rgba(0,47,52,.64)', margin: 0, lineHeight: '1.5'}}>Manage access controls by assigning specific permissions to each role. Toggle permissions to grant or revoke access.</p>
       </div>
       
@@ -171,7 +171,7 @@ export default function PermissionsTab({ error, setError }) {
                     <h3 style={{
                       margin: 0,
                       fontSize: '18px',
-                      fontWeight: '700',
+                      fontWeight: '500',
                       color: roleColor.color,
                       textTransform: 'capitalize',
                       display: 'flex',

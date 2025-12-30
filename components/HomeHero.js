@@ -13,7 +13,7 @@ export default function HomeHero() {
           </div>
         </div>
         <div className="hero__art" aria-hidden="true">
-          <Image src="/images/banners/mobile.webp" alt="" width={640} height={380} priority sizes="(max-width: 768px) 100vw, 640px" style={{width:'100%', height:'auto'}} />
+          <Image src="/images/banners/mobile.png" alt="" width={640} height={380} priority sizes="(max-width: 768px) 100vw, 640px" style={{width:'100%', height:'auto'}} />
         </div>
       </div>
     </section>
