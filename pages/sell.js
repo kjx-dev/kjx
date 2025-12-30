@@ -20,7 +20,7 @@ export default function Sell(){
   const [profileMenuPos, setProfileMenuPos] = useState({ top: 100, left: 16 })
   const editIndex = typeof router.query.editIndex !== 'undefined' ? parseInt(String(router.query.editIndex||''),10) : null
   const [form, setForm] = useState({
-    title:'', description:'', price:'', location:'', profileName:'', profilePhone:'', phoneShow:true, category:'', post_type:'ad'
+    title:'', description:'', price:'', location:'', profileName:'', profilePhone:'', phoneShow:true, category:'', post_type:''
   })
   const [categories, setCategories] = useState([])
   const [tiles, setTiles] = useState([])
@@ -35,7 +35,7 @@ export default function Sell(){
   const [editing, setEditing] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [editingSource, setEditingSource] = useState('')
-  const [step, setStep] = useState(1)
+  const [step, setStep] = useState(0)
   async function compressImage(file){
     return await new Promise((resolve,reject)=>{
       const img = new Image()
@@ -125,7 +125,7 @@ export default function Sell(){
           setEditingId('local:'+editIndex)
           setEditingSource('local')
           setForm({
-            title: p.name||'', description: p.description||'', price: p.price||'', location: p.location||'', profileName: p.profileName||uname, profilePhone: p.profilePhone||phone, phoneShow: (p.phoneShow||'yes')==='yes', category: p.category||''
+            title: p.name||'', description: p.description||'', price: p.price||'', location: p.location||'', profileName: p.profileName||uname, profilePhone: p.profilePhone||phone, phoneShow: (p.phoneShow||'yes')==='yes', category: p.category||'', post_type: p.post_type || 'ad'
           })
           setStep(2)
           setHeaderCatOpen(false)
@@ -429,23 +429,140 @@ export default function Sell(){
           <FaArrowUp />
         </button>
       )}
-    <div className="sell__main" style={step === 1 ? {maxWidth: '1200px', margin: '24px auto 40px', padding: '0 16px'} : {maxWidth: '1200px', margin: '24px auto 40px', padding: '0 16px'}}>
-      <div style={{marginBottom: step === 1 ? '20px' : '16px'}}>
+    <div className="sell__main" style={step === 0 || step === 1 ? {maxWidth: '1200px', margin: '24px auto 40px', padding: '0 16px'} : {maxWidth: '1200px', margin: '24px auto 40px', padding: '0 16px'}}>
+      <div style={{marginBottom: step === 0 || step === 1 ? '20px' : '16px'}}>
         <h1 style={{color: '#012f34', fontSize: '24px', fontWeight: 600, marginBottom: '0', marginTop: '0', fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>Post Your Ad</h1>
       </div>
-      <div className="sell__grid" style={step === 1 ? {gridTemplateColumns: '1fr'} : {}}>
-        <div className="sell__card" style={step === 1 ? {border: 'none', boxShadow: 'none', padding: '0', background: 'transparent'} : {border: '1px solid rgba(1,47,52,.2)', borderRadius: '10px', padding: '20px', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,.06)'}}>
-          {step !== 1 && (
+      <div className="sell__grid" style={step === 0 || step === 1 ? {gridTemplateColumns: '1fr'} : {}}>
+        <div className="sell__card" style={step === 0 || step === 1 ? {border: 'none', boxShadow: 'none', padding: '0', background: 'transparent'} : {border: '1px solid rgba(1,47,52,.2)', borderRadius: '10px', padding: '20px', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,.06)'}}>
+          {step !== 0 && step !== 1 && (
           <div style={{marginBottom:16}}>
             <div style={{display:'flex', alignItems:'center', gap:8, marginBottom:8}}>
               <span style={{fontSize:14, color:'rgba(0,47,52,.64)', fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>Step {step} of 3</span>
             </div>
             <div style={{height:4, borderRadius:2, background:'rgba(1,47,52,.12)'}}>
-              <div style={{height:4, borderRadius:2, background:'#012f34', width: (step===2?'66%':'100%'), transition:'width 0.3s ease'}}></div>
+              <div style={{height:4, borderRadius:2, background:'#012f34', width: (step===1?'33%':step===2?'66%':'100%'), transition:'width 0.3s ease'}}></div>
             </div>
           </div>
           )}
-          {step === 1 ? (
+          {step === 0 ? (
+            <div style={{marginTop:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'60px 20px', minHeight:'400px'}}>
+              <h2 style={{color: '#012f34', fontSize: '28px', fontWeight: 600, marginBottom: '12px', textAlign: 'center', fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>
+                What would you like to do?
+              </h2>
+              <p style={{color: 'rgba(0,47,52,.64)', fontSize: '16px', marginBottom: '40px', textAlign: 'center', fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>
+                Choose an option to get started
+              </p>
+              <div style={{display:'flex', flexDirection: isMobile ? 'column' : 'row', gap: '20px', width: '100%', maxWidth: '600px'}}>
+                <button
+                  onClick={() => {
+                    setForm({...form, post_type: 'product'})
+                    setStep(1)
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '32px 24px',
+                    border: '2px solid rgba(1,47,52,.2)',
+                    borderRadius: '16px',
+                    background: '#fff',
+                    color: '#012f34',
+                    fontSize: '18px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily:'var(--font-roboto), Roboto, sans-serif',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '12px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 8px rgba(0,0,0,.08)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#012f34'
+                    e.currentTarget.style.background = 'rgba(1,47,52,.02)'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,.12)'
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(1,47,52,.2)'
+                    e.currentTarget.style.background = '#fff'
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,.08)'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                  }}
+                >
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '16px',
+                    background: 'rgba(58,119,255,.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#3a77ff'
+                  }}>
+                    <FaTags style={{fontSize: '32px'}} />
+                  </div>
+                  <span>Sell a Product</span>
+                  <span style={{fontSize: '14px', fontWeight: 400, color: 'rgba(0,47,52,.64)', textAlign: 'center'}}>
+                    List items that can be added to cart and purchased
+                  </span>
+                </button>
+                <button
+                  onClick={() => {
+                    setForm({...form, post_type: 'ad'})
+                    setStep(1)
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '32px 24px',
+                    border: '2px solid rgba(1,47,52,.2)',
+                    borderRadius: '16px',
+                    background: '#fff',
+                    color: '#012f34',
+                    fontSize: '18px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily:'var(--font-roboto), Roboto, sans-serif',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '12px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 8px rgba(0,0,0,.08)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#012f34'
+                    e.currentTarget.style.background = 'rgba(1,47,52,.02)'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,.12)'
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(1,47,52,.2)'
+                    e.currentTarget.style.background = '#fff'
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,.08)'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                  }}
+                >
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '16px',
+                    background: 'rgba(245,81,0,.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#f55100'
+                  }}>
+                    <FaBriefcase style={{fontSize: '32px'}} />
+                  </div>
+                  <span>Post an Ad</span>
+                  <span style={{fontSize: '14px', fontWeight: 400, color: 'rgba(0,47,52,.64)', textAlign: 'center'}}>
+                    Create a classified advertisement listing
+                  </span>
+                </button>
+              </div>
+            </div>
+          ) : step === 1 ? (
             <div style={{marginTop:0}}>
               {!showCategoryColumns ? (
                 // Grid View - Initial main categories
@@ -853,7 +970,7 @@ export default function Sell(){
           </div>
           )}
         </div>
-        {step !== 1 && (
+        {(step !== 0 && step !== 1) && (
         <div className="sell__card sell__aside" style={{border: '1px solid rgba(1,47,52,.2)', borderRadius: '10px', padding: '20px', background: '#fff'}}>
           <div style={{marginBottom: 20}}>
             <h4 style={{margin: '0 0 12px 0', fontSize: '18px', fontWeight: 600, color: '#012f34', fontFamily: 'var(--font-roboto), Roboto, sans-serif'}}>Tips for Better Ads</h4>

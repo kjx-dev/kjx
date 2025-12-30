@@ -4,7 +4,8 @@ import { useRouter } from 'next/router'
 import Image from 'next/image'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
-import { FaWhatsapp, FaUser, FaIdCard, FaList, FaHeart, FaShare, FaChevronLeft, FaChevronRight, FaChevronDown } from 'react-icons/fa'
+import { FaWhatsapp, FaUser, FaIdCard, FaList, FaHeart, FaShare, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
+import CategoryBar from '../components/CategoryBar'
 
 export default function ProductDetails(){
   const router = useRouter()
@@ -55,12 +56,6 @@ export default function ProductDetails(){
   const hdrBtnRef = useRef(null)
   const hdrMenuRef = useRef(null)
   const [hdrOpen, setHdrOpen] = useState(false)
-  const [catTiles, setCatTiles] = useState([])
-  const [catGroups, setCatGroups] = useState([])
-  const [allCatOpen, setAllCatOpen] = useState(false)
-  const allCatWrapRef = useRef(null)
-  const allCatBtnRef = useRef(null)
-  const allCatMenuRef = useRef(null)
   const ratingStats = useMemo(() => {
     const reviewRatings = reviews.filter(r => typeof r.rating === 'number')
     const list = [...reviewRatings]
@@ -351,33 +346,6 @@ export default function ProductDetails(){
     }
     loadFav()
   }, [router.query.id, router.query.slug])
-  useEffect(() => {
-    async function loadCategories(){
-      try{
-        const r = await fetch('/api/v1/category')
-        const j = await r.json()
-        const tiles = (j && j.data && j.data.tiles) ? j.data.tiles : []
-        setCatTiles(Array.isArray(tiles) ? tiles : [])
-        try{
-          const rg = await fetch('/api/v1/categories')
-          const dg = await rg.json()
-          const groups = (dg && dg.data && dg.data.groups) || []
-          setCatGroups(groups)
-        }catch(_){ setCatGroups([]) }
-      }catch(_){
-        setCatTiles([])
-        setCatGroups([])
-      }
-    }
-    loadCategories()
-  }, [])
-  useEffect(() => {
-    function onKey(e){ if (e.key === 'Escape') setAllCatOpen(false) }
-    function onOutside(e){ const el = allCatWrapRef.current; if (!el) return; if (!el.contains(e.target)) setAllCatOpen(false) }
-    document.addEventListener('keydown', onKey)
-    document.addEventListener('pointerdown', onOutside)
-    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('pointerdown', onOutside) }
-  }, [])
   function search(){ router.push('/') }
   function sell(){ if (auth.email && auth.isAuthenticated) router.push('/sell'); else router.push('/login') }
   function manage(){ router.push('/manage') }
@@ -731,82 +699,7 @@ export default function ProductDetails(){
         <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify(jsonLd)}} />
       </Head>
       <Header />
-        <div className="third__navbar" id="categories" ref={allCatWrapRef}>
-          <div className="select__itself">
-            <a href="#" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(v=>!v) }} ref={allCatBtnRef} aria-expanded={allCatOpen} className="all-categories-btn">
-              <span>All Categories</span>
-              <FaChevronDown className={`chevron ${allCatOpen ? 'rotated' : ''}`} />
-            </a>
-          </div>
-          <div className="links" id="links">
-          {(() => {
-            try {
-              const order = ['mobile-phones','cars','motercycles','house','tv-video-audio','tablets','land-plots','jobs','services','furniture']
-              function slug(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') }
-              if (!Array.isArray(catTiles) || catTiles.length === 0) return null
-              const tiles = order.map(sl => catTiles.find(t => t && slug(t.k)===sl)).filter(Boolean)
-              if (tiles.length === 0) return null
-              return tiles.map((c, idx) => {
-                if (!c || !c.k) return null
-                try {
-                  const displayLabel = c.shortLabel || c.label || c.k || 'Category'
-                  const catSlug = slug(c.k)
-                  return (
-                    <a 
-                      key={c.k || idx} 
-                      href={'/category/' + catSlug}
-                      className="category-link"
-                    >
-                      {displayLabel}
-                    </a>
-                  )
-                } catch(e) {
-                  return null
-                }
-              })
-            } catch(e) {
-              return null
-            }
-          })()}
-          </div>
-          {(() => {
-            const groups = Array.isArray(catGroups) ? catGroups : []
-            function byName(n){ const g = groups.find(x => String(x.parent?.name||'')===n); return g ? g : { parent:{ name:n, category_id: 'missing:'+n }, children: [] } }
-            const layout = [
-              [byName('Mobiles'), byName('Vehicles')],
-              [byName('Bikes'), byName('Business, Industrial & Agriculture')],
-              [byName('Jobs')],
-              [byName('Furniture & Home Decor')]
-            ]
-            return (
-              <div ref={allCatMenuRef} className={`all-cat-menu ${allCatOpen ? '' : 'hidden'}`}>
-                <div className="all-cat-menu-content">
-                  <div className="all-cat-menu-grid">
-                    {layout.map((list,ci)=> (
-                      <div key={'col:'+ci}>
-                        {list.map(gr => (
-                          <div key={gr.parent.category_id} className="all-cat-group">
-                            <div className="all-cat-group-title">{gr.parent.name}</div>
-                            <ul className="all-cat-group-list">
-                              {gr.children.map(ch => {
-                                const s = String(ch.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
-                                return (
-                                  <li key={ch.category_id} className="all-cat-group-item">
-                                    <a href={'/category/'+s} className="all-cat-group-link" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(false); router.push('/category/'+s) }}>{ch.name}</a>
-                                  </li>
-                                )
-                              })}
-                            </ul>
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )
-          })()}
-        </div>
+      <CategoryBar />
    
     <div className="productDetails" style={{marginTop:40, maxWidth:'1400px', margin:'40px auto', padding:'0 20px'}}>
       <div className="left__side">
@@ -1046,79 +939,76 @@ export default function ProductDetails(){
             )}
             <div className="profile__actions" style={{display:'grid', gap:'12px'}}>
               {(() => {
-                // Use both data.post_type and postType state for reliability
+                // Determine if this is a product or an ad
                 const dataPostType = String(data.post_type || postType || 'ad').toLowerCase().trim()
                 const statePostType = String(postType || 'ad').toLowerCase().trim()
                 const finalPostType = dataPostType || statePostType || 'ad'
                 const isProduct = finalPostType === 'product'
                 
-                console.log('Rendering button - Current state:', {
-                  'data.post_type': data.post_type,
-                  'postType state': postType,
-                  'dataPostType (normalized)': dataPostType,
-                  'statePostType (normalized)': statePostType,
-                  'finalPostType': finalPostType,
-                  'isProduct': isProduct,
-                  'Will show Add to Cart': isProduct
-                })
-                return isProduct
-              })() ? (
-                <button 
-                  className="btn btn--primary btn--xl" 
-                  onClick={addToCart}
-                  style={{
-                    width:'100%',
-                    padding:'14px 20px',
-                    borderRadius:'12px',
-                    fontWeight:600,
-                    fontSize:'15px',
-                    background:'linear-gradient(135deg, #f55100 0%, #ff6b2b 100%)',
-                    border:'none',
-                    color:'#fff',
-                    cursor:'pointer',
-                    boxShadow:'0 4px 12px rgba(245,81,0,.3)',
-                    transition:'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(245,81,0,.4)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(245,81,0,.3)'
-                  }}
-                >
-                  <i className="fa-solid fa-cart-plus"></i>&nbsp;Add to Cart
-                </button>
-              ) : (
-                <button 
-                  className="btn btn--primary btn--xl" 
-                  onClick={callSeller}
-                  style={{
-                    width:'100%',
-                    padding:'14px 20px',
-                    borderRadius:'12px',
-                    fontWeight:600,
-                    fontSize:'15px',
-                    background:'linear-gradient(135deg, #3a77ff 0%, #5a9fff 100%)',
-                    border:'none',
-                    color:'#fff',
-                    cursor:'pointer',
-                    boxShadow:'0 4px 12px rgba(58,119,255,.3)',
-                    transition:'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(58,119,255,.4)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(58,119,255,.3)'
-                  }}
-                >
-                  <i className="fa-solid fa-phone"></i>&nbsp;{showPhone ? (data.profilePhone||data.phone||'') : 'Show phone number'}
-                </button>
-              )}
+                // Show "Add to Cart" button for products, "Show phone number" button for ads
+                if (isProduct) {
+                  return (
+                    <button 
+                      className="btn btn--primary btn--xl" 
+                      onClick={addToCart}
+                      style={{
+                        width:'100%',
+                        padding:'14px 20px',
+                        borderRadius:'12px',
+                        fontWeight:600,
+                        fontSize:'15px',
+                        background:'linear-gradient(135deg, #f55100 0%, #ff6b2b 100%)',
+                        border:'none',
+                        color:'#fff',
+                        cursor:'pointer',
+                        boxShadow:'0 4px 12px rgba(245,81,0,.3)',
+                        transition:'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)'
+                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(245,81,0,.4)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)'
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(245,81,0,.3)'
+                      }}
+                    >
+                      <i className="fa-solid fa-cart-plus"></i>&nbsp;Add to Cart
+                    </button>
+                  )
+                } else {
+                  // Ad design: Show phone number button
+                  return (
+                    <button 
+                      className="btn btn--primary btn--xl" 
+                      onClick={callSeller}
+                      style={{
+                        width:'100%',
+                        padding:'14px 20px',
+                        borderRadius:'12px',
+                        fontWeight:600,
+                        fontSize:'15px',
+                        background:'linear-gradient(135deg, #3a77ff 0%, #5a9fff 100%)',
+                        border:'none',
+                        color:'#fff',
+                        cursor:'pointer',
+                        boxShadow:'0 4px 12px rgba(58,119,255,.3)',
+                        transition:'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)'
+                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(58,119,255,.4)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)'
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(58,119,255,.3)'
+                      }}
+                    >
+                      <i className="fa-solid fa-phone"></i>&nbsp;{showPhone ? (data.profilePhone||data.phone||'') : 'Show phone number'}
+                    </button>
+                  )
+                }
+              })()}
               <button 
                 className="btn btn--secondary btn--outline btn--xl" 
                 onClick={openChat}

@@ -2,7 +2,6 @@ import Head from 'next/head'
 import Footer from '../components/Footer'
 
 export default function About(){
-  const year = new Date().getFullYear()
   return (
     <>
       <Head>

@@ -149,17 +149,6 @@ export default function Header(){
               </svg>
             </a>
           </div>
-          {/* <div className="actions__links">
-            <a href="/category/cars" onClick={(e)=>{ e.preventDefault(); router.push('/category/cars') }} aria-label="OMG Motors">
-              <FaCar />
-              <span>MOTORS</span>
-            </a>
-            <a href="/category/house" onClick={(e)=>{ e.preventDefault(); router.push('/category/house') }} className="ac22b0e1" aria-label="OMG Property">
-              <FaHome />
-              <span>PROPERTY</span>
-            </a>
-          </div> */}
-          
           </div>
 
 
@@ -252,16 +241,6 @@ export default function Header(){
         </div>
       </div>
       <div className={"second__navbar container-width" + (menuOpen ? " open" : "") }>
-        {/* <div className="second-navbar__logo">
-          <a href="/">
-            <svg viewBox="0 0 36.289 20.768" alt="Logo"><path d="M18.9 20.77V0h4.93v20.77zM0 10.39a8.56 8.56 0 1 1 8.56 8.56A8.56 8.56 0 0 1 0 10.4zm5.97-.01a2.6 2.6 0 1 0 2.6-2.6 2.6 2.6 0 0 0-2.6 2.6zm27 5.2l-1.88-1.87-1.87 1.88H25.9V12.3l1.9-1.9-1.9-1.89V5.18h3.27l1.92 1.92 1.93-1.92h3.27v3.33l-1.9 1.89 1.9 1.9v3.39h-3.27z"/></svg>
-          </a>
-        </div>
-        <button className="hamburger" aria-label="Menu" onClick={()=>setMenuOpen(v=>!v)}>
-          <span className="bar"></span>
-          <span className="bar"></span>
-          <span className="bar"></span>
-        </button> */}
         <div className="select_option">
           <FaSearch />
           <select name="loc" value={location} onChange={onLocationChange} style={{border:'none', background:'transparent', outline:'none', width:'100%', padding:0, margin:0, marginLeft:15, appearance:'none', WebkitAppearance:'none', MozAppearance:'none', cursor:'pointer', fontSize:17, color:location ? 'inherit' : 'rgba(0,47,52,.64)'}}>

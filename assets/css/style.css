@@ -2347,6 +2347,10 @@ body {
         .footer__content {
         grid-template-columns: repeat(1, 1fr);
     }
+    .cart-grid {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
     .footer__content ul li {
     padding: 5px 0;
     font-size: 13px;

@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import Image from 'next/image'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 import CategorySlider from '../components/CategorySlider'
-import { FaTags, FaHeart, FaRegHeart, FaWhatsapp, FaMapMarkerAlt, FaArrowUp, FaChevronDown, FaChevronLeft, FaChevronRight, FaMobileAlt, FaCar, FaMotorcycle, FaHome, FaTv, FaTabletAlt, FaMapMarker, FaBriefcase, FaPaintRoller, FaChair, FaLaptop, FaHeadphones, FaCamera, FaGamepad, FaBook, FaDumbbell, FaUser, FaBaby, FaDog, FaIndustry, FaTools, FaClock, FaRegClock } from 'react-icons/fa'
-import { getShortCategoryName } from '../lib/categoryNames'
-import { getCategoryIcon } from '../lib/categoryIcons'
-import { getOrderedCategories, getCategoryIconComponent } from '../lib/categoryUtils'
+import CategoryBar from '../components/CategoryBar'
+import HomeHero from '../components/HomeHero'
+import CategoryGrid from '../components/CategoryGrid'
+import BannerAd from '../components/BannerAd'
+import PopularAdsSlider from '../components/PopularAdsSlider'
+import { FaArrowUp } from 'react-icons/fa'
 
 export default function Home() {
   const router = useRouter()
@@ -26,10 +27,6 @@ export default function Home() {
   const profileBtnRef = useRef(null)
   const profileMenuRef = useRef(null)
   const [profileMenuPos, setProfileMenuPos] = useState({ top: 100, left: 16 })
-  const [allCatOpen, setAllCatOpen] = useState(false)
-  const allCatWrapRef = useRef(null)
-  const allCatBtnRef = useRef(null)
-  const allCatMenuRef = useRef(null)
   const [allProducts, setAllProducts] = useState([])
   const [list, setList] = useState([])
   const [displayCount, setDisplayCount] = useState(8)
@@ -38,10 +35,8 @@ export default function Home() {
   const [usingDb, setUsingDb] = useState(false)
   const [q, setQ] = useState('')
   const searchTimerRef = useRef(null)
-  const year = new Date().getFullYear()
   const [showTop, setShowTop] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [sliderIndex, setSliderIndex] = useState(0)
   const [favorites, setFavorites] = useState(new Set())
   const [userId, setUserId] = useState(null)
 
@@ -153,7 +148,6 @@ export default function Home() {
       localStorage.setItem('products', JSON.stringify(db))
       setAllProducts(merged)
       setList(merged)
-      setSliderIndex(0)
     }
     loadProducts()
   }, [])
@@ -171,13 +165,6 @@ export default function Home() {
       window.addEventListener('resize', checkMobile)
       return () => window.removeEventListener('resize', checkMobile)
     }catch(_){ }
-  }, [])
-  useEffect(() => {
-    function onKey(e){ if (e.key === 'Escape') setAllCatOpen(false) }
-    function onOutside(e){ const el = allCatWrapRef.current; if (!el) return; if (!el.contains(e.target)) setAllCatOpen(false) }
-    document.addEventListener('keydown', onKey)
-    document.addEventListener('pointerdown', onOutside)
-    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('pointerdown', onOutside) }
   }, [])
   const [catsExpanded, setCatsExpanded] = useState(false)
 
@@ -399,71 +386,6 @@ export default function Home() {
   }
   const toShow = Array.isArray(list) ? (usingDb ? list.slice(0, 8) : list.slice(0, Math.min(displayCount, 8))) : []
   
-  // Slider functionality - Popular Ads limited to 8 items
-  const itemsPerPage = 4
-  const totalPages = Math.ceil(toShow.length / itemsPerPage)
-  const currentPage = Math.min(sliderIndex, totalPages - 1)
-  const startIndex = currentPage * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const visibleItems = toShow.slice(startIndex, endIndex)
-  
-  function nextSlide() {
-    setSliderIndex((prev) => (prev + 1) % totalPages)
-  }
-  
-  function prevSlide() {
-    setSliderIndex((prev) => (prev - 1 + totalPages) % totalPages)
-  }
-
-  function getTimeAgo(dateString) {
-    if (!dateString || dateString === null || dateString === undefined) return 'Recently'
-    try {
-      const date = new Date(dateString)
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        return 'Recently'
-      }
-      const now = new Date()
-      const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-      
-      // Check if diffInSeconds is valid (not NaN)
-      if (isNaN(diffInSeconds) || diffInSeconds < 0) {
-        return 'Recently'
-      }
-      
-      if (diffInSeconds < 60) return 'Just now'
-      if (diffInSeconds < 3600) {
-        const minutes = Math.floor(diffInSeconds / 60)
-        if (isNaN(minutes)) return 'Recently'
-        return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`
-      }
-      if (diffInSeconds < 86400) {
-        const hours = Math.floor(diffInSeconds / 3600)
-        if (isNaN(hours)) return 'Recently'
-        return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`
-      }
-      if (diffInSeconds < 604800) {
-        const days = Math.floor(diffInSeconds / 86400)
-        if (isNaN(days)) return 'Recently'
-        return `${days} ${days === 1 ? 'day' : 'days'} ago`
-      }
-      if (diffInSeconds < 2592000) {
-        const weeks = Math.floor(diffInSeconds / 604800)
-        if (isNaN(weeks)) return 'Recently'
-        return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`
-      }
-      if (diffInSeconds < 31536000) {
-        const months = Math.floor(diffInSeconds / 2592000)
-        if (isNaN(months)) return 'Recently'
-        return `${months} ${months === 1 ? 'month' : 'months'} ago`
-      }
-      const years = Math.floor(diffInSeconds / 31536000)
-      if (isNaN(years)) return 'Recently'
-      return `${years} ${years === 1 ? 'year' : 'years'} ago`
-    } catch (_) {
-      return 'Recently'
-    }
-  }
 
   async function toggleFavorite(postId, e){
     if (e) {
@@ -516,282 +438,22 @@ export default function Home() {
         <meta property="og:type" content="website" />
       </Head>
       <Header />
+      <CategoryBar />
+      <HomeHero />
+      <CategoryGrid 
+        catTiles={catTiles} 
+        catGroups={catGroups} 
+        catsExpanded={catsExpanded} 
+        setCatsExpanded={setCatsExpanded} 
+      />
+      <BannerAd />
 
-        <div className="third__navbar container-width" id="categories" ref={allCatWrapRef}>
-          <div className="select__itself">
-            <a href="#" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(v=>!v) }} ref={allCatBtnRef} aria-expanded={allCatOpen} className="all-categories-btn">
-              <span>All Categories</span>
-              <FaChevronDown className={`chevron ${allCatOpen ? 'rotated' : ''}`} />
-            </a>
-          </div>
-          <div className="links" id="links">
-          {(() => {
-            try {
-              const order = ['mobile-phones','cars','motercycles','house','tv-video-audio','tablets','land-plots','jobs','services','furniture']
-              function slug(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') }
-              if (!Array.isArray(catTiles) || catTiles.length === 0) return null
-              const tiles = order.map(sl => catTiles.find(t => t && slug(t.k)===sl)).filter(Boolean)
-              if (tiles.length === 0) return null
-              return tiles.map((c, idx) => {
-                if (!c || !c.k) return null
-                try {
-                  const displayLabel = getShortCategoryName(c.shortLabel || c.label, c.k) || 'Category'
-                  const catSlug = slug(c.k)
-                  return (
-                    <a 
-                      key={c.k || idx} 
-                      href={'/category/' + catSlug}
-                      className="category-link"
-                    >
-                      {displayLabel}
-                    </a>
-                  )
-                } catch(e) {
-                  return null
-                }
-              })
-            } catch(e) {
-              return null
-            }
-          })()}
-          </div>
-          {(() => {
-            const groups = Array.isArray(catGroups) ? catGroups : []
-            function byName(n){ const g = groups.find(x => String(x.parent?.name||'')===n); return g ? g : { parent:{ name:n, category_id: 'missing:'+n }, children: [] } }
-            const layout = [
-              [byName('Mobiles'), byName('Vehicles')],
-              [byName('Bikes'), byName('Business, Industrial & Agriculture')],
-              [byName('Jobs')],
-              [byName('Furniture & Home Decor')]
-            ]
-            return (
-              <div ref={allCatMenuRef} className={`all-cat-menu ${allCatOpen ? '' : 'hidden'}`}>
-                <div className="all-cat-menu-content">
-                  <div className="all-cat-menu-grid">
-                    {layout.map((list,ci)=> (
-                      <div key={'col:'+ci}>
-                        {list.map(gr => (
-                          <div key={gr.parent.category_id} className="all-cat-group">
-                            <div className="all-cat-group-title">{gr.parent.name}</div>
-                            <ul className="all-cat-group-list">
-                              {gr.children.map(ch => {
-                                const s = String(ch.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
-                                return (
-                                  <li key={ch.category_id} className="all-cat-group-item">
-                                    <a href={'/category/'+s} className="all-cat-group-link" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(false); router.push('/category/'+s) }}>{ch.name}</a>
-                                  </li>
-                                )
-                              })}
-                            </ul>
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )
-          })()}
-        </div>
-
-      <section className="hero home-hero" aria-labelledby="hero-title">
-        <div className="hero__inner">
-          <div className="hero__content">
-            <h1 id="hero-title">Find great deals near you</h1>
-            <p>Buy, sell and discover items across Pakistan. Post your ad or browse categories to get started.</p>
-            <div className="hero__actions" role="group" aria-label="Primary actions">
-              <a className="btn btn--primary" href="/sell" aria-label="Post your ad">Post Your Ad</a>
-              <a className="btn btn--secondary" href="#categories" aria-label="Browse categories">Browse Categories</a>
-            </div>
-          </div>
-          <div className="hero__art" aria-hidden="true">
-            <Image src="/images/banners/mobile.webp" alt="" width={640} height={380} priority sizes="(max-width: 768px) 100vw, 640px" style={{width:'100%', height:'auto'}} />
-          </div>
-        </div>
-      </section>
-
-      <section className="home__categories" aria-labelledby="home-cats-title">
-        <div className='container-width'>
-        <h2 id="home-cats-title">Browse by category</h2>
-        <div className="home__categories-grid">
-          {(() => {
-            try {
-              const orderedCats = getOrderedCategories(catTiles, catGroups)
-              const displayCats = catsExpanded ? orderedCats : orderedCats.slice(0, 21)
-              if (displayCats.length === 0) {
-                return <div className="loading-categories">Loading categories...</div>
-              }
-              
-              return displayCats.map((c, i) => {
-                if (!c || !c.k) return null
-                const slug = String(c.k || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-                const IconComponent = getCategoryIconComponent(c)
-                return (
-                  <a
-                    key={(c.label || c.k || '') + ':' + i}
-                    className="cat__card"
-                    href={'/category/' + slug}
-                    aria-label={c.displayLabel || c.label || c.k}
-                    onClick={(e) => { e.preventDefault(); router.push('/category/' + slug) }}
-                  >
-                    <div className="cat__icon">
-                      {IconComponent ? <IconComponent /> : null}
-                    </div>
-                    <div className="cat__label">{c.displayLabel || c.k}</div>
-                  </a>
-                )
-              })
-            } catch(e) {
-              console.error('Category render error:', e)
-              return null
-            }
-          })()}
-        </div>
-        {(() => {
-          const total = catTiles.length
-          const seen = new Set(catTiles.map(t=>String(t.label||t.k||'').toLowerCase()))
-          const uniqCount = seen.size
-          return (!catsExpanded && uniqCount>21) ? (
-            <div className="view-more-container">
-              <button className="load__more-btn" onClick={()=>setCatsExpanded(true)}>View more</button>
-            </div>
-          ) : null
-        })()}
-        </div>
-      </section>
-
-      <div className="ad" role="img" aria-label="Exclusive offers banner">
-        <Image
-          src="/images/banners/ad.jpg"
-          alt="Exclusive offers"
-          width={1300}
-          height={240}
-          loading="lazy"
-          sizes="(max-width: 768px) 100vw, 1100px"
-          style={{ width: '100%', height: 'auto' }}
-        />
-      </div>
-
-      {/* Popular Ads - All Categories */}
-      <div className="fresh__recomandation" aria-labelledby="fresh-title">
-        <div className="fresh__recomandation-container">
-          <h1 id="fresh-title">Popular Ads</h1>
-          {Array.isArray(toShow) && toShow.length > 0 ? (
-            <div className="popular-ads-slider">
-              <button 
-                className="slider-nav slider-nav-prev" 
-                onClick={prevSlide}
-                aria-label="Previous ads"
-                disabled={totalPages <= 1}
-              >
-                <FaChevronLeft />
-              </button>
-              <div className="slider-container">
-                <div className="slider-track" style={{ transform: `translateX(-${currentPage * 100}%)` }}>
-                  {Array.from({ length: totalPages }).map((_, pageIndex) => {
-                    const pageStart = pageIndex * itemsPerPage
-                    const pageEnd = pageStart + itemsPerPage
-                    const pageItems = toShow.slice(pageStart, pageEnd)
-                    return (
-                      <div key={pageIndex} className="slider-page">
-                        <div className="cards__grid">
-                          {pageItems.map((card, i) => {
-                            const originalIndex = pageStart + i
-                            // Check actual featured field from database, not index position
-                            const isFeatured = card.featured === 1 || card.featured === true || (card.featured && Number(card.featured) === 1)
-                            return (
-                              <article
-                                key={originalIndex}
-                                className="card"
-                                onClick={() => productDetail(originalIndex)}
-                                aria-label={card.name}
-                              >
-                                <div className="img__featured">
-                                  <Image src={card.image} alt={card.name} fill loading="lazy" sizes="(max-width: 768px) 100vw, 320px" unoptimized style={{objectFit:'cover'}} />
-                                  {isFeatured && (
-                                    <p className="featured">featured</p>
-                                  )}
-                                </div>
-                                <div className="card__content">
-                                  <div className="card__content-gap">
-                                    <div className="name__heart">
-                                      <h4 className="card__price" aria-label={'Price ' + card.price}>Rs {card.price}</h4>
-                                      <button
-                                        onClick={(e) => toggleFavorite(card.post_id || card.id, e)}
-                                        aria-label={favorites.has(String(card.post_id || card.id)) ? 'Remove from favorites' : 'Add to favorites'}
-                                        className="card__heart-btn"
-                                      >
-                                        {favorites.has(String(card.post_id || card.id)) ? (
-                                          <FaHeart 
-                                            aria-hidden="true" 
-                                            className="card__heart" 
-                                            style={{
-                                              color: '#f55100',
-                                              fill: '#f55100',
-                                              fontSize: '16px',
-                                              transition: 'all 0.2s ease'
-                                            }} 
-                                          />
-                                        ) : (
-                                          <FaRegHeart 
-                                            aria-hidden="true" 
-                                            className="card__heart" 
-                                            style={{
-                                              color: '#f55100',
-                                              opacity: 0.5,
-                                              fontSize: '16px',
-                                              transition: 'all 0.2s ease'
-                                            }} 
-                                          />
-                                        )}
-                                      </button>
-                                    </div>
-                                    <div className="card__name-wrap">
-                                    <h4 className="card__name">{card.name}</h4>
-                                    </div>
-                                  </div>
-                                  <h5 className="card__location"><FaMapMarkerAlt aria-hidden="true" /> {card.location}</h5>
-                                  <h5 className="card__location time-total">
-                                    {getTimeAgo(card.created_at)}
-                                  </h5>
-                                </div>
-                              </article>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-              <button 
-                className="slider-nav slider-nav-next" 
-                onClick={nextSlide}
-                aria-label="Next ads"
-                disabled={totalPages <= 1}
-              >
-                <FaChevronRight />
-              </button>
-              {totalPages > 1 && (
-                <div className="slider-dots">
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <button
-                      key={i}
-                      className={`slider-dot ${i === currentPage ? 'active' : ''}`}
-                      onClick={() => setSliderIndex(i)}
-                      aria-label={`Go to page ${i + 1}`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="no-products">
-              <p>No products found. Be the first to post an ad!</p>
-            </div>
-          )}
-        </div>
-      </div>
+      <PopularAdsSlider 
+        products={toShow}
+        onProductClick={productDetail}
+        favorites={favorites}
+        onToggleFavorite={toggleFavorite}
+      />
 
       {/* Category-wise Sliders */}
       <CategorySlider heading="Mobile Phones" category="Mobile Phones" favorites={favorites} onToggleFavorite={toggleFavorite} userId={userId} />

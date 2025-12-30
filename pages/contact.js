@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock } from 'react-icons/fa'
 
 export default function Contact(){
-  const year = new Date().getFullYear()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [subject, setSubject] = useState('')
