@@ -208,7 +208,9 @@ export default function ProductDetails(){
             const category = (d.category && d.category.name) || ''
             const post_type = String(d.post_type || 'ad').toLowerCase().trim()
             const created_at = d.created_at || Date.now()
-            console.log('API Response - post_type:', d.post_type, 'normalized:', post_type, 'full d object keys:', Object.keys(d))
+            if (process.env.NODE_ENV === 'development') {
+              console.log('API Response - post_type:', d.post_type, 'normalized:', post_type, 'full d object keys:', Object.keys(d))
+            }
             // Set post_type in separate state
             setPostType(post_type)
             // Store seller's user_id
@@ -230,7 +232,9 @@ export default function ProductDetails(){
               }
             }catch(_){ }
             setData({ phoneShow, phone, name, description, image, price, location, productName, category, post_type, created_at })
-            console.log('State updated with post_type:', post_type, 'data.post_type will be:', post_type, 'postType state:', post_type)
+            if (process.env.NODE_ENV === 'development') {
+              console.log('State updated with post_type:', post_type, 'data.post_type will be:', post_type, 'postType state:', post_type)
+            }
             setActiveImg(image || '/images/products/img1.jpg')
             const g = Array.isArray(d.images) ? d.images.map(im=>im.url).filter(Boolean) : []
             setGallery(g.length ? g : (image ? [image] : []))

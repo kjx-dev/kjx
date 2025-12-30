@@ -1,16 +1,20 @@
 import Head from 'next/head'
 import { useEffect, useState } from 'react'
 import { Roboto } from 'next/font/google'
+import ErrorBoundary from '../components/ErrorBoundary'
 import '../assets/css/style.css'
 import '../assets/css/profile.css'
 import '../assets/css/sell.css'
 
+// Optimize font loading - only load weights we actually use
 const roboto = Roboto({
-  weight: ['100', '300', '400', '500', '700', '900'],
-  style: ['normal', 'italic'],
+  weight: ['300', '400', '500'], // Only load weights we use (300, 400, 500)
+  style: ['normal'],
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-roboto',
+  preload: true,
+  fallback: ['system-ui', 'arial'],
 })
 
 export default function App({ Component, pageProps }) {
@@ -35,7 +39,11 @@ export default function App({ Component, pageProps }) {
     try{
       if (window.dataLayer) window.dataLayer.push({ event:'whatsapp_click', location })
       if (window.gtag) window.gtag('event','whatsapp_click',{ location })
-    }catch(e){ console.log('whatsapp_click', { location }) }
+    }catch(e){ 
+      if (process.env.NODE_ENV === 'development') {
+        console.log('whatsapp_click', { location })
+      }
+    }
   }
   function startWhatsApp(){
     const number = (waNumber||'').replace(/[^0-9]/g,'')
@@ -47,38 +55,40 @@ export default function App({ Component, pageProps }) {
     setWaOpen(false)
   }
   return (
-    <div className={roboto.variable}>
-      <Head>
-        <meta charSet="UTF-8" />
-        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="format-detection" content="telephone=no,email=no,address=no" />
-        <meta name="robots" content="index, follow" />
-        <meta name="theme-color" content="#012f34" />
-        <meta property="og:site_name" content="OMG" />
-        <meta property="og:type" content="website" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
-        <title>OMG</title>
-      </Head>
-      <div className="site__container">
-        <Component {...pageProps} />
-      </div>
-      {waOpen && (
-        <div className="whatsapp-modal" role="dialog" aria-modal="true" aria-label="WhatsApp chat">
-          <div className="whatsapp-dialog">
-            <h3>Chat on WhatsApp</h3>
-            <div className="whatsapp-field">
-              <label htmlFor="waMessage">Message</label>
-              <textarea id="waMessage" value={waMessage} onChange={e=>setWaMessage(e.target.value)} placeholder="Type your message"></textarea>
-            </div>
-            <div className="whatsapp-actions">
-              <button className="btn" onClick={()=>setWaOpen(false)} aria-label="Cancel">Cancel</button>
-              <button className="btn btn--secondary" onClick={startWhatsApp} aria-label="Start WhatsApp chat">Start Chat</button>
+    <ErrorBoundary>
+      <div className={roboto.variable}>
+        <Head>
+          <meta charSet="UTF-8" />
+          <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <meta name="format-detection" content="telephone=no,email=no,address=no" />
+          <meta name="robots" content="index, follow" />
+          <meta name="theme-color" content="#012f34" />
+          <meta property="og:site_name" content="OMG" />
+          <meta property="og:type" content="website" />
+          <meta name="twitter:card" content="summary_large_image" />
+          <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+          <title>OMG</title>
+        </Head>
+        <div className="site__container">
+          <Component {...pageProps} />
+        </div>
+        {waOpen && (
+          <div className="whatsapp-modal" role="dialog" aria-modal="true" aria-label="WhatsApp chat">
+            <div className="whatsapp-dialog">
+              <h3>Chat on WhatsApp</h3>
+              <div className="whatsapp-field">
+                <label htmlFor="waMessage">Message</label>
+                <textarea id="waMessage" value={waMessage} onChange={e=>setWaMessage(e.target.value)} placeholder="Type your message"></textarea>
+              </div>
+              <div className="whatsapp-actions">
+                <button className="btn" onClick={()=>setWaOpen(false)} aria-label="Cancel">Cancel</button>
+                <button className="btn btn--secondary" onClick={startWhatsApp} aria-label="Start WhatsApp chat">Start Chat</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </ErrorBoundary>
   )
 }

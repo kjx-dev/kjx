@@ -76,14 +76,18 @@ export default function UsersTab({ error, setError }) {
   }
 
   async function updateUserRole(userId, newRole) {
-    console.log('updateUserRole called:', { userId, newRole })
+    if (process.env.NODE_ENV === 'development') {
+      console.log('updateUserRole called:', { userId, newRole })
+    }
     try {
       setUpdating(prev => ({ ...prev, [userId]: true }))
       setError('')
       
       const url = `/api/v1/users/${userId}`
       const body = JSON.stringify({ role: newRole })
-      console.log('Sending request:', { url, method: 'PATCH', body })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Sending request:', { url, method: 'PATCH', body })
+      }
       
       const response = await fetch(url, {
         method: 'PATCH',
@@ -91,7 +95,9 @@ export default function UsersTab({ error, setError }) {
         body: body
       })
       
-      console.log('Response status:', response.status, response.statusText)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Response status:', response.status, response.statusText)
+      }
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
@@ -100,13 +106,17 @@ export default function UsersTab({ error, setError }) {
       }
       
       const data = await response.json()
-      console.log('Role update response:', data)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Role update response:', data)
+      }
       
       if (data.data) {
         // Use the data from the response to ensure we have the latest values
         const updatedUser = data.data
-        console.log('Received updated user from API:', updatedUser)
-        console.log('New role value:', updatedUser.role)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Received updated user from API:', updatedUser)
+          console.log('New role value:', updatedUser.role)
+        }
         
         setUsers(prev => {
           const updated = prev.map(u => {
@@ -118,20 +128,24 @@ export default function UsersTab({ error, setError }) {
                 role: updatedUser.role || newRole, // Ensure role is set
                 status: updatedUser.status || u.status
               }
-              console.log('Updating user in state:', { 
-                userId, 
-                oldRole: u.role, 
-                newRole: newUser.role,
-                oldUser: u, 
-                newUser 
-              })
+              if (process.env.NODE_ENV === 'development') {
+                console.log('Updating user in state:', { 
+                  userId, 
+                  oldRole: u.role, 
+                  newRole: newUser.role,
+                  oldUser: u, 
+                  newUser 
+                })
+              }
               return newUser
             }
             return u
           })
-          console.log('Updated users state - checking role values:', 
-            updated.map(u => ({ id: u.user_id, role: u.role }))
-          )
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Updated users state - checking role values:', 
+              updated.map(u => ({ id: u.user_id, role: u.role }))
+            )
+          }
           return updated
         })
         setError('') // Clear any previous errors

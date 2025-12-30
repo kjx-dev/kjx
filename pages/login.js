@@ -69,7 +69,9 @@ export default function Login(){
               xfbml: true,
               version: 'v18.0'
             })
-            console.log('Facebook SDK initialized successfully')
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Facebook SDK initialized successfully')
+            }
           } catch (e) {
             console.error('Error initializing Facebook SDK:', e)
           }
@@ -84,7 +86,9 @@ export default function Login(){
         facebookScript.async = true
         facebookScript.defer = true
         facebookScript.onload = () => {
-          console.log('Facebook SDK script loaded')
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Facebook SDK script loaded')
+          }
           // If fbAsyncInit hasn't been called yet, call it manually
           if (window.FB && typeof window.fbAsyncInit === 'function') {
             window.fbAsyncInit()
@@ -109,7 +113,9 @@ export default function Login(){
             xfbml: true,
             version: 'v18.0'
           })
-          console.log('Facebook SDK initialized (already loaded)')
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Facebook SDK initialized (already loaded)')
+          }
         } catch (e) {
           console.error('Error initializing already-loaded Facebook SDK:', e)
         }
@@ -273,7 +279,9 @@ export default function Login(){
             }
           })()
         } else {
-          console.log('Facebook login cancelled or no auth response:', response)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Facebook login cancelled or no auth response:', response)
+          }
           if (response.status !== 'unknown') {
             alert('Facebook login was cancelled or failed. Please try again.')
           }
