@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { useState } from 'react'
 import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock } from 'react-icons/fa'
@@ -37,16 +38,7 @@ export default function Contact(){
       <Head>
         <title>Contact | OMG</title>
       </Head>
-      <div className="same__color">
-        <div className="small__navbar">
-          <div className="small__navbar_logo">
-            <a href="/">
-              <svg height="20" viewBox="0 0 36.289 20.768" alt="Logo"><path d="M18.9 20.77V0h4.93v20.77zM0 10.39a8.56 8.56 0 1 1 8.56 8.56A8.56 8.56 0 0 1 0 10.4zm5.97-.01a2.6 2.6 0 1 0 2.6-2.6 2.6 2.6 0 0 0-2.6 2.6zm27 5.2l-1.88-1.87-1.87 1.88H25.9V12.3l1.9-1.9-1.9-1.89V5.18h3.27l1.92 1.92 1.93-1.92h3.27v3.33l-1.9 1.9 1.9 1.9v3.27z"></path></svg>
-            </a>
-          </div>
-          <div className="actions__links"></div>
-        </div>
-      </div>
+      <Header />
       <main className="contact__main">
         <h1>Contact Us</h1>
         <p>Reach us using the details below or send a message.</p>
