@@ -128,7 +128,16 @@ export default function Favorites(){
                     <a href={'/product/'+encodeURIComponent(String(p.post_id))} style={{textDecoration:'none'}}>
                       <h4 style={{margin:0, fontSize:16, color:'#012f34', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden'}}>{p.title}</h4>
                     </a>
-                    <h2 aria-label={'Price ' + p.price} style={{margin:'6px 0', fontSize:18, color:'#012f34'}}>{formatPrice(p.price)}</h2>
+                    <h2 aria-label={'Price ' + p.price} style={{
+                      margin:'6px 0', 
+                      fontSize:20, 
+                      fontWeight:400, 
+                      color:'#f55100',
+                      background:'linear-gradient(135deg, #f55100 0%, #ff6b35 100%)',
+                      WebkitBackgroundClip:'text',
+                      WebkitTextFillColor:'transparent',
+                      backgroundClip:'text'
+                    }}>{formatPrice(p.price)}</h2>
                     <div style={{display:'flex', alignItems:'center', gap:8, color:'rgba(0,47,52,.72)'}}>
                       <i className="fa-solid fa-location-dot" aria-hidden="true"></i>
                       <span>{p.location}</span>

@@ -176,7 +176,7 @@ export default function ProductCard({ post }) {
         {post.price && (
           <p style={{
             fontSize:'22px',
-            fontWeight:700,
+            fontWeight:400,
             color:'#f55100',
             marginBottom:'12px',
             background:'linear-gradient(135deg, #f55100 0%, #ff6b35 100%)',

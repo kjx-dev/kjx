@@ -305,12 +305,6 @@ export default function ProductDetails(){
       for (let i=0; i<g.length; i++) { const s = g[i]; if (s && !uniq.includes(s)) uniq.push(s) }
       setGallery(uniq)
       try {
-        const pid = (router.query.slug||router.query.id||'').toString()
-        const idPart = parseInt((pid.split('-').pop()||pid),10)
-      } catch (e) {
-        setError('Failed to load product details')
-      }
-      try {
         const products = JSON.parse(localStorage.getItem('products')||'[]') || []
         const rel = products.filter(p => p.category === category).slice(0,4)
         setRelated(rel)
@@ -389,7 +383,7 @@ export default function ProductDetails(){
     try{ window.dispatchEvent(new CustomEvent('whatsapp:open', { detail: { number: n, message: msg } })) }catch(e){}
   }
   async function callSeller(){
-    const phone = (data.profilePhone||data.phone||'').replace(/\s+/g,'')
+    const phone = (data.phone||'').replace(/\s+/g,'')
     const can = (data.phoneShow||'').toLowerCase() !== 'no' && phone.length>0
     if (!can){ setActionStatus('Phone is hidden'); return }
     
@@ -665,12 +659,11 @@ export default function ProductDetails(){
     }catch(_){ setActiveAdsCount(7) }
   }, [])
   useEffect(() => {
-    try{
-      const checkMobile = () => setIsMobile(typeof window !== 'undefined' ? window.innerWidth <= 768 : false)
-      checkMobile()
-      window.addEventListener('resize', checkMobile)
-      return () => window.removeEventListener('resize', checkMobile)
-    }catch(_){ }
+    if (typeof window === 'undefined') return
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
   }, [])
   
   
@@ -849,7 +842,7 @@ export default function ProductDetails(){
                 </div>
                 <div style={{flex:1}}>
                   <div className="profile__label" style={{fontSize:'12px', color:'rgba(0,47,52,.6)', marginBottom:'2px'}}>Posted by</div>
-                  <div className="profile__name" style={{fontSize:'16px', fontWeight:600, color:'#012f34'}}>{data.name || 'Seller'}</div>
+                  <div className="profile__name" style={{fontSize:'16px', fontWeight:400, color:'#012f34'}}>{data.name || 'Seller'}</div>
                 </div>
               </div>
             </div>
@@ -870,7 +863,7 @@ export default function ProductDetails(){
                 </div>
                 <div>
                   <div className="muted" style={{fontSize:'11px', color:'rgba(0,47,52,.6)', marginBottom:'4px', fontWeight:500}}>Member Since</div>
-                  <div className="val" style={{fontSize:'16px', fontWeight:700, color:'#012f34'}}>
+                  <div className="val" style={{fontSize:'16px', fontWeight:400, color:'#012f34'}}>
                     {(() => {
                       try {
                         const dateStr = userCreatedAt || data.created_at
@@ -902,42 +895,86 @@ export default function ProductDetails(){
                 </div>
                 <div>
                   <div className="muted" style={{fontSize:'11px', color:'rgba(0,47,52,.6)', marginBottom:'4px', fontWeight:500}}>Active Ads</div>
-                  <div className="val" style={{fontSize:'16px', fontWeight:700, color:'#012f34'}}><span suppressHydrationWarning={true}>{hydrated ? (Number.isNaN(activeAdsCount) ? 0 : activeAdsCount) : 7}</span></div>
+                  <div className="val" style={{fontSize:'16px', fontWeight:400, color:'#012f34'}}><span suppressHydrationWarning={true}>{hydrated ? (Number.isNaN(activeAdsCount) ? 0 : activeAdsCount) : 7}</span></div>
                 </div>
               </div>
             </div>
             {sellerUserId && (
-              <div style={{marginBottom:'12px'}}>
+              <div style={{
+                marginBottom:'16px',
+                padding:'16px',
+                background:'linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%)',
+                border:'1px solid rgba(58,119,255,.15)',
+                borderRadius:'14px',
+                boxShadow:'0 2px 12px rgba(58,119,255,.08)'
+              }}>
+                <div style={{
+                  display:'flex',
+                  alignItems:'center',
+                  gap:'12px',
+                  marginBottom:'12px'
+                }}>
+                  <div style={{
+                    width:'44px',
+                    height:'44px',
+                    borderRadius:'12px',
+                    background:'linear-gradient(135deg, #3a77ff 0%, #5a9fff 100%)',
+                    display:'flex',
+                    alignItems:'center',
+                    justifyContent:'center',
+                    boxShadow:'0 4px 12px rgba(58,119,255,.25)'
+                  }}>
+                    <i className="fa-solid fa-store" style={{color:'#fff', fontSize:'18px'}}></i>
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{
+                      fontSize:'12px',
+                      color:'rgba(0,47,52,.6)',
+                      marginBottom:'2px',
+                      fontWeight:500
+                    }}>Seller Store</div>
+                    <div style={{
+                      fontSize:'14px',
+                      color:'#012f34',
+                      fontWeight:500
+                    }}>{data.name || 'Owner'}'s Shop</div>
+                  </div>
+                </div>
                 <button 
-                  className="btn btn--outline btn--md" 
+                  className="btn btn--store" 
                   onClick={() => router.push(`/seller/${sellerUserId}`)}
                   style={{
                     width:'100%',
                     padding:'12px 16px',
                     borderRadius:'10px',
-                    fontWeight:400,
+                    fontWeight:500,
                     fontSize:'14px',
-                    border:'2px solid #3a77ff',
-                    color:'#3a77ff',
-                    background:'#fff',
+                    border:'none',
+                    color:'#fff',
+                    background:'linear-gradient(135deg, #3a77ff 0%, #5a9fff 100%)',
                     cursor:'pointer',
-                    transition:'all 0.2s ease',
+                    transition:'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     display:'flex',
                     alignItems:'center',
                     justifyContent:'center',
-                    gap:'8px'
+                    gap:'8px',
+                    boxShadow:'0 4px 12px rgba(58,119,255,.3)',
+                    position:'relative',
+                    overflow:'hidden'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#f0f7ff'
-                    e.currentTarget.style.transform = 'translateY(-1px)'
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)'
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(58,119,255,.4)'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#fff'
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #3a77ff 0%, #5a9fff 100%)'
                     e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(58,119,255,.3)'
                   }}
                 >
-                  <i className="fa-solid fa-list"></i>
-                  <span>View {data.name || 'Owner'}'s Store</span>
+                  <i className="fa-solid fa-arrow-right" style={{fontSize:'12px'}}></i>
+                  <span>Visit Store</span>
                 </button>
               </div>
             )}
@@ -1008,7 +1045,7 @@ export default function ProductDetails(){
                         e.currentTarget.style.boxShadow = '0 4px 12px rgba(58,119,255,.3)'
                       }}
                     >
-                      <i className="fa-solid fa-phone"></i>&nbsp;{showPhone ? (data.profilePhone||data.phone||'') : 'Show phone number'}
+                      <i className="fa-solid fa-phone"></i>&nbsp;{showPhone ? (data.phone||'') : 'Show phone number'}
                     </button>
                   )
                 }
@@ -1043,7 +1080,7 @@ export default function ProductDetails(){
               </button>
               <button 
                 className="btn btn--secondary btn--outline btn--xl" 
-                onClick={()=>triggerWhatsApp(data.profilePhone||data.phone||'', data.productName)} 
+                onClick={()=>triggerWhatsApp(data.phone||'', data.productName)} 
                 aria-label="Chat on WhatsApp"
                 style={{
                   width:'100%',
@@ -1189,7 +1226,7 @@ export default function ProductDetails(){
                 <>
                   <div className="details__head" aria-label="Product header" style={{display:'flex', alignItems:'flex-start', justifyContent:'space-between', padding:'0 0 24px 0', marginBottom:'24px', borderBottom:'1px solid rgba(1,47,52,.1)'}}>
                     <div className="head__left" style={{display:'grid', gap:10, flex:1}}>
-                      <div className="price__value" id="price" aria-live="polite" style={{fontSize:'42px', fontWeight:700, color:'#012f34', lineHeight:1.2}}>{formatPrice(data.price)}</div>
+                      <div className="price__value" id="price" aria-live="polite" style={{fontSize:'42px', fontWeight:400, color:'#012f34', lineHeight:1.2}}>{formatPrice(data.price)}</div>
                       <h1 className="details__title" style={{margin:0, fontSize:28, fontWeight:700, color:'#012f34', lineHeight:1.3}}>{data.productName}</h1>
                       <p className="price__location" id="location" style={{color:'rgba(0,47,52,.7)', fontSize:'15px', display:'flex', alignItems:'center', gap:'8px', marginTop:'4px'}}>
                         <i className="fa-solid fa-location-dot" style={{color:'#3a77ff', fontSize:'16px'}}></i> 
@@ -1267,7 +1304,7 @@ export default function ProductDetails(){
                     </div>
                   </div>
                   
-                  <h3 className="section__heading" style={{margin:'0 0 16px 0', fontSize:'20px', fontWeight:600, color:'#012f34', display:'flex', alignItems:'center', gap:'10px'}}>
+                  <h3 className="section__heading" style={{margin:'0 0 16px 0', fontSize:'20px', fontWeight:400, color:'#012f34', display:'flex', alignItems:'center', gap:'10px'}}>
                     <span style={{width:'4px', height:'20px', background:'linear-gradient(135deg, #3a77ff 0%, #5a9fff 100%)', borderRadius:'2px'}}></span>
                     Description
                   </h3>

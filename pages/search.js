@@ -492,7 +492,16 @@ export default function SearchPage(){
                         <a href={'/product/'+(card.slug || (slugify(card.name)+'-'+(parseInt(String(card.id||String((card.slug||'').split('-').pop()||'')),10)||'')))} onClick={(e)=>{ e.preventDefault(); productDetail(card) }} style={{textDecoration:'none'}}>
                           <h4 style={{margin:0, fontSize:16, color:'#012f34', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden'}}>{card.name}</h4>
                         </a>
-                        <h2 aria-label={'Price ' + card.price} style={{margin:'6px 0', fontSize:18, color:'#012f34'}}>Rs {card.price}</h2>
+                        <h2 aria-label={'Price ' + card.price} style={{
+                          margin:'6px 0', 
+                          fontSize:20, 
+                          fontWeight:400, 
+                          color:'#f55100',
+                          background:'linear-gradient(135deg, #f55100 0%, #ff6b35 100%)',
+                          WebkitBackgroundClip:'text',
+                          WebkitTextFillColor:'transparent',
+                          backgroundClip:'text'
+                        }}>Rs {card.price}</h2>
                         <div style={{display:'flex', alignItems:'center', gap:8, color:'rgba(0,47,52,.72)'}}>
                           <i className="fa-solid fa-location-dot" aria-hidden="true"></i>
                           <span>{card.location}</span>
@@ -559,7 +568,16 @@ export default function SearchPage(){
                             <h4 style={{margin:0, fontSize:16, color:'#012f34', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden'}}>{card.name}</h4>
                             <i className="fa-solid fa-heart" aria-hidden="true"></i>
                           </div>
-                          <h2 aria-label={'Price ' + card.price} style={{margin:'6px 0', fontSize:18, color:'#012f34'}}>Rs {card.price}</h2>
+                          <h2 aria-label={'Price ' + card.price} style={{
+                          margin:'6px 0', 
+                          fontSize:20, 
+                          fontWeight:400, 
+                          color:'#f55100',
+                          background:'linear-gradient(135deg, #f55100 0%, #ff6b35 100%)',
+                          WebkitBackgroundClip:'text',
+                          WebkitTextFillColor:'transparent',
+                          backgroundClip:'text'
+                        }}>Rs {card.price}</h2>
                         </div>
                         <h5 className="card__location" style={{color:'rgba(0,47,52,.72)'}}><i className="fa-solid fa-location-dot" aria-hidden="true"></i> {card.location}</h5>
                       </div>
