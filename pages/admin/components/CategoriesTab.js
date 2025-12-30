@@ -633,13 +633,13 @@ export default function CategoriesTab({ error, setError }) {
           <table style={{width: '100%', borderCollapse: 'collapse'}}>
             <thead>
               <tr style={{background: '#f5f5f5'}}>
-                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>ID</th>
-                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Name</th>
-                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Icon</th>
-                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Parent</th>
-                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Description</th>
-                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Created At</th>
-                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Actions</th>
+                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>ID</th>
+                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Name</th>
+                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Icon</th>
+                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Parent</th>
+                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Description</th>
+                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Created At</th>
+                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Actions</th>
               </tr>
             </thead>
             <tbody>

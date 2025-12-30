@@ -2258,7 +2258,7 @@ body {
 /* .fresh__recomandation h1 { text-align: left; color:black; } */
 .category-slider-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 16px; }
 .category-slider-header h1 { margin: 0; flex: 1; font-weight: 500; }
-.view-more-btn { display: inline-flex; align-items: center; padding: 8px 16px; background: var(--primary-color); color: #fff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 500; transition: all 0.2s ease; white-space: nowrap; }
+.view-more-btn { display: inline-flex; align-items: center; padding: 8px 16px; background: var(--primary-color); color: #fff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 400; transition: all 0.2s ease; white-space: nowrap; }
 .view-more-btn:hover { background: var(--primary-color-dark); transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,.15); }
 .view-more-btn:active { transform: translateY(0); }
 .category-products-grid { width: 100%; margin: 20px 0; }

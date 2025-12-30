@@ -337,7 +337,7 @@ export default function CategoryPage(){
           margin:'24px 0 0 0',
           padding:'0 16px'
         }}>
-          <h1 id="cat-title" style={{fontWeight:600, textAlign:'left', fontSize:28, fontFamily:'var(--font-roboto), Roboto, sans-serif', letterSpacing:'-0.01em', lineHeight:1.3, color:'#012f34', margin:'0 0 8px 0'}}>{label}</h1>
+          <h1 id="cat-title" style={{fontWeight:400, textAlign:'left', fontSize:28, fontFamily:'var(--font-roboto), Roboto, sans-serif', letterSpacing:'-0.01em', lineHeight:1.3, color:'#012f34', margin:'0 0 8px 0'}}>{label}</h1>
           <div style={{
             // maxWidth:1100,
              margin:'0 auto', padding:'0 0px'}}>
@@ -548,7 +548,7 @@ export default function CategoryPage(){
             </div>
             <div style={{display:'flex', alignItems:'center', gap:12}}>
               <div style={{display:'inline-flex', alignItems:'center', gap:8}}>
-                <span style={{fontWeight:600, color:'#012f34', fontSize:14, fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>View</span>
+                <span style={{fontWeight:400, color:'#012f34', fontSize:14, fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>View</span>
                 <button aria-label="List view" onClick={()=>setView('list')} style={{border:'none', background: view==='list' ? '#e6eff6' : 'transparent', borderRadius:'50%', width:28, height:28, display:'inline-flex', alignItems:'center', justifyContent:'center', color:'#012f34'}}>
                   <i className="fa-solid fa-bars"></i>
                 </button>
@@ -558,7 +558,7 @@ export default function CategoryPage(){
                 <span aria-hidden="true" style={{width:1, height:24, background:'rgba(1,47,52,.2)'}}></span>
               </div>
               <div style={{position:'relative', display:'inline-flex', alignItems:'center', gap:8}} ref={sortWrapRef}>
-                <span style={{fontWeight:600, color:'#012f34', fontSize:14, fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>Sort by:</span>
+                <span style={{fontWeight:400, color:'#012f34', fontSize:14, fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>Sort by:</span>
                 <button 
                   ref={sortBtnRef} 
                   aria-haspopup="true" 
@@ -574,7 +574,7 @@ export default function CategoryPage(){
                     cursor:'pointer',
                     padding:'8px 12px',
                     borderRadius:8,
-                    fontWeight:500,
+                    fontWeight:400,
                     fontSize:14,
                     fontFamily:'var(--font-roboto), Roboto, sans-serif',
                     transition:'all 0.2s ease'
@@ -607,7 +607,7 @@ export default function CategoryPage(){
                           background: sortKey===opt.k ? '#e6eff6' : 'transparent', 
                           cursor:'pointer', 
                           color: sortKey===opt.k ? '#012f34' : 'rgba(0,47,52,.84)',
-                          fontWeight: sortKey===opt.k ? 600 : 400,
+                          fontWeight: 400,
                           fontSize:14,
                           fontFamily:'var(--font-roboto), Roboto, sans-serif',
                           transition:'all 0.15s ease'
@@ -700,10 +700,35 @@ export default function CategoryPage(){
             {!loading && toShow.length === 0 && (
               <div style={{padding:'28px', textAlign:'center', color:'rgba(0,47,52,.72)', border:'1px solid rgba(1,47,52,.16)', borderRadius:12}}>
                 <div style={{fontSize:40, color:'#012f34'}}><i className="fa-regular fa-circle-xmark"></i></div>
-                <h3 style={{margin:'8px 0', fontWeight:600, color:'#012f34'}}>No posts found in {label}</h3>
+                <h3 style={{margin:'8px 0', fontWeight:500, color:'#012f34'}}>No posts found in {label}</h3>
                 <p style={{margin:'8px 0'}}>Try adjusting filters or explore similar categories.</p>
                 <div style={{marginTop:12}}>
-                  <a href="/sell" className="login__btn">Post now</a>
+                  <button 
+                    onClick={() => router.push('/sell')}
+                    className="btn btn--primary"
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, #f55100 0%, #ff6b2b 100%)',
+                      color: '#fff',
+                      border: 'none',
+                      fontWeight: '400',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      boxShadow: '0 4px 12px rgba(245,81,0,.3)',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)'
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(245,81,0,.4)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)'
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(245,81,0,.3)'
+                    }}
+                  >
+                    Post now
+                  </button>
                 </div>
                 <div style={{marginTop:16, display:'flex', flexWrap:'wrap', gap:10, justifyContent:'center'}}>
                   {catTiles.filter(t=>t.label!==label).slice(0,6).map(t=>{
@@ -751,10 +776,35 @@ export default function CategoryPage(){
             {!loading && toShow.length === 0 && (
               <div style={{padding:'28px', textAlign:'center', color:'rgba(0,47,52,.72)', border:'1px solid rgba(1,47,52,.16)', borderRadius:12}}>
                 <div style={{fontSize:40, color:'#012f34'}}><i className="fa-regular fa-circle-xmark"></i></div>
-                <h3 style={{margin:'8px 0', fontWeight:600, color:'#012f34'}}>No posts found in {label}</h3>
+                <h3 style={{margin:'8px 0', fontWeight:500, color:'#012f34'}}>No posts found in {label}</h3>
                 <p style={{margin:'8px 0'}}>Try adjusting filters or explore similar categories.</p>
                 <div style={{marginTop:12}}>
-                  <a href="/sell" className="login__btn">Post now</a>
+                  <button 
+                    onClick={() => router.push('/sell')}
+                    className="btn btn--primary"
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, #f55100 0%, #ff6b2b 100%)',
+                      color: '#fff',
+                      border: 'none',
+                      fontWeight: '400',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      boxShadow: '0 4px 12px rgba(245,81,0,.3)',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)'
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(245,81,0,.4)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)'
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(245,81,0,.3)'
+                    }}
+                  >
+                    Post now
+                  </button>
                 </div>
                 <div style={{marginTop:16, display:'flex', flexWrap:'wrap', gap:10, justifyContent:'center'}}>
                   {catTiles.filter(t=>t.label!==label).slice(0,6).map(t=>{
