@@ -83,6 +83,8 @@ export default function PermissionsTab({ error, setError }) {
 
   async function grantAllPermissionsForRole(role) {
     const roleKey = `${role}-all-all`
+    // Store scroll position to prevent jump
+    const scrollY = window.scrollY || window.pageYOffset
     try {
       setError('')
       setTogglingPermission(prev => ({ ...prev, [roleKey]: true }))
@@ -119,9 +121,18 @@ export default function PermissionsTab({ error, setError }) {
       
       await Promise.all(promises)
       await fetchPermissions() // Refresh permissions
+      
+      // Restore scroll position after update
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollY)
+      })
     } catch (err) {
       console.error('Error granting all permissions for role:', err)
       setError('Error granting all permissions: ' + (err.message || 'Unknown error'))
+      // Restore scroll position even on error
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollY)
+      })
     } finally {
       setTogglingPermission(prev => {
         const next = { ...prev }
@@ -291,7 +302,12 @@ export default function PermissionsTab({ error, setError }) {
                         {grantedPerms}/{totalPerms}
                       </div>
                       <button
-                        onClick={() => grantAllPermissionsForRole(role)}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          grantAllPermissionsForRole(role)
+                        }}
                         disabled={togglingPermission[`${role}-all-all`] || grantedPerms === totalPerms}
                         style={{
                           padding: '6px 12px',
@@ -352,7 +368,12 @@ export default function PermissionsTab({ error, setError }) {
                                 {resourcePerms.length}/{actions.length}
                               </span>
                               <button
-                                onClick={() => grantAllPermissionsForResource(role, resource.key)}
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  grantAllPermissionsForResource(role, resource.key)
+                                }}
                                 disabled={togglingPermission[`${role}-${resource.key}-all`] || resourcePerms.length === actions.length}
                                 style={{
                                   padding: '4px 8px',

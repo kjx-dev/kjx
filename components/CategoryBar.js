@@ -15,16 +15,17 @@ export default function CategoryBar() {
   useEffect(() => {
     async function loadCats(){
       try{
+        // Use the same endpoint as sell page to get groups with subchildren
         const res = await fetch('/api/v1/category')
         const data = await res.json()
         const payload = data.data || {}
         setCatTiles(payload.tiles || [])
-        try{
-          const rg = await fetch('/api/v1/categories')
-          const dg = await rg.json()
-          setCatGroups((dg && dg.data && dg.data.groups) || [])
-        }catch(_){ setCatGroups([]) }
-      }catch(e){ setCatTiles([]); setCatGroups([]) }
+        // Get groups from the same endpoint (includes subchildren)
+        setCatGroups(payload.groups || [])
+      }catch(e){ 
+        setCatTiles([])
+        setCatGroups([]) 
+      }
     }
     loadCats()
   }, [])
@@ -84,34 +85,80 @@ export default function CategoryBar() {
       </div>
       {(() => {
         const groups = Array.isArray(catGroups) ? catGroups : []
-        function byName(n){ const g = groups.find(x => String(x.parent?.name||'')===n); return g ? g : { parent:{ name:n, category_id: 'missing:'+n }, children: [] } }
-        const layout = [
-          [byName('Mobiles'), byName('Vehicles')],
-          [byName('Bikes'), byName('Business, Industrial & Agriculture')],
-          [byName('Jobs')],
-          [byName('Furniture & Home Decor')]
-        ]
+        if (groups.length === 0) return null
+        
+        // Dynamically organize groups into columns (max 4 columns)
+        const maxColumns = 4
+        const itemsPerColumn = Math.ceil(groups.length / maxColumns)
+        const columns = []
+        for (let i = 0; i < maxColumns; i++) {
+          const start = i * itemsPerColumn
+          const end = start + itemsPerColumn
+          const columnGroups = groups.slice(start, end).filter(gr => gr && gr.parent && gr.children && gr.children.length > 0)
+          if (columnGroups.length > 0) {
+            columns.push(columnGroups)
+          }
+        }
+        
         return (
           <div ref={allCatMenuRef} className={`all-cat-menu ${allCatOpen ? '' : 'hidden'}`}>
             <div className="all-cat-menu-content">
               <div className="all-cat-menu-grid">
-                {layout.map((list,ci)=> (
+                {columns.map((columnGroups, ci) => (
                   <div key={'col:'+ci}>
-                    {list.map(gr => (
-                      <div key={gr.parent.category_id} className="all-cat-group">
-                        <div className="all-cat-group-title">{gr.parent.name}</div>
-                        <ul className="all-cat-group-list">
-                          {gr.children.map(ch => {
-                            const s = String(ch.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
-                            return (
-                              <li key={ch.category_id} className="all-cat-group-item">
-                                <a href={'/category/'+s} className="all-cat-group-link" onClick={(e)=>{ e.preventDefault(); setAllCatOpen(false); router.push('/category/'+s) }}>{ch.name}</a>
-                              </li>
-                            )
-                          })}
-                        </ul>
-                      </div>
-                    ))}
+                    {columnGroups.map(gr => {
+                      if (!gr || !gr.parent || !gr.children || gr.children.length === 0) return null
+                      return (
+                        <div key={gr.parent.category_id || gr.parent.name} className="all-cat-group">
+                          <div className="all-cat-group-title">{gr.parent.name}</div>
+                          <ul className="all-cat-group-list">
+                            {gr.children.map(ch => {
+                              // Check if this child has subchildren
+                              const hasSubchildren = ch.subchildren && Array.isArray(ch.subchildren) && ch.subchildren.length > 0
+                              const s = String(ch.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
+                              return (
+                                <li key={ch.category_id || ch.name} className="all-cat-group-item">
+                                  <a 
+                                    href={'/category/'+s} 
+                                    className="all-cat-group-link" 
+                                    onClick={(e)=>{ 
+                                      e.preventDefault()
+                                      setAllCatOpen(false)
+                                      router.push('/category/'+s) 
+                                    }}
+                                  >
+                                    {ch.name}
+                                  </a>
+                                  {/* Show subchildren if they exist */}
+                                  {hasSubchildren && (
+                                    <ul className="all-cat-subchildren-list">
+                                      {ch.subchildren.map(subch => {
+                                        const subS = String(subch.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
+                                        return (
+                                          <li key={subch.category_id || subch.name} className="all-cat-subchildren-item">
+                                            <a 
+                                              href={'/category/'+subS} 
+                                              className="all-cat-subchildren-link" 
+                                              onClick={(e)=>{ 
+                                                e.preventDefault()
+                                                setAllCatOpen(false)
+                                                router.push('/category/'+subS) 
+                                              }}
+                                            >
+                                              {subch.name}
+                                            </a>
+                                          </li>
+                                        )
+                                      })}
+                                    </ul>
+                                  )}
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        </div>
+                      )
+                    })}
                   </div>
                 ))}
               </div>

@@ -595,8 +595,20 @@ export default function Sell(){
                   {(() => {
                     const orderedCats = getOrderedCategories(tiles, groups)
                     return orderedCats.map((parent, idx) => {
-                      const group = groups.find(g => (g.parent.category_id === parent.category_id || g.parent.name === parent.name || g.parent.name === parent.k))
+                      // Match by category_id first (most reliable), then by name (case-insensitive)
+                      const parentKey = (parent.k || parent.name || '').toLowerCase().trim()
+                      const group = groups.find(g => {
+                        const gParent = g.parent || {}
+                        const gName = (gParent.name || '').toLowerCase().trim()
+                        const gId = gParent.category_id
+                        return gId === parent.category_id || 
+                               gName === parentKey || 
+                               gName === (parent.name || '').toLowerCase().trim() ||
+                               gName === (parent.label || '').toLowerCase().trim()
+                      })
                       const hasChildren = group && group.children && group.children.length > 0
+                      // Use the actual database category name from the group, not the tile key
+                      const actualCategoryName = group ? group.parent.name : (parent.k || parent.name)
                       const IconComponent = getCategoryIconComponent(parent) || FaTags
                       return (
                         <a 
@@ -606,11 +618,11 @@ export default function Sell(){
                           onClick={(e)=>{ 
                             e.preventDefault()
                             if (hasChildren) {
-                              setSelectedParentCategory({...parent, name: parent.k || parent.name})
+                              setSelectedParentCategory({...parent, name: actualCategoryName, category_id: group ? group.parent.category_id : parent.category_id})
                               setSelectedSubCategory(null)
                               setShowCategoryColumns(true)
                             } else {
-                              setForm({...form, category: parent.k || parent.name})
+                              setForm({...form, category: actualCategoryName})
                               setStep(2)
                             }
                           }}
@@ -746,7 +758,14 @@ export default function Sell(){
                 
                 {/* Second Column - Subcategories */}
                 {selectedParentCategory && (() => {
-                  const group = groups.find(g => (g.parent.category_id === selectedParentCategory.category_id || g.parent.name === selectedParentCategory.name))
+                  // Match by category_id first, then by name (case-insensitive)
+                  const selectedName = (selectedParentCategory.name || '').toLowerCase().trim()
+                  const group = groups.find(g => {
+                    const gParent = g.parent || {}
+                    if (selectedParentCategory.category_id && gParent.category_id === selectedParentCategory.category_id) return true
+                    const gName = (gParent.name || '').toLowerCase().trim()
+                    return gName === selectedName
+                  })
                   const subcategories = group ? group.children : []
                   if (subcategories.length === 0) return null
                   return (
@@ -1208,7 +1227,17 @@ export default function Sell(){
                     Select Subcategory
                   </label>
                   {(() => {
-                    const group = groups.find(g => (g.parent.category_id === modalSelectedParent.category_id || g.parent.name === modalSelectedParent.name))
+                    // Match group by category_id, name, or k (case-insensitive)
+                    const selectedKey = (modalSelectedParent.k || modalSelectedParent.name || '').toLowerCase().trim()
+                    const group = groups.find(g => {
+                      const gParent = g.parent || {}
+                      const gName = (gParent.name || '').toLowerCase().trim()
+                      const gId = gParent.category_id
+                      return gId === modalSelectedParent.category_id || 
+                             gName === selectedKey || 
+                             gName === (modalSelectedParent.name || '').toLowerCase().trim() ||
+                             gName === (modalSelectedParent.label || '').toLowerCase().trim()
+                    })
                     const subcategories = group ? group.children : []
                     if (subcategories.length === 0) {
                       return (
