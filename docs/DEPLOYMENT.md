@@ -32,8 +32,7 @@ This creates:
 - `.next/static/` (static assets)
 - `public/` (public files)
 - `server/` (if you have custom server files)
-- `db/` (if you have database files)
-- `prisma/` (if using Prisma)
+- `db/` (database files, schema, and migrations)
 - `.env` (environment variables)
 
 **Do NOT deploy**:

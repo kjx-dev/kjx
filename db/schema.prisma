@@ -8,15 +8,18 @@ datasource db {
 }
 
 model User {
-  user_id      Int      @id @default(autoincrement())
-  username     String   @unique
-  name         String?
-  email        String   @unique
-  phone        String?
-  gender       String?
-  password_hash String
-  created_at   DateTime @default(now())
-  posts        Post[]
+  user_id       Int      @id @default(autoincrement())
+  username      String   @unique
+  name          String?
+  email         String   @unique
+  phone         String?
+  gender        String?
+  password_hash String?
+  status        String   @default("active")
+  role          String   @default("user")
+  created_at    DateTime @default(now())
+  posts         Post[]
+  bids          PostBid[]
 
   @@map("users")
 }
@@ -47,6 +50,8 @@ model Post {
   category    Category @relation(fields: [category_id], references: [category_id])
   price       Int?
   location    String?
+  post_type   String   @default("ad")
+  featured    Boolean  @default(false)
   images      PostImage[]
   reviews     PostReview[]
   bids        PostBid[]
@@ -92,4 +97,48 @@ model PostBid {
 
   @@index([post_id])
   @@map("post_bids")
+}
+
+model Favorite {
+  id          Int      @id @default(autoincrement()) @map("fav_id")
+  user_id     Int
+  post_id     Int
+  created_at  DateTime @default(now())
+
+  @@unique([user_id, post_id])
+  @@map("favorites")
+}
+
+model PostFlag {
+  flag_id     Int      @id @default(autoincrement())
+  post_id     Int
+  author      String?
+  reason      String
+  details     String?
+  created_at  DateTime @default(now())
+
+  @@map("post_flags")
+}
+
+model ChatMessage {
+  message_id  Int      @id @default(autoincrement())
+  post_id     Int
+  author      String?
+  recipient   String?
+  text        String
+  created_at  DateTime @default(now())
+
+  @@index([post_id])
+  @@map("chat_messages")
+}
+
+model RolePermission {
+  permission_id Int      @id @default(autoincrement())
+  role          String
+  resource      String
+  action        String
+  created_at    DateTime @default(now())
+
+  @@unique([role, resource, action], name: "role_resource_action")
+  @@map("role_permissions")
 }

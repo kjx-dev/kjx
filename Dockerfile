@@ -47,7 +47,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 # Copy WebSocket server if needed (adjust path as necessary)
 COPY --from=builder --chown=nextjs:nodejs /app/server ./server
 COPY --from=builder --chown=nextjs:nodejs /app/db ./db
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
 # Copy environment files if they exist
 COPY --from=builder --chown=nextjs:nodejs /app/.env* ./

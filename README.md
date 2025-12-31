@@ -63,6 +63,37 @@ Notes:
   - `__tests__/product-banner-css.test.js`
   - `__tests__/product-banner-markup.test.js`
 
+## 🗄️ Database Management
+
+This project uses Prisma for database management. All database operations are simplified through npm scripts.
+
+### Quick Start
+
+```bash
+# Setup database (first time)
+npm run db:migrate    # Run migrations
+npm run db:seed       # Seed initial data
+
+# Common operations
+npm run db:migrate:dev [name]  # Create new migration
+npm run db:reset               # Reset database (⚠️ deletes all data)
+npm run db:status              # Check migration status
+npm run db:studio              # Open Prisma Studio
+```
+
+### Available Commands
+
+- `npm run db:migrate` - Apply pending migrations
+- `npm run db:migrate:dev [name]` - Create new migration
+- `npm run db:seed` - Seed database with demo data
+- `npm run db:seed:categories` - Seed categories only
+- `npm run db:reset` - Reset and reseed database
+- `npm run db:status` - Check database status
+- `npm run db:studio` - Open Prisma Studio (visual database browser)
+- `npm run db:generate` - Generate Prisma Client
+
+For detailed database management instructions, see [docs/DATABASE_MANAGEMENT.md](docs/DATABASE_MANAGEMENT.md)
+
 ## 🚀 Production Deployment (Standalone Mode)
 
 This project is optimized for production using **Next.js Standalone Mode**, which reduces deployment size from ~200MB to ~10MB.

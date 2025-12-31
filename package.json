@@ -7,7 +7,15 @@
     "build": "next build",
     "start": "next start",
     "start:standalone": "node .next/standalone/server.js",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "db:migrate": "node scripts/db-manage.js migrate",
+    "db:migrate:dev": "node scripts/db-manage.js migrate:dev",
+    "db:seed": "node scripts/db-manage.js seed",
+    "db:seed:categories": "node scripts/db-manage.js seed:categories",
+    "db:reset": "node scripts/db-manage.js reset",
+    "db:status": "node scripts/db-manage.js status",
+    "db:studio": "node scripts/db-manage.js studio",
+    "db:generate": "node scripts/db-manage.js generate"
   },
   "dependencies": {
     "@prisma/client": "^5.19.0",
