@@ -20,6 +20,7 @@ model User {
   created_at    DateTime @default(now())
   posts         Post[]
   bids          PostBid[]
+  orders        Order[]
 
   @@map("users")
 }
@@ -141,4 +142,49 @@ model RolePermission {
 
   @@unique([role, resource, action], name: "role_resource_action")
   @@map("role_permissions")
+}
+
+model Order {
+  order_id      Int         @id @default(autoincrement())
+  order_number  String      @unique
+  buyer_id      Int?
+  buyer_email   String
+  buyer_name    String
+  buyer_phone   String
+  shipping_full_name String
+  shipping_email    String
+  shipping_phone    String
+  shipping_address  String
+  shipping_city     String
+  shipping_postal_code String
+  payment_method     String      @default("cash_on_delivery")
+  status            String      @default("pending")
+  subtotal          Int
+  shipping_cost     Int
+  total             Int
+  notes             String?
+  created_at        DateTime    @default(now())
+  updated_at        DateTime    @updatedAt
+  buyer             User?       @relation(fields: [buyer_id], references: [user_id])
+  items             OrderItem[]
+
+  @@index([buyer_id])
+  @@index([order_number])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  order_item_id Int      @id @default(autoincrement())
+  order_id      Int
+  post_id       Int?
+  title         String
+  price         Int
+  image_url     String?
+  location      String?
+  order         Order    @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+
+  @@index([order_id])
+  @@index([post_id])
+  @@map("order_items")
 }

@@ -30,6 +30,22 @@ const nextConfig = {
       
       // Tree shaking
       config.optimization.usedExports = true
+      
+      // CSS optimization
+      if (!isServer) {
+        config.optimization.splitChunks = {
+          ...config.optimization.splitChunks,
+          cacheGroups: {
+            ...config.optimization.splitChunks?.cacheGroups,
+            styles: {
+              name: 'styles',
+              test: /\.(css|scss)$/,
+              chunks: 'all',
+              enforce: true,
+            },
+          },
+        }
+      }
     }
     
     return config
@@ -65,6 +81,33 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/api/v1/category/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=300, s-maxage=300',
+          },
+        ],
+      },
+      {
+        source: '/api/v1/categories/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=300, s-maxage=300',
+          },
+        ],
+      },
+      {
+        source: '/api/v1/posts',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=30, s-maxage=30',
           },
         ],
       },

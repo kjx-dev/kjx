@@ -1,5 +1,7 @@
 import { randomUUID } from 'crypto'
 import { getPrisma } from '../../../../../db/client'
+import { logger } from '../../../../../lib/logger'
+import { setNoCacheHeaders } from '../../../../../lib/api-helpers'
 
 function verifyAdmin(req) {
   try {
@@ -69,7 +71,7 @@ export default async function handler(req, res) {
         ')'
       )
     } catch (e) {
-      console.log('Error ensuring settings table:', e.message)
+      logger.warn('Error ensuring settings table:', e.message)
     }
     
     if (req.method === 'GET') {
@@ -81,6 +83,7 @@ export default async function handler(req, res) {
             settingsObj[s.setting_key] = s.setting_value
           })
         }
+        setNoCacheHeaders(res)
         res.status(200).json({ status: 'success', data: settingsObj, request_id: reqId })
       } catch (e) {
         res.status(500).json({ status: 'error', message: String(e.message || 'Failed to get settings'), request_id: reqId })

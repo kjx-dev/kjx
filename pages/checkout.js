@@ -29,11 +29,7 @@ export default function Checkout(){
     const phone = localStorage.getItem('phone') || ''
     setAuth({ email, isAuthenticated, name, phone })
     
-    if (!isAuthenticated || !email) { 
-      router.push('/login')
-      return 
-    }
-    
+    // Guest checkout is allowed - no redirect to login
     try{
       const cartData = JSON.parse(localStorage.getItem('cart') || '[]')
       if (cartData.length === 0) {
@@ -41,13 +37,15 @@ export default function Checkout(){
         return
       }
       setCart(cartData)
-      // Pre-fill form with user data
-      setFormData(prev => ({
-        ...prev,
-        fullName: name || '',
-        email: email || '',
-        phone: phone || ''
-      }))
+      // Pre-fill form with user data if authenticated
+      if (isAuthenticated) {
+        setFormData(prev => ({
+          ...prev,
+          fullName: name || '',
+          email: email || '',
+          phone: phone || ''
+        }))
+      }
     }catch(_){
       router.push('/cart')
     }
@@ -90,7 +88,7 @@ export default function Checkout(){
     setSubmitting(true)
     
     try{
-      // Get buyer user ID
+      // Get buyer user ID if authenticated
       function getUserId(){
         try{
           const tok = localStorage.getItem('auth_token')||''
@@ -106,9 +104,15 @@ export default function Checkout(){
       
       const buyerId = getUserId()
       
-      // Create order data
+      // Prepare order data for API
       const orderData = {
-        items: cart,
+        items: cart.map(item => ({
+          post_id: item.post_id || null,
+          title: item.title || 'Untitled',
+          price: Number(String(item.price||'0').replace(/[^0-9.-]/g,'')) || 0,
+          image: item.image || null,
+          location: item.location || null
+        })),
         buyer_id: buyerId,
         shipping: {
           fullName: formData.fullName,
@@ -120,15 +124,35 @@ export default function Checkout(){
         },
         paymentMethod: formData.paymentMethod,
         notes: formData.notes,
-        total: total,
-        orderDate: new Date().toISOString()
+        subtotal: subtotal,
+        shipping_cost: shipping,
+        total: total
       }
       
-      // Save order to localStorage (in a real app, this would go to a database)
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]')
-      const orderId = 'ORD-' + Date.now()
-      orders.push({ orderId, ...orderData, status: 'pending' })
-      localStorage.setItem('orders', JSON.stringify(orders))
+      // Create order via API
+      const response = await fetch('/api/v1/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(buyerId ? { 'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}` } : {})
+        },
+        body: JSON.stringify(orderData)
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok || result.status !== 'success') {
+        throw new Error(result.message || 'Failed to place order')
+      }
+      
+      const order = result.data
+      const orderNumber = order.order_number
+      
+      // Store email for guest orders lookup (normalize to lowercase and trim)
+      if (!buyerId) {
+        const normalizedEmail = (formData.email || '').trim().toLowerCase()
+        localStorage.setItem('email', normalizedEmail)
+      }
       
       // Clear cart
       localStorage.setItem('cart', '[]')
@@ -139,17 +163,17 @@ export default function Checkout(){
       // Show success message
       try{ 
         if (typeof window !== 'undefined' && window.swal){ 
-          await window.swal('Order Placed!', 'Your order has been placed successfully. Order ID: ' + orderId, 'success') 
+          await window.swal('Order Placed!', 'Your order has been placed successfully. Order ID: ' + orderNumber, 'success') 
         } 
       }catch(_){ }
       
-      // Redirect to order confirmation or home
-      router.push('/order-confirmation?orderId=' + encodeURIComponent(orderId))
+      // Redirect to order confirmation
+      router.push('/order-confirmation?orderId=' + encodeURIComponent(orderNumber) + (buyerId ? '' : '&email=' + encodeURIComponent(formData.email)))
     }catch(e){
       console.error('Error placing order:', e)
       try{ 
         if (typeof window !== 'undefined' && window.swal){ 
-          await window.swal('Error', 'Failed to place order. Please try again.', 'error') 
+          await window.swal('Error', e.message || 'Failed to place order. Please try again.', 'error') 
         } 
       }catch(_){ }
       setSubmitting(false)

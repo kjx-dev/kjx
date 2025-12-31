@@ -118,34 +118,118 @@ export default function Manage(){
       }catch(_){ setAllPosts([]) }
     }
     loadMyAds()
-    
-    // Load store orders (orders for seller's products)
-    function loadStoreOrders(){
+  }, [])
+  
+  // Load store orders after products are loaded
+  useEffect(() => {
+    async function loadStoreOrders(){
       try{
-        const ordersData = JSON.parse(localStorage.getItem('orders') || '[]')
-        const currentUserId = getTokenUserId()
+        const currentUserId = getTokenUserId() || userId
         if (!currentUserId) { setStoreOrders([]); return }
         
-        // Filter orders where any item belongs to this seller
-        const sellerOrders = ordersData.filter(order => {
-          if (!order.items || !Array.isArray(order.items)) return false
-          return order.items.some(item => item.seller_id === currentUserId)
+        const token = localStorage.getItem('auth_token')
+        if (!token) { setStoreOrders([]); return }
+        
+        // Fetch store orders from API
+        const response = await fetch('/api/v1/orders?seller=true', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         })
         
-        // Sort by order date (newest first)
-        const sortedOrders = sellerOrders.sort((a, b) => {
-          const dateA = new Date(a.orderDate || 0)
-          const dateB = new Date(b.orderDate || 0)
-          return dateB - dateA
-        })
-        setStoreOrders(sortedOrders)
-      }catch(_){
+        if (!response.ok) {
+          setStoreOrders([])
+          return
+        }
+        
+        const result = await response.json()
+        if (result.status === 'success' && Array.isArray(result.data)) {
+          // Get seller's post IDs
+          const sellerPostIds = new Set(products.map(p => String(p.id || p.post_id || '')))
+          
+          // Fetch full details for each store order
+          const ordersWithDetails = await Promise.all(
+            result.data.map(async (order) => {
+              try {
+                const detailResponse = await fetch(`/api/v1/orders?order_number=${encodeURIComponent(order.order_number)}`, {
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  }
+                })
+                const detailResult = await detailResponse.json()
+                
+                if (detailResult.status === 'success' && detailResult.data) {
+                  const orderData = detailResult.data
+                  // Filter items to only show seller's items
+                  const sellerItems = (orderData.items || []).filter(item => {
+                    // Check if this item's post belongs to the seller
+                    return item.post_id && sellerPostIds.has(String(item.post_id))
+                  })
+                  
+                  if (sellerItems.length === 0) return null
+                  
+                  // Calculate totals for seller's items only
+                  const itemsTotal = sellerItems.reduce((sum, item) => sum + (Number(item.price) || 0), 0)
+                  
+                  return {
+                    orderId: orderData.order_number,
+                    orderDate: orderData.created_at,
+                    items: sellerItems.map(item => ({
+                      post_id: item.post_id,
+                      title: item.title || 'Untitled Item',
+                      price: item.price != null ? Number(item.price) : 0,
+                      image: item.image_url || null,
+                      location: item.location || null
+                    })),
+                    shipping: {
+                      fullName: orderData.shipping_full_name,
+                      email: orderData.shipping_email,
+                      phone: orderData.shipping_phone,
+                      address: orderData.shipping_address,
+                      city: orderData.shipping_city,
+                      postalCode: orderData.shipping_postal_code
+                    },
+                    paymentMethod: orderData.payment_method,
+                    status: orderData.status,
+                    total: itemsTotal,
+                    subtotal: itemsTotal,
+                    shippingCost: 0
+                  }
+                }
+                return null
+              } catch (e) {
+                console.error('Error fetching store order details:', e)
+                return null
+              }
+            })
+          )
+          
+          const validOrders = ordersWithDetails.filter(order => order !== null)
+          setStoreOrders(validOrders)
+        } else {
+          setStoreOrders([])
+        }
+      }catch(e){
+        console.error('Error loading store orders:', e)
         setStoreOrders([])
       }
     }
-    loadStoreOrders()
-  }, [])
-  useEffect(() => { setHydrated(true) }, [])
+    
+    if (products.length > 0 || userId) {
+      loadStoreOrders()
+    }
+  }, [products, userId])
+  useEffect(() => { 
+    setHydrated(true)
+    // Check for tab parameter in URL
+    if (router.query.tab && typeof router.query.tab === 'string') {
+      const tabParam = router.query.tab.toLowerCase()
+      if (['all', 'active', 'inactive', 'moderator', 'store-orders'].includes(tabParam)) {
+        setTab(tabParam)
+      }
+    }
+  }, [router.query.tab])
   function applySearch(val){ setQ(val ? String(val) : '') }
   function clearSearch(){ setQ('') }
   function onSearchChange(e){ const v = e.target.value || ''; if (searchTimerRef.current){ clearTimeout(searchTimerRef.current) } searchTimerRef.current = setTimeout(()=>applySearch(v), 400) }
@@ -506,8 +590,8 @@ export default function Manage(){
           ) : (
             <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
               {storeOrders.map((order, orderIndex) => {
-                // Filter items that belong to this seller
-                const sellerItems = order.items.filter(item => item.seller_id === getTokenUserId())
+                // Items are already filtered to only show seller's items
+                const sellerItems = order.items || []
                 const sellerTotal = sellerItems.reduce((sum, item) => {
                   const price = Number(String(item.price||'0').replace(/[^0-9.-]/g,'')) || 0
                   return sum + price
@@ -768,7 +852,7 @@ export default function Manage(){
                                 color: '#012f34',
                                 fontFamily: 'var(--font-roboto), Roboto, sans-serif'
                               }}>
-                                {formatPrice(item.price)}
+                                {formatPrice(item.price || 0)}
                               </div>
                             </div>
                           </div>
@@ -872,13 +956,12 @@ export default function Manage(){
           ) : (
             <span style={{background:'#f3e5f5', color:'#7b1fa2', padding:'4px 8px', borderRadius:4, fontWeight:600, textTransform:'uppercase', fontSize:11}}>Ad</span>
           )
-          const statusBadge = postStatus==='active' ? (
-            <span style={{background:'#248f3c',color:'#fff',padding:'4px 8px',borderRadius:4,fontSize:12}}>Active</span>
-          ) : postStatus==='pending' ? (
+          // Only show status badge for pending or inactive - active posts don't need a label
+          const statusBadge = postStatus==='pending' ? (
             <span style={{background:'#ff9800',color:'#fff',padding:'4px 8px',borderRadius:4,fontSize:12}}>Pending</span>
-          ) : (
+          ) : postStatus==='inactive' ? (
             <span style={{background:'#999',color:'#fff',padding:'4px 8px',borderRadius:4,fontSize:12}}>Inactive</span>
-          )
+          ) : null
           return (
             <div key={i} style={{display:'flex',alignItems:'center',justifyContent:'space-between',border:'1px solid #012f34',borderRadius:6,padding:12}}>
               <div style={{display:'flex',alignItems:'center',gap:12}}>

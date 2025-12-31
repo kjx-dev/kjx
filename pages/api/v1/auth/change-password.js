@@ -2,6 +2,8 @@ import { getPrisma } from '../../../../db/client'
 import { verifyPassword, hashPassword } from '../../../../lib/auth'
 import { createHmac } from 'crypto'
 import { passwordComplexity } from '../../../../lib/passwordStrength'
+import { logger } from '../../../../lib/logger'
+import { setNoCacheHeaders } from '../../../../lib/api-helpers'
 
 function verify(token){
   try{
@@ -55,7 +57,8 @@ export default async function handler(req, res){
     const next = hashPassword(new_password)
     await prisma.user.update({ where: { user_id: user.user_id }, data: { password_hash: next } })
     attempts.delete(key)
-    console.log('[audit] password_changed', { user_id: user.user_id, at: new Date().toISOString() })
+    logger.log('[audit] password_changed', { user_id: user.user_id, at: new Date().toISOString() })
+    setNoCacheHeaders(res)
     return res.status(200).json({ status:'ok' })
   }catch(e){ return res.status(500).json({ error:'Failed to change password' }) }
 }

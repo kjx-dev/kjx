@@ -10,6 +10,8 @@ export default function Orders(){
   const [hydrated, setHydrated] = useState(false)
   const [filter, setFilter] = useState('all') // all, pending, processing, completed, cancelled
 
+  const [loading, setLoading] = useState(false)
+
   useEffect(() => {
     setHydrated(true)
     const email = localStorage.getItem('email') || ''
@@ -17,42 +19,102 @@ export default function Orders(){
     const name = localStorage.getItem('name') || ''
     setAuth({ email, isAuthenticated, name })
     
-    if (!isAuthenticated || !email) { 
-      router.push('/login')
-      return 
-    }
-    
-    // Get current user ID
-    function getUserId(){
-      try{
-        const tok = localStorage.getItem('auth_token')||''
-        const parts = String(tok||'').split('.')
-        if (parts.length<3) return null
-        const data = parts[1]
-        const pad = data.length%4===2 ? '==' : data.length%4===3 ? '=' : ''
-        const norm = data.replace(/-/g,'+').replace(/_/g,'/') + pad
-        const json = JSON.parse(atob(norm))
-        return json && json.sub ? json.sub : null
-      }catch(_){ return null }
-    }
-    
-    const currentUserId = getUserId()
-    
-    try{
-      const ordersData = JSON.parse(localStorage.getItem('orders') || '[]')
-      // Filter orders where current user is the buyer
-      const userOrders = ordersData.filter(order => order.buyer_id === currentUserId)
-      // Sort by order date (newest first)
-      const sortedOrders = userOrders.sort((a, b) => {
-        const dateA = new Date(a.orderDate || 0)
-        const dateB = new Date(b.orderDate || 0)
-        return dateB - dateA
-      })
-      setOrders(sortedOrders)
-    }catch(_){
-      setOrders([])
-    }
+    // Allow both authenticated users and guests (by email) to view orders
+    // No redirect - guests can view orders by email
+    fetchOrders()
   }, [router])
+
+  async function fetchOrders() {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('auth_token')
+      const email = (localStorage.getItem('email') || '').trim().toLowerCase()
+      
+      // Try to fetch orders - either as authenticated user or by email
+      let response
+      if (token) {
+        // Authenticated user - fetch via API
+        response = await fetch('/api/v1/orders', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+      } else if (email) {
+        // Guest user - fetch orders by email (normalized)
+        response = await fetch(`/api/v1/orders?email=${encodeURIComponent(email)}`, {
+          method: 'GET'
+        })
+      } else {
+        // No email or token - can't fetch orders
+        setOrders([])
+        setLoading(false)
+        return
+      }
+
+      const result = await response.json()
+
+      if (result.status === 'success' && Array.isArray(result.data)) {
+        // Fetch full details for each order
+        const ordersWithDetails = await Promise.all(
+          result.data.map(async (order) => {
+            try {
+              // Fetch order details - include email for guest orders (normalized)
+              const email = (localStorage.getItem('email') || '').trim().toLowerCase()
+              const detailUrl = `/api/v1/orders?order_number=${encodeURIComponent(order.order_number)}${email ? `&email=${encodeURIComponent(email)}` : ''}`
+              const detailHeaders = token ? { 'Authorization': `Bearer ${token}` } : {}
+              const detailResponse = await fetch(detailUrl, {
+                headers: detailHeaders
+              })
+              const detailResult = await detailResponse.json()
+              
+              if (detailResult.status === 'success' && detailResult.data) {
+                const orderData = detailResult.data
+                return {
+                  orderId: orderData.order_number,
+                  orderDate: orderData.created_at,
+                  items: (orderData.items || []).map(item => ({
+                    post_id: item.post_id,
+                    title: item.title,
+                    price: item.price,
+                    image: item.image_url,
+                    location: item.location
+                  })),
+                  shipping: {
+                    fullName: orderData.shipping_full_name,
+                    email: orderData.shipping_email,
+                    phone: orderData.shipping_phone,
+                    address: orderData.shipping_address,
+                    city: orderData.shipping_city,
+                    postalCode: orderData.shipping_postal_code
+                  },
+                  paymentMethod: orderData.payment_method,
+                  status: orderData.status,
+                  total: orderData.total,
+                  subtotal: orderData.subtotal,
+                  shippingCost: orderData.shipping_cost
+                }
+              }
+              return null
+            } catch (e) {
+              console.error('Error fetching order details:', e)
+              return null
+            }
+          })
+        )
+
+        const validOrders = ordersWithDetails.filter(order => order !== null)
+        setOrders(validOrders)
+      } else {
+        setOrders([])
+      }
+    } catch (err) {
+      console.error('Error loading orders:', err)
+      setOrders([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   function getStatusIcon(status){
     switch(status){
@@ -109,7 +171,7 @@ export default function Orders(){
     ? orders 
     : orders.filter(order => order.status === filter)
 
-  if (!hydrated) {
+  if (!hydrated || loading) {
     return (
       <>
         <Header />

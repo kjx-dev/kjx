@@ -15,10 +15,7 @@ export default function Cart(){
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
     const name = localStorage.getItem('name') || ''
     setAuth({ email, isAuthenticated, name })
-    if (!isAuthenticated || !email) { 
-      router.push('/login')
-      return 
-    }
+    // Guest checkout is allowed - no redirect to login
     try{
       const cartData = JSON.parse(localStorage.getItem('cart') || '[]')
       setCart(cartData)

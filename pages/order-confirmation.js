@@ -10,25 +10,77 @@ export default function OrderConfirmation(){
 
   useEffect(() => {
     const orderId = router.query.orderId
+    const email = router.query.email
     if (!orderId) {
       router.push('/')
       return
     }
     
-    try{
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]')
-      const foundOrder = orders.find(o => o.orderId === orderId)
-      if (foundOrder) {
-        setOrder(foundOrder)
-      } else {
+    async function fetchOrder() {
+      try {
+        // Build query string
+        let queryString = `order_number=${encodeURIComponent(orderId)}`
+        if (email) {
+          queryString += `&email=${encodeURIComponent(email)}`
+        }
+        
+        // Get auth token if available
+        const authToken = localStorage.getItem('auth_token')
+        const headers = {
+          'Content-Type': 'application/json'
+        }
+        if (authToken) {
+          headers['Authorization'] = `Bearer ${authToken}`
+        }
+        
+        const response = await fetch(`/api/v1/orders?${queryString}`, {
+          method: 'GET',
+          headers
+        })
+        
+        const result = await response.json()
+        
+        if (!response.ok || result.status !== 'success') {
+          throw new Error(result.message || 'Order not found')
+        }
+        
+        // Transform API response to match expected format
+        const orderData = result.data
+        setOrder({
+          orderId: orderData.order_number,
+          orderDate: orderData.created_at,
+          items: orderData.items.map(item => ({
+            post_id: item.post_id,
+            title: item.title,
+            price: item.price,
+            image: item.image_url,
+            location: item.location
+          })),
+          shipping: {
+            fullName: orderData.shipping_full_name,
+            email: orderData.shipping_email,
+            phone: orderData.shipping_phone,
+            address: orderData.shipping_address,
+            city: orderData.shipping_city,
+            postalCode: orderData.shipping_postal_code
+          },
+          paymentMethod: orderData.payment_method,
+          status: orderData.status,
+          total: orderData.total,
+          subtotal: orderData.subtotal,
+          shippingCost: orderData.shipping_cost,
+          notes: orderData.notes
+        })
+      } catch (e) {
+        console.error('Error fetching order:', e)
         router.push('/')
+      } finally {
+        setLoading(false)
       }
-    }catch(_){
-      router.push('/')
-    } finally {
-      setLoading(false)
     }
-  }, [router.query.orderId])
+    
+    fetchOrder()
+  }, [router.query.orderId, router.query.email])
 
   function formatPrice(val){
     try{
@@ -292,13 +344,15 @@ export default function OrderConfirmation(){
               </div>
               
               <div style={{fontSize: '15px', color: '#012f34', lineHeight: '1.8'}}>
-                <div style={{fontWeight: '500', marginBottom: '8px', fontSize: '16px'}}>{order.shipping.fullName}</div>
+                <div style={{fontWeight: '500', marginBottom: '8px', fontSize: '16px'}}>
+                  {order.shipping?.fullName || 'N/A'}
+                </div>
                 <div style={{color: 'rgba(0,47,52,.8)', marginBottom: '4px', display: 'flex', alignItems: 'flex-start', gap: '8px'}}>
                   <FaHome style={{fontSize: '14px', marginTop: '4px', color: 'rgba(0,47,52,.5)'}} />
-                  <span>{order.shipping.address}</span>
+                  <span>{order.shipping?.address || 'N/A'}</span>
                 </div>
                 <div style={{color: 'rgba(0,47,52,.8)', marginBottom: '12px'}}>
-                  {order.shipping.city}, {order.shipping.postalCode}
+                  {order.shipping?.city || 'N/A'}, {order.shipping?.postalCode || 'N/A'}
                 </div>
                 <div style={{
                   paddingTop: '16px',
@@ -309,11 +363,11 @@ export default function OrderConfirmation(){
                 }}>
                   <div style={{display: 'flex', alignItems: 'center', gap: '10px', color: 'rgba(0,47,52,.8)'}}>
                     <FaPhone style={{fontSize: '14px', color: 'rgba(0,47,52,.5)'}} />
-                    <span>{order.shipping.phone}</span>
+                    <span>{order.shipping?.phone || 'N/A'}</span>
                   </div>
                   <div style={{display: 'flex', alignItems: 'center', gap: '10px', color: 'rgba(0,47,52,.8)'}}>
                     <FaEnvelope style={{fontSize: '14px', color: 'rgba(0,47,52,.5)'}} />
-                    <span>{order.shipping.email}</span>
+                    <span>{order.shipping?.email || 'N/A'}</span>
                   </div>
                 </div>
               </div>

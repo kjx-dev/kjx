@@ -371,9 +371,13 @@ b {
     box-shadow: 0 8px 24px rgba(0,0,0,.12);
     padding: 12px;
     z-index: 3000;
-    max-height: calc(100vh - 140px);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    height: auto;
+    min-height: auto;
+    max-height: none;
+    overflow: visible;
+    overflow-y: visible;
+    overflow-x: visible;
+    -webkit-overflow-scrolling: auto;
 }
 
 .profile__menu.hidden { 
@@ -424,6 +428,15 @@ b {
     color: #3c3c3c; 
 }
 
+.profile__menu .menu__section {
+    display: flex;
+    flex-direction: column;
+}
+.profile__menu .menu__divider {
+    height: 1px;
+    background: rgba(1, 47, 52, 0.1);
+    margin: 4px 0;
+}
 .profile__menu .menu__item {
     display: flex;
     align-items: center;

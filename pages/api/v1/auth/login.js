@@ -1,6 +1,7 @@
 import { getPrisma } from '../../../../db/client'
 import { verifyPassword } from '../../../../lib/auth'
 import { createHmac } from 'crypto'
+import { setNoCacheHeaders } from '../../../../lib/api-helpers'
 
 function sign(payload){
   const secret = process.env.AUTH_SECRET || 'dev-secret'
@@ -38,6 +39,7 @@ export default async function handler(req, res){
       const ok = verifyPassword(password, user.password_hash)
       if (!ok) return res.status(401).json({ error: 'Invalid credentials' })
       const token = sign({ sub: user.user_id, email: user.email, exp: Date.now() + 1000*60*60*12 })
+      setNoCacheHeaders(res)
       return res.status(200).json({ token, user: { user_id: user.user_id, username: user.username, name: user.name || '', phone: user.phone || '', gender: user.gender || '', email: user.email } })
     }catch(e){
       return res.status(500).json({ error: 'Login failed' })
@@ -50,6 +52,7 @@ export default async function handler(req, res){
     try{
       const user = await prisma.user.findUnique({ where: { user_id: payload.sub } })
       if (!user) return res.status(401).json({ error: 'Unauthorized' })
+      setNoCacheHeaders(res)
       return res.status(200).json({ user: { user_id: user.user_id, username: user.username, name: user.name || '', phone: user.phone || '', gender: user.gender || '', email: user.email } })
     }catch(e){
       return res.status(500).json({ error: 'Failed' })

@@ -319,7 +319,7 @@ export default function Login(){
                 return
               }
               
-              alert('You have successfully logged in with Facebook')
+              // Facebook login successful - redirecting
               router.push('/')
             } catch (e) {
               console.error('Network error during Facebook sign-in:', e)
@@ -387,7 +387,7 @@ export default function Login(){
         return
       }
       
-      alert('You have successfully logged in with Google')
+      // Google login successful - redirecting
       router.push('/')
     } catch (e) {
       console.error('Network error during Google sign-in:', e)
@@ -409,7 +409,7 @@ export default function Login(){
       localStorage.setItem('phone', user.phone || '')
       localStorage.setItem('gender', user.gender || '')
       localStorage.setItem('isAuthenticated', 'true')
-      alert('You have successfully Login')
+      // Login successful - redirecting
       router.push('/')
     }catch(e){ alert('Network error during login') }
   }

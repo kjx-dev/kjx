@@ -92,7 +92,32 @@ export default function Favorites(){
   }
   function manage(){ router.push('/my-ads') }
   function sell(){ if (auth.email && auth.isAuthenticated) router.push('/sell'); else router.push('/login') }
-  function logout(){ try{ localStorage.removeItem('auth_token'); localStorage.removeItem('email'); localStorage.removeItem('username'); localStorage.removeItem('name'); localStorage.removeItem('phone'); localStorage.removeItem('gender'); localStorage.removeItem('isAuthenticated'); }catch(_){ } router.replace('/') }
+  function logout(){ 
+    try{ 
+      // Get current path before clearing auth
+      const currentPath = router.asPath || router.pathname || '/'
+      // Pages that require auth - redirect to home instead
+      const authRequiredPages = ['/admin', '/profile', '/my-ads', '/sell', '/cart', '/checkout', '/orders', '/favorites']
+      const shouldRedirectHome = authRequiredPages.some(page => currentPath.startsWith(page))
+      const redirectPath = shouldRedirectHome ? '/' : currentPath
+      
+      // Clear all auth data at once
+      const keysToRemove = ['auth_token', 'email', 'username', 'name', 'phone', 'gender', 'isAuthenticated']
+      keysToRemove.forEach(key => {
+        try { localStorage.removeItem(key) } catch(_) {}
+      })
+      
+      // Use replace for immediate redirect (faster than push)
+      router.replace(redirectPath)
+    }catch(_){ 
+      // Fallback: use window.location for immediate redirect
+      try {
+        window.location.href = '/'
+      } catch(e) {
+        router.replace('/')
+      }
+    }
+  }
   function formatPrice(p){ try{ const n = Number(p||0); if (!n) return 'Rs 0'; return 'Rs '+n.toLocaleString('en-PK') }catch(_){ return 'Rs '+String(p||0) } }
   function timeAgo(ts){ try{ const d = typeof ts==='string' ? new Date(ts) : new Date(Number(ts||Date.now())); const diff = Math.max(0, Date.now() - d.getTime()); const s = Math.floor(diff/1000); const m = Math.floor(s/60); const h = Math.floor(m/60); const d2 = Math.floor(h/24); const w = Math.floor(d2/7); if (w>=1) return w===1?'1 week ago':(w+' weeks ago'); if (d2>=1) return d2===1?'1 day ago':(d2+' days ago'); if (h>=1) return h===1?'1 hour ago':(h+' hours ago'); if (m>=1) return m===1?'1 minute ago':(m+' minutes ago'); return 'Just now' }catch(_){ return '' } }
   async function removeFavorite(postId){

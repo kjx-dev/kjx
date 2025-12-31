@@ -1,5 +1,7 @@
 import { randomUUID, createHmac } from 'crypto'
 import { getPrisma } from '../../../../db/client'
+import { logger } from '../../../../lib/logger'
+import { setCacheHeaders, setNoCacheHeaders } from '../../../../lib/api-helpers'
 
 // Helper function to convert BigInt values to numbers for JSON serialization
 function convertBigIntToNumber(obj) {
@@ -41,47 +43,47 @@ async function ensureTables(prisma){
     // Add post_type column if it doesn't exist
     try {
       await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN post_type TEXT DEFAULT \'ad\'')
-      console.log('Added post_type column to posts table')
+      logger.log('Added post_type column to posts table')
     } catch (e) {
       // Column already exists, ignore
       if (e.message && !e.message.includes('duplicate column')) {
-        console.log('Error adding post_type column (may already exist):', e.message)
+        logger.warn('Error adding post_type column (may already exist):', e.message)
       }
     }
     // Add featured column if it doesn't exist
     try {
       await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN featured INTEGER DEFAULT 0')
-      console.log('Added featured column to posts table')
+      logger.log('Added featured column to posts table')
     } catch (e) {
       if (e.message && !e.message.includes('duplicate column')) {
-        console.log('Error adding featured column (may already exist):', e.message)
+        logger.warn('Error adding featured column (may already exist):', e.message)
       }
     }
     // Add views column if it doesn't exist
     try {
       await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN views INTEGER DEFAULT 0')
-      console.log('Added views column to posts table')
+      logger.log('Added views column to posts table')
     } catch (e) {
       if (e.message && !e.message.includes('duplicate column')) {
-        console.log('Error adding views column (may already exist):', e.message)
+        logger.warn('Error adding views column (may already exist):', e.message)
       }
     }
     // Add phone_clicks column if it doesn't exist
     try {
       await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN phone_clicks INTEGER DEFAULT 0')
-      console.log('Added phone_clicks column to posts table')
+      logger.log('Added phone_clicks column to posts table')
     } catch (e) {
       if (e.message && !e.message.includes('duplicate column')) {
-        console.log('Error adding phone_clicks column (may already exist):', e.message)
+        logger.warn('Error adding phone_clicks column (may already exist):', e.message)
       }
     }
     // Add chat_clicks column if it doesn't exist
     try {
       await prisma.$executeRawUnsafe('ALTER TABLE posts ADD COLUMN chat_clicks INTEGER DEFAULT 0')
-      console.log('Added chat_clicks column to posts table')
+      logger.log('Added chat_clicks column to posts table')
     } catch (e) {
       if (e.message && !e.message.includes('duplicate column')) {
-        console.log('Error adding chat_clicks column (may already exist):', e.message)
+        logger.warn('Error adding chat_clicks column (may already exist):', e.message)
       }
     }
     await prisma.$executeRawUnsafe(
@@ -133,6 +135,8 @@ export default async function handler(req, res){
       const convertedImages = convertBigIntToNumber(ims)
       const convertedCategory = convertBigIntToNumber(category)
       res.setHeader('Content-Type','application/json')
+      // Cache individual posts for 60 seconds
+      setCacheHeaders(res, 60, true)
       res.status(200).json({ data: { ...convertedItem, images: convertedImages, category: convertedCategory }, request_id: reqId })
       return
     }
@@ -178,12 +182,12 @@ export default async function handler(req, res){
                         }
                       } catch (e) {
                         // If parsing fails, use default
-                        console.log('Error parsing edit_without_approval_roles setting:', e)
+                        logger.warn('Error parsing edit_without_approval_roles setting:', e)
                       }
                     }
                   } catch (e) {
                     // If settings table doesn't exist or query fails, use default
-                    console.log('Error fetching edit_without_approval_roles setting:', e)
+                    logger.warn('Error fetching edit_without_approval_roles setting:', e)
                   }
                   
                   // Check if user's role is in the allowed roles
@@ -209,7 +213,7 @@ export default async function handler(req, res){
         }
       } catch (e) {
         // If we can't verify user status, assume no special permissions
-        console.log('Error checking user role:', e.message)
+        logger.warn('Error checking user role:', e.message)
       }
       
       let catId = patch.category_id || null
@@ -317,6 +321,8 @@ export default async function handler(req, res){
         const convertedItem = convertBigIntToNumber(item)
         const convertedImages = convertBigIntToNumber(ims)
         res.setHeader('Content-Type','application/json')
+        // Don't cache PATCH responses (data may have changed)
+        setNoCacheHeaders(res)
         res.status(200).json({ data: { ...convertedItem, images: convertedImages }, request_id: reqId })
         return
       }catch(e){ res.setHeader('Content-Type','application/json'); res.status(500).json({ status:'error', message:String(e&&e.message||'Failed to update'), data:null, request_id:reqId }); return }
@@ -330,6 +336,7 @@ export default async function handler(req, res){
         await prisma.post.update({ where: { post_id: id }, data: { images: { deleteMany: {} } } })
         await prisma.post.delete({ where: { post_id: id } })
         res.setHeader('Content-Type','application/json')
+        setNoCacheHeaders(res)
         res.status(200).json({ data: { deleted:true }, request_id:reqId })
         return
       }catch(e){

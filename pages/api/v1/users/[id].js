@@ -1,5 +1,7 @@
 import { randomUUID } from 'crypto'
 import { getPrisma } from '../../../../db/client'
+import { setNoCacheHeaders } from '../../../../lib/api-helpers'
+import { logger } from '../../../../lib/logger'
 
 export default async function handler(req, res){
   const reqId = req.headers['x-request-id'] || randomUUID()
@@ -16,12 +18,14 @@ export default async function handler(req, res){
       const item = await prisma.user.findUnique({ where: { user_id: id } })
       if (!item){ res.status(404).json({ status:'error', message:'Not found', data:null, request_id:reqId }); return }
       res.setHeader('Content-Type','application/json')
+      // Don't cache user data (sensitive)
+      setNoCacheHeaders(res)
       res.status(200).json({ data: item, request_id: reqId })
       return
     }
     if (req.method === 'PATCH'){
       const patch = req.body || {}
-      console.log('PATCH request received:', { id, body: patch })
+      logger.log('PATCH request received:', { id, body: patch })
       const prisma = getPrisma()
       if (!prisma){ res.setHeader('Content-Type','application/json'); res.status(503).json({ status:'error', message:'Database unavailable', data:null, request_id:reqId }); return }
       const data = {}
@@ -33,7 +37,7 @@ export default async function handler(req, res){
       if (typeof patch.password_hash === 'string') data.password_hash = patch.password_hash
       if (typeof patch.status === 'string') data.status = patch.status
       if (typeof patch.role === 'string') data.role = patch.role
-      console.log('Processed data object:', data)
+      logger.log('Processed data object:', data)
       
       if (Object.keys(data).length === 0) {
         res.setHeader('Content-Type','application/json')
@@ -89,22 +93,22 @@ export default async function handler(req, res){
         try {
           // Try to add role column if it doesn't exist (SQLite will ignore if it exists)
           await prisma.$executeRawUnsafe(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'`)
-          console.log('Role column added or already exists')
+          logger.log('Role column added or already exists')
         } catch (alterError) {
           // Column already exists or other error - that's okay, continue
           if (alterError.message && !alterError.message.includes('duplicate column name') && !alterError.message.includes('duplicate')) {
-            console.log('Note: role column check:', alterError.message)
+            logger.warn('Note: role column check:', alterError.message)
           }
         }
         
         try {
           // Try to add status column if it doesn't exist
           await prisma.$executeRawUnsafe(`ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'`)
-          console.log('Status column added or already exists')
+          logger.log('Status column added or already exists')
         } catch (alterError) {
           // Column already exists or other error - that's okay, continue
           if (alterError.message && !alterError.message.includes('duplicate column name') && !alterError.message.includes('duplicate')) {
-            console.log('Note: status column check:', alterError.message)
+            logger.warn('Note: status column check:', alterError.message)
           }
         }
         
@@ -112,14 +116,14 @@ export default async function handler(req, res){
         const sql = `UPDATE users SET ${updates.join(', ')} WHERE user_id = ?`
         values.push(id)
         
-        console.log('Updating user with SQL:', sql)
-        console.log('SQL Values:', values)
-        console.log('User ID:', id)
-        console.log('Data to update:', data)
+        logger.log('Updating user with SQL:', sql)
+        logger.log('SQL Values:', values)
+        logger.log('User ID:', id)
+        logger.log('Data to update:', data)
         
         try {
           const result = await prisma.$executeRawUnsafe(sql, ...values)
-          console.log('Update result (rows affected):', result)
+          logger.log('Update result (rows affected):', result)
         } catch (sqlError) {
           console.error('SQL Update Error:', sqlError)
           throw sqlError
@@ -142,9 +146,9 @@ export default async function handler(req, res){
         
         const rows = await prisma.$queryRawUnsafe(fetchSql, id)
         const updated = Array.isArray(rows) && rows.length > 0 ? rows[0] : null
-        console.log('Fetched updated user:', updated)
-        console.log('Updated user role:', updated?.role)
-        console.log('Updated user status:', updated?.status)
+        logger.log('Fetched updated user:', updated)
+        logger.log('Updated user role:', updated?.role)
+        logger.log('Updated user status:', updated?.status)
         
         if (!updated) {
           res.setHeader('Content-Type','application/json')

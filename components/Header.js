@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
-import { FaSearch, FaUser, FaChevronDown, FaList, FaHeart, FaComment, FaKey, FaSignOutAlt, FaCar, FaHome, FaCog, FaShoppingCart, FaShoppingBag } from 'react-icons/fa'
+import { FaSearch, FaUser, FaChevronDown, FaList, FaHeart, FaComment, FaKey, FaSignOutAlt, FaCar, FaHome, FaCog, FaShoppingCart, FaShoppingBag, FaStore } from 'react-icons/fa'
 import { getShortCategoryName } from '../lib/categoryNames'
 import Logo from './Logo'
 
@@ -123,8 +123,33 @@ export default function Header(){
     })
   }
   function sell(){ if (auth.email && auth.isAuthenticated) router.push('/sell'); else router.push('/login') }
-  function manage(){ router.push('/my-ads') }
-  function logout(){ try{ localStorage.removeItem('auth_token'); localStorage.removeItem('email'); localStorage.removeItem('username'); localStorage.removeItem('name'); localStorage.removeItem('phone'); localStorage.removeItem('gender'); localStorage.removeItem('isAuthenticated'); }catch(_){ } router.push('/login') }
+  function manage(){ router.push('/my-ads?tab=all') }
+  function logout(){ 
+    try{ 
+      // Get current path before clearing auth
+      const currentPath = router.asPath || router.pathname || '/'
+      // Pages that require auth - redirect to home instead
+      const authRequiredPages = ['/admin', '/profile', '/my-ads', '/sell', '/cart', '/checkout', '/orders', '/favorites']
+      const shouldRedirectHome = authRequiredPages.some(page => currentPath.startsWith(page))
+      const redirectPath = shouldRedirectHome ? '/' : currentPath
+      
+      // Clear all auth data at once
+      const keysToRemove = ['auth_token', 'email', 'username', 'name', 'phone', 'gender', 'isAuthenticated']
+      keysToRemove.forEach(key => {
+        try { localStorage.removeItem(key) } catch(_) {}
+      })
+      
+      // Use replace for immediate redirect (faster than push)
+      router.replace(redirectPath)
+    }catch(_){ 
+      // Fallback: use window.location for immediate redirect
+      try {
+        window.location.href = '/'
+      } catch(e) {
+        router.replace('/')
+      }
+    }
+  }
   function onSearchChange(e){ setQ(e.target.value) }
   function onLocationChange(e){ setLocation(e.target.value) }
   function clearSearch(){ setQ('') }
@@ -166,18 +191,22 @@ export default function Header(){
                      
                       <div>
                         <h4 style={{fontWeight:500}}>{auth.name || 'My Profile'}</h4>
-                        <a href="/profile" className="profile__link"><span>View Public Profile</span></a>
+                        <a href="/profile" className="profile__link" onClick={(e)=>{e.preventDefault(); setProfileMenuOpen(false); router.push('/profile')}}><span>View Public Profile</span></a>
                       </div>
                     </div>
-                    <div className="menu__item" onClick={manage}><FaList /><span>My Ads</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/orders')}><FaShoppingBag /><span>Orders</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/favorites')}><FaHeart /><span>Favorites</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/chat')}><FaComment /><span>Chat</span></div>
-                    <div className="menu__item" onClick={()=>router.push('/change-password')}><FaKey /><span>Change Password</span></div>
+                    <div className="menu__section">
+                      <div className="menu__item" onClick={()=>{setProfileMenuOpen(false); manage()}}><FaList /><span>My Ads</span></div>
+                      <div className="menu__item" onClick={()=>{setProfileMenuOpen(false); router.push('/my-ads?tab=store-orders')}}><FaStore /><span>Store Orders</span></div>
+                      <div className="menu__item" onClick={()=>{setProfileMenuOpen(false); router.push('/orders')}}><FaShoppingBag /><span>My Orders</span></div>
+                    </div>
+                    <div className="menu__divider"></div>
+                    <div className="menu__item" onClick={()=>{setProfileMenuOpen(false); router.push('/favorites')}}><FaHeart /><span>Favorites</span></div>
+                    <div className="menu__item" onClick={()=>{setProfileMenuOpen(false); router.push('/chat')}}><FaComment /><span>Chat</span></div>
+                    <div className="menu__item" onClick={()=>{setProfileMenuOpen(false); router.push('/change-password')}}><FaKey /><span>Change Password</span></div>
                     {isAdmin && (
-                      <div className="menu__item" onClick={()=>router.push('/admin')}><FaCog /><span>Admin</span></div>
+                      <div className="menu__item" onClick={()=>{setProfileMenuOpen(false); router.push('/admin')}}><FaCog /><span>Admin</span></div>
                     )}
-                    <div className="menu__item" onClick={logout}><FaSignOutAlt /><span>Logout</span></div>
+                    <div className="menu__item" onClick={()=>{setProfileMenuOpen(false); logout()}}><FaSignOutAlt /><span>Logout</span></div>
                   </div>
                 )}
               </div>

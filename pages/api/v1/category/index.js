@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
 import { getPrisma } from '../../../../db/client'
+import { setCacheHeaders } from '../../../../lib/api-helpers'
 
 function slugify(str){ return String(str||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') }
 
@@ -36,6 +37,8 @@ export default async function handler(req, res){
     const uniqTiles = []
     for (const t of tiles){ const key = slugify(t.k); if (!seen.has(key)){ seen.add(key); uniqTiles.push(t) } }
     res.setHeader('Content-Type','application/json')
+    // Cache categories for 5 minutes (they don't change often)
+    setCacheHeaders(res, 300, true)
     res.status(200).json({ data: { categories: cats, tiles: uniqTiles, groups: groups }, request_id:reqId })
   }catch(e){ res.setHeader('Content-Type','application/json'); res.status(500).json({ status:'error', message:'Internal Server Error', data:null, request_id:reqId }) }
 }

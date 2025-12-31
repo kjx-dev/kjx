@@ -350,12 +350,7 @@ export default function ProductDetails(){
   function buyNow(){
     const idPart = getPostId()
     if (Number.isNaN(idPart)) return
-    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
-    if (!isAuthenticated){
-      try{ if (typeof window !== 'undefined' && window.swal){ window.swal('Login required', 'Please login to add items to cart', 'warning') } }catch(_){ }
-      router.push('/login')
-      return
-    }
+    // Guest checkout is allowed - no login required
     try{
       const cart = JSON.parse(localStorage.getItem('cart') || '[]')
       const existingIndex = cart.findIndex(item => item.post_id === idPart)
@@ -415,7 +410,32 @@ export default function ProductDetails(){
       return next
     })
   }
-  function logout(){ try{ localStorage.removeItem('auth_token'); localStorage.removeItem('email'); localStorage.removeItem('username'); localStorage.removeItem('name'); localStorage.removeItem('phone'); localStorage.removeItem('gender'); localStorage.removeItem('isAuthenticated'); }catch(_){} router.replace('/') }
+  function logout(){ 
+    try{ 
+      // Get current path before clearing auth
+      const currentPath = router.asPath || router.pathname || '/'
+      // Pages that require auth - redirect to home instead
+      const authRequiredPages = ['/admin', '/profile', '/my-ads', '/sell', '/cart', '/checkout', '/orders', '/favorites']
+      const shouldRedirectHome = authRequiredPages.some(page => currentPath.startsWith(page))
+      const redirectPath = shouldRedirectHome ? '/' : currentPath
+      
+      // Clear all auth data at once
+      const keysToRemove = ['auth_token', 'email', 'username', 'name', 'phone', 'gender', 'isAuthenticated']
+      keysToRemove.forEach(key => {
+        try { localStorage.removeItem(key) } catch(_) {}
+      })
+      
+      // Use replace for immediate redirect (faster than push)
+      router.replace(redirectPath)
+    }catch(_){ 
+      // Fallback: use window.location for immediate redirect
+      try {
+        window.location.href = '/'
+      } catch(e) {
+        router.replace('/')
+      }
+    }
+  }
   function openReport(){ setReportOpen(true); setReportReason('Spam or misleading'); setReportDetails('') }
   async function openChat(){
     const idPart = getPostId()
@@ -435,12 +455,7 @@ export default function ProductDetails(){
   async function addToCart(){
     const idPart = getPostId()
     if (Number.isNaN(idPart)) return
-    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
-    if (!isAuthenticated){
-      try{ if (typeof window !== 'undefined' && window.swal){ window.swal('Login required', 'Please login to add items to cart', 'warning') } }catch(_){ }
-      router.push('/login')
-      return
-    }
+    // Guest checkout is allowed - no login required
     try{
       const cart = JSON.parse(localStorage.getItem('cart') || '[]')
       const existingIndex = cart.findIndex(item => item.post_id === idPart)

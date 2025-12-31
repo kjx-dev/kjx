@@ -1,5 +1,7 @@
 import { getPrisma } from '../../../../db/client'
 import { createHmac } from 'crypto'
+import { logger } from '../../../../lib/logger'
+import { setNoCacheHeaders } from '../../../../lib/api-helpers'
 
 function sign(payload){
   const secret = process.env.AUTH_SECRET || 'dev-secret'
@@ -32,7 +34,7 @@ async function verifyFacebookToken(accessToken, prisma) {
   const appSecret = settings.facebook_app_secret || process.env.FACEBOOK_APP_SECRET
   
   if (!accessToken) {
-    console.error('No access token provided')
+    logger.error('No access token provided')
     return null
   }
   
@@ -43,7 +45,7 @@ async function verifyFacebookToken(accessToken, prisma) {
     
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Facebook token verification failed:', response.status, errorText)
+      logger.error('Facebook token verification failed:', response.status, errorText)
       return null
     }
     
@@ -51,7 +53,7 @@ async function verifyFacebookToken(accessToken, prisma) {
     
     // Check for error in response
     if (userInfo.error) {
-      console.error('Facebook API error:', userInfo.error)
+      logger.error('Facebook API error:', userInfo.error)
       return null
     }
     
@@ -62,7 +64,7 @@ async function verifyFacebookToken(accessToken, prisma) {
       if (debugResponse.ok) {
         const debugInfo = await debugResponse.json()
         if (debugInfo.data && debugInfo.data.app_id !== appId) {
-          console.error('App ID mismatch. Expected:', appId, 'Got:', debugInfo.data.app_id)
+          logger.error('App ID mismatch. Expected:', appId, 'Got:', debugInfo.data.app_id)
           return null
         }
       }
@@ -70,7 +72,7 @@ async function verifyFacebookToken(accessToken, prisma) {
     
     return userInfo
   } catch (e) {
-    console.error('Facebook token verification error:', e)
+    logger.error('Facebook token verification error:', e)
     return null
   }
 }
@@ -88,7 +90,7 @@ export default async function handler(req, res){
     // Verify the Facebook token
     const facebookUser = await verifyFacebookToken(accessToken, prisma)
     if (!facebookUser) {
-      console.error('Token verification failed for access token:', accessToken?.substring(0, 20) + '...')
+      logger.error('Token verification failed for access token:', accessToken?.substring(0, 20) + '...')
       return res.status(401).json({ error: 'Invalid or expired Facebook token. Please try signing in again.' })
     }
     
@@ -104,30 +106,30 @@ export default async function handler(req, res){
           const emailData = await emailResponse.json()
           if (emailData.email && !emailData.error) {
             userEmail = emailData.email
-            console.log('Email retrieved from separate API call')
+            logger.log('Email retrieved from separate API call')
           } else if (emailData.error) {
-            console.warn('Email permission error:', emailData.error)
+            logger.warn('Email permission error:', emailData.error)
             // Check if it's a permission issue
             if (emailData.error.code === 200 || emailData.error.type === 'OAuthException') {
-              console.warn('Email permission not granted by user')
+              logger.warn('Email permission not granted by user')
             }
           }
         }
       } catch (e) {
-        console.warn('Could not fetch email separately:', e)
+        logger.warn('Could not fetch email separately:', e)
       }
     }
     
     // If still no email, create a fallback email using Facebook ID
     let finalEmail = userEmail
     if (!finalEmail) {
-      console.warn('No email available, creating fallback email from Facebook ID:', facebookId)
+      logger.warn('No email available, creating fallback email from Facebook ID:', facebookId)
       // Create a temporary email using Facebook ID
       // This allows the user to sign in, but they should grant email permission
       finalEmail = `fb_${facebookId}@facebook.temp`
       
       // Return a warning but allow the sign-in to proceed
-      console.warn('Using fallback email. User should grant email permission for better experience.')
+      logger.warn('Using fallback email. User should grant email permission for better experience.')
     }
     
     // Check if user exists
@@ -135,7 +137,7 @@ export default async function handler(req, res){
     try {
       user = await prisma.user.findUnique({ where: { email: finalEmail } })
     } catch (dbError) {
-      console.error('Database error finding user:', dbError)
+      logger.error('Database error finding user:', dbError)
       return res.status(500).json({ error: 'Database error while checking user', details: String(dbError?.message || dbError) })
     }
     
@@ -176,7 +178,7 @@ export default async function handler(req, res){
           }
         }
       } catch (usernameError) {
-        console.error('Error checking username uniqueness:', usernameError)
+        logger.error('Error checking username uniqueness:', usernameError)
         username = `user${Date.now()}${Math.floor(Math.random() * 10000)}`
       }
       
@@ -205,29 +207,29 @@ export default async function handler(req, res){
         // Use placeholder for OAuth users
         userData.password_hash = 'OAUTH_USER_NO_PASSWORD'
         
-        console.log('Attempting to create user with data:', { ...userData, password_hash: '[OAUTH_USER_NO_PASSWORD]' })
+        logger.log('Attempting to create user with data:', { ...userData, password_hash: '[OAUTH_USER_NO_PASSWORD]' })
         
         user = await prisma.user.create({
           data: userData
         })
-        console.log('Successfully created user:', user.user_id, user.email)
+        logger.log('Successfully created user:', user.user_id, user.email)
       } catch (createError) {
-        console.error('Error creating user:', createError)
-        console.error('Error code:', createError.code)
-        console.error('Error message:', createError.message)
-        console.error('Error meta:', createError.meta)
-        console.error('Attempted data:', { username: username.trim(), email: email.trim().toLowerCase(), name })
+        logger.error('Error creating user:', createError)
+        logger.error('Error code:', createError.code)
+        logger.error('Error message:', createError.message)
+        logger.error('Error meta:', createError.meta)
+        logger.error('Attempted data:', { username: username.trim(), email: email.trim().toLowerCase(), name })
         
         // Check if user was created by another request (race condition)
         if (createError.code === 'P2002') { // Unique constraint violation
-          console.log('Unique constraint violation, checking if user exists...')
+          logger.log('Unique constraint violation, checking if user exists...')
           user = await prisma.user.findUnique({ where: { email: finalEmail.trim().toLowerCase() } })
           if (!user) {
             // Try username instead
             user = await prisma.user.findUnique({ where: { username: username.trim() } })
           }
           if (user) {
-            console.log('User found after constraint violation:', user.user_id)
+            logger.log('User found after constraint violation:', user.user_id)
           } else {
             return res.status(500).json({ 
               error: 'Failed to create user account - username or email already exists', 
@@ -261,6 +263,8 @@ export default async function handler(req, res){
       exp: Date.now() + 1000*60*60*12 
     })
     
+    // Don't cache auth responses
+    setNoCacheHeaders(res)
     return res.status(200).json({ 
       token, 
       user: { 
@@ -273,8 +277,8 @@ export default async function handler(req, res){
       } 
     })
   }catch(e){
-    console.error('Facebook OAuth error:', e)
-    console.error('Error stack:', e?.stack)
+    logger.error('Facebook OAuth error:', e)
+    logger.error('Error stack:', e?.stack)
     return res.status(500).json({ 
       error: 'Facebook authentication failed', 
       details: String(e && e.message || e),

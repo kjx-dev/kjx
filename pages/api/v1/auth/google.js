@@ -1,5 +1,7 @@
 import { getPrisma } from '../../../../db/client'
 import { createHmac } from 'crypto'
+import { logger } from '../../../../lib/logger'
+import { setNoCacheHeaders } from '../../../../lib/api-helpers'
 
 function sign(payload){
   const secret = process.env.AUTH_SECRET || 'dev-secret'
@@ -180,29 +182,29 @@ export default async function handler(req, res){
         // This is a workaround until the database migration is applied
         userData.password_hash = 'OAUTH_USER_NO_PASSWORD'
         
-        console.log('Attempting to create user with data:', { ...userData, password_hash: '[OAUTH_USER_NO_PASSWORD]' })
+        logger.log('Attempting to create user with data:', { ...userData, password_hash: '[OAUTH_USER_NO_PASSWORD]' })
         
         user = await prisma.user.create({
           data: userData
         })
-        console.log('Successfully created user:', user.user_id, user.email)
+        logger.log('Successfully created user:', user.user_id, user.email)
       } catch (createError) {
-        console.error('Error creating user:', createError)
-        console.error('Error code:', createError.code)
-        console.error('Error message:', createError.message)
-        console.error('Error meta:', createError.meta)
-        console.error('Attempted data:', { username: username.trim(), email: email.trim().toLowerCase(), name })
+        logger.error('Error creating user:', createError)
+        logger.error('Error code:', createError.code)
+        logger.error('Error message:', createError.message)
+        logger.error('Error meta:', createError.meta)
+        logger.error('Attempted data:', { username: username.trim(), email: email.trim().toLowerCase(), name })
         
         // Check if user was created by another request (race condition)
         if (createError.code === 'P2002') { // Unique constraint violation
-          console.log('Unique constraint violation, checking if user exists...')
+          logger.log('Unique constraint violation, checking if user exists...')
           user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } })
           if (!user) {
             // Try username instead
             user = await prisma.user.findUnique({ where: { username: username.trim() } })
           }
           if (user) {
-            console.log('User found after constraint violation:', user.user_id)
+            logger.log('User found after constraint violation:', user.user_id)
           } else {
             return res.status(500).json({ 
               error: 'Failed to create user account - username or email already exists', 
@@ -238,6 +240,8 @@ export default async function handler(req, res){
       exp: Date.now() + 1000*60*60*12 
     })
     
+    // Don't cache auth responses
+    setNoCacheHeaders(res)
     return res.status(200).json({ 
       token, 
       user: { 
@@ -250,8 +254,8 @@ export default async function handler(req, res){
       } 
     })
   }catch(e){
-    console.error('Google OAuth error:', e)
-    console.error('Error stack:', e?.stack)
+    logger.error('Google OAuth error:', e)
+    logger.error('Error stack:', e?.stack)
     return res.status(500).json({ 
       error: 'Google authentication failed', 
       details: String(e && e.message || e),

@@ -1,5 +1,7 @@
 import { randomUUID } from 'crypto'
 import { getPrisma } from '../../../../db/client'
+import { logger } from '../../../../lib/logger'
+import { setNoCacheHeaders } from '../../../../lib/api-helpers'
 
 export default async function handler(req, res){
   const reqId = req.headers['x-request-id'] || randomUUID()
@@ -28,10 +30,12 @@ export default async function handler(req, res){
           FROM users ORDER BY user_id DESC`
           const rows = await prisma.$queryRawUnsafe(sql)
           res.setHeader('Content-Type','application/json')
+          // Don't cache user lists (sensitive data)
+          setNoCacheHeaders(res)
           res.status(200).json({ data: rows || [], request_id: reqId })
         } catch (sqlError) {
           // Fallback to Prisma if SQL fails
-          console.log('Falling back to Prisma for user list:', sqlError.message)
+          logger.warn('Falling back to Prisma for user list:', sqlError.message)
           const items = await prisma.user.findMany()
           res.setHeader('Content-Type','application/json')
           res.status(200).json({ data: items, request_id: reqId })

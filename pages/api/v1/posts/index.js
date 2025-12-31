@@ -1,5 +1,7 @@
 import { randomUUID, createHmac } from 'crypto'
 import { getPrisma } from '../../../../db/client'
+import { logger } from '../../../../lib/logger'
+import { setCacheHeaders, parsePagination, escapeSQL } from '../../../../lib/api-helpers'
 
 // Helper function to convert BigInt values to numbers for JSON serialization
 function convertBigIntToNumber(obj) {
@@ -84,7 +86,7 @@ async function ensureTables(prisma){
         await prisma.$executeRawUnsafe("INSERT INTO settings (setting_key, setting_value) VALUES ('ad_expiration_days', '30')")
       }
     } catch (e) {
-      console.log('Error ensuring settings table:', e.message)
+        logger.warn('Error ensuring settings table:', e.message)
     }
     await prisma.$executeRawUnsafe(
       'CREATE TABLE IF NOT EXISTS post_images (\n'+
@@ -136,8 +138,7 @@ export default async function handler(req, res){
     if (req.method === 'OPTIONS'){ res.status(204).end(); return }
     if (req.method === 'GET'){
       const prisma = getPrisma()
-      const page = Math.max(1, parseInt(String(req.query.page||'1'),10) || 1)
-      const limit = Math.max(1, Math.min(50, parseInt(String(req.query.limit||'10'),10) || 10))
+      const { page, limit, skip } = parsePagination(req.query)
       if (!prisma){ res.setHeader('Content-Type','application/json'); res.status(200).json({ data: [], status:'degraded', message:'Database unavailable', page, limit, total: 0, has_more: false, request_id: reqId }); return }
       try{
         await ensureTables(prisma)
@@ -155,7 +156,7 @@ export default async function handler(req, res){
         
         // Build search filter
         if (searchQuery) {
-          const searchEscaped = searchQuery.replace(/'/g, "''") // Escape single quotes for SQL
+          const searchEscaped = escapeSQL(searchQuery)
           conditions.push(`(title LIKE '%${searchEscaped}%' OR content LIKE '%${searchEscaped}%' OR location LIKE '%${searchEscaped}%')`)
         }
         
@@ -166,7 +167,6 @@ export default async function handler(req, res){
         const totalRowsQuery = `SELECT COUNT(1) as c FROM posts ${whereClause}`
         const totalRows = await prisma.$queryRawUnsafe(totalRowsQuery)
         const total = (Array.isArray(totalRows) && totalRows.length) ? Number(totalRows[0].c||0) : 0
-        const skip = (page-1) * limit
         
         // Fetch posts with search and status filters
         // Try with featured column first, fallback if column doesn't exist
@@ -177,14 +177,14 @@ export default async function handler(req, res){
           rows = await prisma.$queryRawUnsafe(rowsQuery)
         } catch (e) {
           // If query fails (e.g., featured column doesn't exist), try without it
-          console.log('Featured column may not exist, trying query without it:', e.message)
+          logger.warn('Featured column may not exist, trying query without it:', e.message)
           try {
             const rowsQuery = `SELECT post_id, title, content, created_at, user_id, category_id, price, location, COALESCE(status, ${showAll ? "'pending'" : "'active'"}) as status, COALESCE(post_type, 'ad') as post_type FROM posts ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${skip}`
             rows = await prisma.$queryRawUnsafe(rowsQuery)
             // Add featured: 0 and metrics: 0 to each row
             rows = rows.map(r => ({ ...r, featured: 0, views: 0, phone_clicks: 0, chat_clicks: 0 }))
           } catch (e2) {
-            console.error('Error fetching posts:', e2)
+            logger.error('Error fetching posts:', e2)
             throw e2
           }
         }
@@ -203,6 +203,8 @@ export default async function handler(req, res){
         const convertedOut = convertBigIntToNumber(out)
         const convertedTotal = typeof total === 'bigint' ? Number(total) : total
         res.setHeader('Content-Type','application/json')
+        // Cache public post listings for 30 seconds
+        setCacheHeaders(res, 30, true)
         res.status(200).json({ data: convertedOut, page, limit, total: convertedTotal, has_more: hasMore, request_id: reqId })
         return
       }catch(e){ res.setHeader('Content-Type','application/json'); res.status(500).json({ status:'error', message:String(e&&e.message||'Failed to load posts'), data:null, page, limit, request_id:reqId }); return }
