@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client')
-const { hashPassword } = require('../db/auth.js')
+const { hashPassword } = require('../lib/auth.js')
 require('dotenv').config({ path: ['.env.local', '.env'] })
 
 async function updateAdminPassword() {

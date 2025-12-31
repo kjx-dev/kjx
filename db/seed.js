@@ -1,4 +1,4 @@
-import { hashPassword } from './auth.js'
+import { hashPassword } from '../lib/auth.js'
 
 export async function resetCategories(prisma){
   // Use raw SQL to ensure complete deletion (more reliable for SQLite)

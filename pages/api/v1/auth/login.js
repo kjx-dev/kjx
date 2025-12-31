@@ -1,5 +1,5 @@
 import { getPrisma } from '../../../../db/client'
-import { verifyPassword } from '../../../../db/auth'
+import { verifyPassword } from '../../../../lib/auth'
 import { createHmac } from 'crypto'
 
 function sign(payload){

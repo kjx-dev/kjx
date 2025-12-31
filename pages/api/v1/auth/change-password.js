@@ -1,5 +1,5 @@
 import { getPrisma } from '../../../../db/client'
-import { verifyPassword, hashPassword } from '../../../../db/auth'
+import { verifyPassword, hashPassword } from '../../../../lib/auth'
 import { createHmac } from 'crypto'
 import { passwordComplexity } from '../../../../lib/passwordStrength'
 

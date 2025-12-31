@@ -1,5 +1,5 @@
 import { getPrisma } from '../../../../db/client'
-import { hashPassword } from '../../../../db/auth'
+import { hashPassword } from '../../../../lib/auth'
 
 export default async function handler(req, res){
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' })
