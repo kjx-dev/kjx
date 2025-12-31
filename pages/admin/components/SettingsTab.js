@@ -2,9 +2,16 @@ import { useEffect, useState } from 'react'
 
 export default function SettingsTab({ error, setError }) {
   const [expirationDays, setExpirationDays] = useState(30)
+  const [googleClientId, setGoogleClientId] = useState('')
+  const [googleClientSecret, setGoogleClientSecret] = useState('')
+  const [facebookAppId, setFacebookAppId] = useState('')
+  const [facebookAppSecret, setFacebookAppSecret] = useState('')
+  const [editWithoutApprovalRoles, setEditWithoutApprovalRoles] = useState(['admin', 'manager', 'data_entry'])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  
+  const availableRoles = ['admin', 'manager', 'data_entry', 'user']
 
   useEffect(() => {
     loadSettings()
@@ -25,8 +32,37 @@ export default function SettingsTab({ error, setError }) {
 
       if (res.ok) {
         const data = await res.json()
-        if (data.data && data.data.ad_expiration_days) {
-          setExpirationDays(parseInt(data.data.ad_expiration_days, 10) || 30)
+        if (data.data) {
+          if (data.data.ad_expiration_days) {
+            setExpirationDays(parseInt(data.data.ad_expiration_days, 10) || 30)
+          }
+          if (data.data.google_client_id) {
+            setGoogleClientId(data.data.google_client_id)
+          }
+          if (data.data.google_client_secret) {
+            setGoogleClientSecret(data.data.google_client_secret)
+          }
+          if (data.data.facebook_app_id) {
+            setFacebookAppId(data.data.facebook_app_id)
+          }
+          if (data.data.facebook_app_secret) {
+            setFacebookAppSecret(data.data.facebook_app_secret)
+          }
+          if (data.data.edit_without_approval_roles) {
+            // Parse comma-separated roles or JSON array
+            try {
+              const roles = typeof data.data.edit_without_approval_roles === 'string' 
+                ? (data.data.edit_without_approval_roles.includes('[') 
+                    ? JSON.parse(data.data.edit_without_approval_roles)
+                    : data.data.edit_without_approval_roles.split(',').map(r => r.trim()).filter(r => r))
+                : data.data.edit_without_approval_roles
+              if (Array.isArray(roles)) {
+                setEditWithoutApprovalRoles(roles)
+              }
+            } catch (e) {
+              console.error('Error parsing edit_without_approval_roles:', e)
+            }
+          }
         }
       } else {
         setError('Failed to load settings')
@@ -60,7 +96,14 @@ export default function SettingsTab({ error, setError }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ ad_expiration_days: expirationDays })
+        body: JSON.stringify({ 
+          ad_expiration_days: expirationDays,
+          google_client_id: googleClientId.trim(),
+          google_client_secret: googleClientSecret.trim(),
+          facebook_app_id: facebookAppId.trim(),
+          facebook_app_secret: facebookAppSecret.trim(),
+          edit_without_approval_roles: JSON.stringify(editWithoutApprovalRoles)
+        })
       })
 
       if (res.ok) {
@@ -91,7 +134,8 @@ export default function SettingsTab({ error, setError }) {
         </div>
       )}
 
-      <div style={{marginBottom: '32px'}}>
+      {/* Ad Expiration Settings */}
+      <div style={{marginBottom: '32px', paddingBottom: '32px', borderBottom: '1px solid rgba(1,47,52,.1)'}}>
         <label style={{display: 'block', marginBottom: '8px', fontSize: '16px', fontWeight: 500, color: '#012f34'}}>
           Ad Expiration Days
         </label>
@@ -113,35 +157,205 @@ export default function SettingsTab({ error, setError }) {
             marginBottom: '16px'
           }}
         />
-        <div style={{marginBottom: '20px'}}>
-          <button
-            onClick={saveSettings}
-            disabled={saving || expirationDays < 1 || expirationDays > 365}
+      </div>
+
+      {/* Google OAuth Settings */}
+      <div style={{marginBottom: '32px', paddingBottom: '32px', borderBottom: '1px solid rgba(1,47,52,.1)'}}>
+        <h3 style={{fontSize: '18px', fontWeight: 500, marginBottom: '16px', color: '#012f34'}}>Google OAuth Configuration</h3>
+        <p style={{marginBottom: '16px', color: 'rgba(0,47,52,.7)', fontSize: '14px'}}>
+          Configure Google Sign-In authentication. Get your credentials from{' '}
+          <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" style={{color: '#e44c00', textDecoration: 'underline'}}>
+            Google Cloud Console
+          </a>.
+        </p>
+        
+        <div style={{marginBottom: '16px'}}>
+          <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 500, color: '#012f34'}}>
+            Google Client ID
+          </label>
+          <input
+            type="text"
+            value={googleClientId}
+            onChange={(e) => setGoogleClientId(e.target.value)}
+            placeholder="your-client-id.apps.googleusercontent.com"
             style={{
-              padding: '10px 24px',
-              background: saving || expirationDays < 1 || expirationDays > 365 ? '#ccc' : '#e44c00',
-              color: '#fff',
-              border: 'none',
+              width: '100%',
+              maxWidth: '600px',
+              padding: '10px 14px',
+              border: '1px solid rgba(1,47,52,.2)',
               borderRadius: '6px',
-              fontSize: '15px',
-              fontWeight: 400,
-              cursor: saving || expirationDays < 1 || expirationDays > 365 ? 'not-allowed' : 'pointer',
-              transition: 'background 0.2s'
+              fontSize: '15px'
             }}
-            onMouseEnter={(e) => {
-              if (!saving && expirationDays >= 1 && expirationDays <= 365) {
-                e.currentTarget.style.background = '#c94300'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!saving && expirationDays >= 1 && expirationDays <= 365) {
-                e.currentTarget.style.background = '#e44c00'
-              }
-            }}
-          >
-            {saving ? 'Saving...' : 'Save Settings'}
-          </button>
+          />
         </div>
+
+        <div style={{marginBottom: '16px'}}>
+          <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 500, color: '#012f34'}}>
+            Google Client Secret
+          </label>
+          <input
+            type="password"
+            value={googleClientSecret}
+            onChange={(e) => setGoogleClientSecret(e.target.value)}
+            placeholder="your-client-secret"
+            style={{
+              width: '100%',
+              maxWidth: '600px',
+              padding: '10px 14px',
+              border: '1px solid rgba(1,47,52,.2)',
+              borderRadius: '6px',
+              fontSize: '15px'
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Facebook OAuth Settings */}
+      <div style={{marginBottom: '32px', paddingBottom: '32px', borderBottom: '1px solid rgba(1,47,52,.1)'}}>
+        <h3 style={{fontSize: '18px', fontWeight: 500, marginBottom: '16px', color: '#012f34'}}>Facebook OAuth Configuration</h3>
+        <p style={{marginBottom: '16px', color: 'rgba(0,47,52,.7)', fontSize: '14px'}}>
+          Configure Facebook Sign-In authentication. Get your credentials from{' '}
+          <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" style={{color: '#e44c00', textDecoration: 'underline'}}>
+            Facebook Developers
+          </a>.
+        </p>
+        
+        <div style={{marginBottom: '16px'}}>
+          <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 500, color: '#012f34'}}>
+            Facebook App ID
+          </label>
+          <input
+            type="text"
+            value={facebookAppId}
+            onChange={(e) => setFacebookAppId(e.target.value)}
+            placeholder="your-facebook-app-id"
+            style={{
+              width: '100%',
+              maxWidth: '600px',
+              padding: '10px 14px',
+              border: '1px solid rgba(1,47,52,.2)',
+              borderRadius: '6px',
+              fontSize: '15px'
+            }}
+          />
+        </div>
+
+        <div style={{marginBottom: '16px'}}>
+          <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 500, color: '#012f34'}}>
+            Facebook App Secret
+          </label>
+          <input
+            type="password"
+            value={facebookAppSecret}
+            onChange={(e) => setFacebookAppSecret(e.target.value)}
+            placeholder="your-facebook-app-secret"
+            style={{
+              width: '100%',
+              maxWidth: '600px',
+              padding: '10px 14px',
+              border: '1px solid rgba(1,47,52,.2)',
+              borderRadius: '6px',
+              fontSize: '15px'
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Post Editing Permissions */}
+      <div style={{marginBottom: '32px', paddingBottom: '32px', borderBottom: '1px solid rgba(1,47,52,.1)'}}>
+        <h3 style={{fontSize: '18px', fontWeight: 500, marginBottom: '16px', color: '#012f34'}}>Post Editing Permissions</h3>
+        <p style={{marginBottom: '16px', color: 'rgba(0,47,52,.7)', fontSize: '14px'}}>
+          Select which user roles can edit posts without requiring admin approval. Posts edited by other roles will be set to "pending" status and require approval.
+        </p>
+        
+        <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+          {availableRoles.map(role => (
+            <label
+              key={role}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                cursor: 'pointer',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                transition: 'background 0.2s',
+                userSelect: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#f8f9fa'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={editWithoutApprovalRoles.includes(role)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setEditWithoutApprovalRoles([...editWithoutApprovalRoles, role])
+                  } else {
+                    setEditWithoutApprovalRoles(editWithoutApprovalRoles.filter(r => r !== role))
+                  }
+                }}
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  cursor: 'pointer'
+                }}
+              />
+              <span style={{fontSize: '15px', color: '#012f34', textTransform: 'capitalize'}}>
+                {role === 'data_entry' ? 'Data Entry' : role}
+              </span>
+            </label>
+          ))}
+        </div>
+        
+        {editWithoutApprovalRoles.length === 0 && (
+          <div style={{
+            marginTop: '12px',
+            padding: '12px',
+            background: '#fff3cd',
+            borderRadius: '6px',
+            border: '1px solid #ffc107',
+            color: '#856404',
+            fontSize: '14px'
+          }}>
+            ⚠️ No roles selected. All post edits will require admin approval.
+          </div>
+        )}
+      </div>
+
+      {/* Save Button */}
+      <div style={{marginBottom: '20px'}}>
+        <button
+          onClick={saveSettings}
+          disabled={saving || expirationDays < 1 || expirationDays > 365}
+          style={{
+            padding: '10px 24px',
+            background: saving || expirationDays < 1 || expirationDays > 365 ? '#ccc' : '#e44c00',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '6px',
+            fontSize: '15px',
+            fontWeight: 400,
+            cursor: saving || expirationDays < 1 || expirationDays > 365 ? 'not-allowed' : 'pointer',
+            transition: 'background 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            if (!saving && expirationDays >= 1 && expirationDays <= 365) {
+              e.currentTarget.style.background = '#c94300'
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!saving && expirationDays >= 1 && expirationDays <= 365) {
+              e.currentTarget.style.background = '#e44c00'
+            }
+          }}
+        >
+          {saving ? 'Saving...' : 'Save All Settings'}
+        </button>
       </div>
 
       <div style={{

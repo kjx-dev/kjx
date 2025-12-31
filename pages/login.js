@@ -6,128 +6,164 @@ export default function Login(){
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [googleConfigured, setGoogleConfigured] = useState(false)
+  const [facebookConfigured, setFacebookConfigured] = useState(false)
   
   useEffect(() => {
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-    const facebookAppId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID
-    
-    // Load Google Identity Services
-    if (clientId) {
-      const googleScript = document.createElement('script')
-      googleScript.src = 'https://accounts.google.com/gsi/client'
-      googleScript.async = true
-      googleScript.defer = true
-      document.head.appendChild(googleScript)
-      
-      googleScript.onload = () => {
-        if (window.google) {
-          try {
-            window.google.accounts.id.initialize({
-              client_id: clientId,
-              callback: handleGoogleSignIn,
-            })
-            
-            window.google.accounts.id.renderButton(
-              document.getElementById('google-signin-button'),
-              {
-                theme: 'outline',
-                size: 'large',
-                width: '100%',
-                text: 'signin_with',
-                locale: 'en'
+    // Fetch OAuth settings from API (with fallback to env vars)
+    async function loadOAuthSettings() {
+      try {
+        const res = await fetch('/api/v1/auth/oauth-settings')
+        const settings = await res.ok ? await res.json() : {}
+        
+        const clientId = settings.google_client_id || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+        const facebookAppId = settings.facebook_app_id || process.env.NEXT_PUBLIC_FACEBOOK_APP_ID
+        
+        // Set configuration flags
+        setGoogleConfigured(!!clientId && clientId.trim() !== '')
+        setFacebookConfigured(!!facebookAppId && facebookAppId.trim() !== '')
+        
+        // Load Google Identity Services
+        if (clientId) {
+          const googleScript = document.createElement('script')
+          googleScript.src = 'https://accounts.google.com/gsi/client'
+          googleScript.async = true
+          googleScript.defer = true
+          document.head.appendChild(googleScript)
+          
+          googleScript.onload = () => {
+            if (window.google) {
+              try {
+                window.google.accounts.id.initialize({
+                  client_id: clientId,
+                  callback: handleGoogleSignIn,
+                })
+                
+                window.google.accounts.id.renderButton(
+                  document.getElementById('google-signin-button'),
+                  {
+                    theme: 'outline',
+                    size: 'large',
+                    width: '100%',
+                    text: 'signin_with',
+                    locale: 'en'
+                  }
+                )
+              } catch (error) {
+                console.error('Error initializing Google Sign-In:', error)
+                const buttonContainer = document.getElementById('google-signin-button')
+                if (buttonContainer) {
+                  buttonContainer.innerHTML = '<p style="color: red; font-size: 12px;">Error initializing Google Sign-In. Please check your configuration.</p>'
+                }
               }
-            )
-          } catch (error) {
-            console.error('Error initializing Google Sign-In:', error)
-            const buttonContainer = document.getElementById('google-signin-button')
-            if (buttonContainer) {
-              buttonContainer.innerHTML = '<p style="color: red; font-size: 12px;">Error initializing Google Sign-In. Please check your configuration.</p>'
             }
           }
+          
+          googleScript.onerror = () => {
+            console.error('Failed to load Google Identity Services script')
+          }
+        } else {
+          // Hide Google button if not configured
+          const buttonContainer = document.getElementById('google-signin-button')
+          if (buttonContainer) {
+            buttonContainer.style.display = 'none'
+          }
         }
-      }
-      
-      googleScript.onerror = () => {
-        console.error('Failed to load Google Identity Services script')
-      }
-    } else {
-      const buttonContainer = document.getElementById('google-signin-button')
-      if (buttonContainer) {
-        buttonContainer.innerHTML = '<p style="color: red; font-size: 12px;">Google Sign-In is not configured.</p>'
-      }
-    }
-    
-    // Load Facebook SDK
-    if (facebookAppId) {
-      // Set up fbAsyncInit before loading the script
-      window.fbAsyncInit = function() {
-        if (window.FB) {
-          try {
-            window.FB.init({
-              appId: facebookAppId,
-              cookie: true,
-              xfbml: true,
-              version: 'v18.0'
-            })
-            if (process.env.NODE_ENV === 'development') {
-              console.log('Facebook SDK initialized successfully')
+        
+        // Load Facebook SDK
+        if (facebookAppId) {
+          // Set up fbAsyncInit before loading the script
+          window.fbAsyncInit = function() {
+            if (window.FB) {
+              try {
+                window.FB.init({
+                  appId: facebookAppId,
+                  cookie: true,
+                  xfbml: true,
+                  version: 'v18.0'
+                })
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('Facebook SDK initialized successfully')
+                }
+              } catch (e) {
+                console.error('Error initializing Facebook SDK:', e)
+              }
             }
-          } catch (e) {
-            console.error('Error initializing Facebook SDK:', e)
           }
-        }
-      }
-      
-      // Load Facebook SDK script if not already loaded
-      if (!document.getElementById('facebook-jssdk')) {
-        const facebookScript = document.createElement('script')
-        facebookScript.id = 'facebook-jssdk'
-        facebookScript.src = 'https://connect.facebook.net/en_US/sdk.js'
-        facebookScript.async = true
-        facebookScript.defer = true
-        facebookScript.onload = () => {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Facebook SDK script loaded')
+          
+          // Load Facebook SDK script if not already loaded
+          if (!document.getElementById('facebook-jssdk')) {
+            const facebookScript = document.createElement('script')
+            facebookScript.id = 'facebook-jssdk'
+            facebookScript.src = 'https://connect.facebook.net/en_US/sdk.js'
+            facebookScript.async = true
+            facebookScript.defer = true
+            facebookScript.onload = () => {
+              if (process.env.NODE_ENV === 'development') {
+                console.log('Facebook SDK script loaded')
+              }
+              // If fbAsyncInit hasn't been called yet, call it manually
+              if (window.FB && typeof window.fbAsyncInit === 'function') {
+                window.fbAsyncInit()
+              }
+            }
+            facebookScript.onerror = () => {
+              console.error('Failed to load Facebook SDK')
+              const button = document.querySelector('.facebook-signin-button')
+              if (button) {
+                button.style.opacity = '0.5'
+                button.style.cursor = 'not-allowed'
+                button.title = 'Facebook SDK failed to load'
+              }
+            }
+            document.head.appendChild(facebookScript)
+          } else if (window.FB && facebookAppId) {
+            // SDK already loaded, initialize it
+            try {
+              window.FB.init({
+                appId: facebookAppId,
+                cookie: true,
+                xfbml: true,
+                version: 'v18.0'
+              })
+              if (process.env.NODE_ENV === 'development') {
+                console.log('Facebook SDK initialized (already loaded)')
+              }
+            } catch (e) {
+              console.error('Error initializing already-loaded Facebook SDK:', e)
+            }
           }
-          // If fbAsyncInit hasn't been called yet, call it manually
-          if (window.FB && typeof window.fbAsyncInit === 'function') {
-            window.fbAsyncInit()
-          }
-        }
-        facebookScript.onerror = () => {
-          console.error('Failed to load Facebook SDK')
+        } else {
+          // Hide Facebook button if not configured
           const button = document.querySelector('.facebook-signin-button')
           if (button) {
-            button.style.opacity = '0.5'
-            button.style.cursor = 'not-allowed'
-            button.title = 'Facebook SDK failed to load'
+            button.style.display = 'none'
           }
         }
-        document.head.appendChild(facebookScript)
-      } else if (window.FB && facebookAppId) {
-        // SDK already loaded, initialize it
-        try {
-          window.FB.init({
-            appId: facebookAppId,
-            cookie: true,
-            xfbml: true,
-            version: 'v18.0'
-          })
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Facebook SDK initialized (already loaded)')
+      } catch (error) {
+        console.error('Error loading OAuth settings:', error)
+        // Fallback to environment variables
+        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+        const facebookAppId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID
+        
+        // Hide buttons if not configured
+        if (!clientId) {
+          const buttonContainer = document.getElementById('google-signin-button')
+          if (buttonContainer) {
+            buttonContainer.style.display = 'none'
           }
-        } catch (e) {
-          console.error('Error initializing already-loaded Facebook SDK:', e)
         }
-      }
-    } else {
-      console.warn('Facebook App ID not found. Facebook sign-in will not work.')
-      const button = document.querySelector('.facebook-signin-button')
-      if (button) {
-        button.style.opacity = '0.5'
-        button.title = 'Facebook sign-in not configured'
+        
+        if (!facebookAppId) {
+          const button = document.querySelector('.facebook-signin-button')
+          if (button) {
+            button.style.display = 'none'
+          }
+        }
       }
     }
+    
+    loadOAuthSettings()
     
     return () => {
       // Cleanup handled by browser
@@ -136,10 +172,21 @@ export default function Login(){
   
   async function handleFacebookSignIn() {
     try {
-      const facebookAppId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID
+      // Fetch OAuth settings from API
+      let facebookAppId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID
+      try {
+        const res = await fetch('/api/v1/auth/oauth-settings')
+        if (res.ok) {
+          const settings = await res.json()
+          facebookAppId = settings.facebook_app_id || facebookAppId
+        }
+      } catch (e) {
+        console.warn('Could not fetch OAuth settings, using environment variables')
+      }
+      
       if (!facebookAppId) {
-        alert('Facebook sign-in is not configured. Please set NEXT_PUBLIC_FACEBOOK_APP_ID in your environment variables.')
-        console.error('Facebook App ID not found in environment variables')
+        alert('Facebook sign-in is not configured. Please configure it in the admin panel settings.')
+        console.error('Facebook App ID not found')
         return
       }
       
@@ -379,15 +426,19 @@ export default function Login(){
         <h2>Login</h2>
         
         {/* Social Sign-In Buttons */}
-        <div style={{display:'flex', flexDirection:'column', gap:'12px', width:'80%', margin:'0 auto 20px'}}>
-          {/* Google Sign-In Button */}
-          <div id="google-signin-button" className="google-signin-container"></div>
-          
-          {/* Facebook Sign-In Button */}
-          <button
-            onClick={handleFacebookSignIn}
-            type="button"
-            className="facebook-signin-button"
+        {(googleConfigured || facebookConfigured) && (
+          <div style={{display:'flex', flexDirection:'column', gap:'12px', width:'80%', margin:'0 auto 20px'}}>
+            {/* Google Sign-In Button */}
+            {googleConfigured && (
+              <div id="google-signin-button" className="google-signin-container"></div>
+            )}
+            
+            {/* Facebook Sign-In Button */}
+            {facebookConfigured && (
+              <button
+                onClick={handleFacebookSignIn}
+                type="button"
+                className="facebook-signin-button"
             style={{
               width:'100%',
               height:'44px',
@@ -418,15 +469,19 @@ export default function Login(){
               e.currentTarget.style.transform = 'translateY(0)'
             }}
           >
-            <i className="fa-brands fa-facebook-f" style={{fontSize:'18px'}}></i>
-            <span>Continue with Facebook</span>
-          </button>
-        </div>
+                <i className="fa-brands fa-facebook-f" style={{fontSize:'18px'}}></i>
+                <span>Continue with Facebook</span>
+              </button>
+            )}
+          </div>
+        )}
         
-        {/* Divider */}
-        <div className="divider">
-          <span>or</span>
-        </div>
+        {/* Divider - only show if there are OAuth buttons */}
+        {(googleConfigured || facebookConfigured) && (
+          <div className="divider">
+            <span>or</span>
+          </div>
+        )}
         
         <input 
           type="text" 

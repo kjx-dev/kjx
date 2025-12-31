@@ -98,19 +98,52 @@ export default async function handler(req, res) {
       }
       
       try {
-        // Update or insert expiration days setting (SQLite syntax)
-        const existing = await prisma.$queryRawUnsafe("SELECT setting_key FROM settings WHERE setting_key = 'ad_expiration_days' LIMIT 1")
-        const expirationDaysStr = String(expirationDays)
-        if (existing && Array.isArray(existing) && existing.length > 0) {
-          await prisma.$executeRawUnsafe(`UPDATE settings SET setting_value = '${expirationDaysStr}', updated_at = CURRENT_TIMESTAMP WHERE setting_key = 'ad_expiration_days'`)
-        } else {
-          await prisma.$executeRawUnsafe(`INSERT INTO settings (setting_key, setting_value, updated_at) VALUES ('ad_expiration_days', '${expirationDaysStr}', CURRENT_TIMESTAMP)`)
+        // Helper function to safely escape SQL strings
+        const escapeSQL = (str) => {
+          if (!str) return ''
+          return String(str).replace(/'/g, "''")
+        }
+        
+        // Parse edit_without_approval_roles
+        let editWithoutApprovalRoles = '["admin","manager","data_entry"]' // Default
+        if (body.edit_without_approval_roles) {
+          if (typeof body.edit_without_approval_roles === 'string') {
+            editWithoutApprovalRoles = escapeSQL(body.edit_without_approval_roles)
+          } else if (Array.isArray(body.edit_without_approval_roles)) {
+            editWithoutApprovalRoles = escapeSQL(JSON.stringify(body.edit_without_approval_roles))
+          }
+        }
+        
+        // Update or insert settings
+        const settingsToUpdate = [
+          { key: 'ad_expiration_days', value: String(expirationDays) },
+          { key: 'google_client_id', value: escapeSQL(body.google_client_id || '') },
+          { key: 'google_client_secret', value: escapeSQL(body.google_client_secret || '') },
+          { key: 'facebook_app_id', value: escapeSQL(body.facebook_app_id || '') },
+          { key: 'facebook_app_secret', value: escapeSQL(body.facebook_app_secret || '') },
+          { key: 'edit_without_approval_roles', value: editWithoutApprovalRoles }
+        ]
+        
+        for (const setting of settingsToUpdate) {
+          const existing = await prisma.$queryRawUnsafe(`SELECT setting_key FROM settings WHERE setting_key = '${setting.key}' LIMIT 1`)
+          if (existing && Array.isArray(existing) && existing.length > 0) {
+            await prisma.$executeRawUnsafe(`UPDATE settings SET setting_value = '${setting.value}', updated_at = CURRENT_TIMESTAMP WHERE setting_key = '${setting.key}'`)
+          } else {
+            await prisma.$executeRawUnsafe(`INSERT INTO settings (setting_key, setting_value, updated_at) VALUES ('${setting.key}', '${setting.value}', CURRENT_TIMESTAMP)`)
+          }
         }
         
         res.status(200).json({ 
           status: 'success', 
           message: 'Settings updated successfully',
-          data: { ad_expiration_days: expirationDays },
+          data: { 
+            ad_expiration_days: expirationDays,
+            google_client_id: body.google_client_id || '',
+            google_client_secret: body.google_client_secret ? '***' : '',
+            facebook_app_id: body.facebook_app_id || '',
+            facebook_app_secret: body.facebook_app_secret ? '***' : '',
+            edit_without_approval_roles: editWithoutApprovalRoles
+          },
           request_id: reqId 
         })
       } catch (e) {

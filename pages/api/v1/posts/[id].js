@@ -163,15 +163,39 @@ export default async function handler(req, res){
                 const userRows = await prisma.$queryRaw`SELECT role FROM users WHERE user_id=${payload.sub} LIMIT 1`
                 if (Array.isArray(userRows) && userRows.length) {
                   const userRole = String(userRows[0].role || 'user').toLowerCase().trim()
-                  if (userRole === 'admin') {
-                    isAdmin = true
+                  
+                  // Get roles that can edit without approval from settings
+                  let allowedRoles = ['admin', 'manager', 'data_entry'] // Default
+                  try {
+                    const settingsRows = await prisma.$queryRawUnsafe(
+                      "SELECT setting_value FROM settings WHERE setting_key = 'edit_without_approval_roles' LIMIT 1"
+                    )
+                    if (Array.isArray(settingsRows) && settingsRows.length && settingsRows[0].setting_value) {
+                      try {
+                        const parsed = JSON.parse(settingsRows[0].setting_value)
+                        if (Array.isArray(parsed)) {
+                          allowedRoles = parsed.map(r => String(r).toLowerCase().trim())
+                        }
+                      } catch (e) {
+                        // If parsing fails, use default
+                        console.log('Error parsing edit_without_approval_roles setting:', e)
+                      }
+                    }
+                  } catch (e) {
+                    // If settings table doesn't exist or query fails, use default
+                    console.log('Error fetching edit_without_approval_roles setting:', e)
+                  }
+                  
+                  // Check if user's role is in the allowed roles
+                  if (allowedRoles.includes(userRole)) {
                     hasEditPermission = true
-                  } else if (userRole === 'manager') {
-                    isManager = true
-                    hasEditPermission = true
-                  } else if (userRole === 'data_entry' || userRole === 'dataentry') {
-                    isDataEntry = true
-                    hasEditPermission = true
+                    if (userRole === 'admin') {
+                      isAdmin = true
+                    } else if (userRole === 'manager') {
+                      isManager = true
+                    } else if (userRole === 'data_entry' || userRole === 'dataentry') {
+                      isDataEntry = true
+                    }
                   }
                 }
               }

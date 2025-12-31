@@ -8,9 +8,28 @@ function sign(payload){
   return `v1.${data}.${sig}`
 }
 
-async function verifyFacebookToken(accessToken) {
-  const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID
-  const appSecret = process.env.FACEBOOK_APP_SECRET
+async function getOAuthSettings(prisma) {
+  try {
+    const settings = await prisma.$queryRawUnsafe(
+      "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('google_client_id', 'google_client_secret', 'facebook_app_id', 'facebook_app_secret')"
+    )
+    const settingsObj = {}
+    if (Array.isArray(settings)) {
+      settings.forEach(s => {
+        settingsObj[s.setting_key] = s.setting_value
+      })
+    }
+    return settingsObj
+  } catch (e) {
+    return {}
+  }
+}
+
+async function verifyFacebookToken(accessToken, prisma) {
+  // Get settings from database with fallback to environment variables
+  const settings = prisma ? await getOAuthSettings(prisma) : {}
+  const appId = settings.facebook_app_id || process.env.NEXT_PUBLIC_FACEBOOK_APP_ID
+  const appSecret = settings.facebook_app_secret || process.env.FACEBOOK_APP_SECRET
   
   if (!accessToken) {
     console.error('No access token provided')
@@ -67,7 +86,7 @@ export default async function handler(req, res){
   
   try{
     // Verify the Facebook token
-    const facebookUser = await verifyFacebookToken(accessToken)
+    const facebookUser = await verifyFacebookToken(accessToken, prisma)
     if (!facebookUser) {
       console.error('Token verification failed for access token:', accessToken?.substring(0, 20) + '...')
       return res.status(401).json({ error: 'Invalid or expired Facebook token. Please try signing in again.' })

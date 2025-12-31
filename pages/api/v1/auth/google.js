@@ -8,9 +8,28 @@ function sign(payload){
   return `v1.${data}.${sig}`
 }
 
-async function verifyGoogleToken(idToken) {
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET
+async function getOAuthSettings(prisma) {
+  try {
+    const settings = await prisma.$queryRawUnsafe(
+      "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('google_client_id', 'google_client_secret', 'facebook_app_id', 'facebook_app_secret')"
+    )
+    const settingsObj = {}
+    if (Array.isArray(settings)) {
+      settings.forEach(s => {
+        settingsObj[s.setting_key] = s.setting_value
+      })
+    }
+    return settingsObj
+  } catch (e) {
+    return {}
+  }
+}
+
+async function verifyGoogleToken(idToken, prisma) {
+  // Get settings from database with fallback to environment variables
+  const settings = prisma ? await getOAuthSettings(prisma) : {}
+  const clientId = settings.google_client_id || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+  const clientSecret = settings.google_client_secret || process.env.GOOGLE_CLIENT_SECRET
   
   if (!idToken) {
     console.error('No ID token provided')
@@ -75,7 +94,7 @@ export default async function handler(req, res){
   
   try{
     // Verify the Google token
-    const googleUser = await verifyGoogleToken(credential)
+    const googleUser = await verifyGoogleToken(credential, prisma)
     if (!googleUser) {
       console.error('Token verification failed for credential:', credential?.substring(0, 20) + '...')
       return res.status(401).json({ error: 'Invalid or expired Google token. Please try signing in again.' })

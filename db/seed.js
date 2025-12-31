@@ -85,6 +85,33 @@ export async function resetCategories(prisma){
 }
 
 export async function seedDemo(prisma){
+  // Create default admin user
+  const adminEmail = 'kamransuleman9@gmail.com'
+  const adminPassword = 'Fireon5253'
+  const adminUsername = adminEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, '') || 'admin'
+  
+  // Check if admin user already exists, if not create it
+  let adminUser = await prisma.user.findUnique({ where: { email: adminEmail } })
+  if (!adminUser) {
+    adminUser = await prisma.user.create({ 
+      data: { 
+        username: adminUsername, 
+        email: adminEmail, 
+        password_hash: hashPassword(adminPassword),
+        role: 'admin'
+      } 
+    })
+  } else {
+    // Update existing user to admin if not already
+    if (adminUser.role !== 'admin') {
+      adminUser = await prisma.user.update({
+        where: { email: adminEmail },
+        data: { role: 'admin', password_hash: hashPassword(adminPassword) }
+      })
+    }
+  }
+  
+  // Create demo users
   const u1 = await prisma.user.create({ data: { username:'alice', email:'alice@example.com', password_hash:hashPassword('alice123') } })
   const u2 = await prisma.user.create({ data: { username:'bob', email:'bob@example.com', password_hash:hashPassword('bob123') } })
   
@@ -112,43 +139,7 @@ export async function seedDemo(prisma){
     )
   )
   const cats = [...allCats, ...newCats]
-  // Helper to find category ID, trying exact match first, then parent category
-  const findCategoryId = (name) => {
-    const exact = allCats.find(c => c.name === name)
-    if (exact) return exact.category_id
-    // Try to find parent category for common mappings
-    if (name === 'Cars') {
-      const vehicles = allCats.find(c => c.name === 'Vehicles' && !c.parent_id)
-      return vehicles?.category_id
-    }
-    return allCats.find(c => c.name === name || c.name.includes(name))?.category_id || allCats[0]?.category_id
-  }
   
-  // Filter out posts where category doesn't exist
-  const postData = [
-    { title:'Toyota Corolla 2018', content:'Excellent condition, low mileage, single owner.', user_id:u1.user_id, catName:'Cars' },
-    { title:'iPhone 13 Pro', content:'Graphite, 256GB, like new.', user_id:u2.user_id, catName:'Mobile Phones' },
-    { title:'2 Bed Apartment', content:'Downtown, near metro, furnished.', user_id:u2.user_id, catName:'Houses' },
-    { title:'Honda CG 125 2022', content:'Genuine parts, single owner.', user_id:u1.user_id, catName:'Motorcycles' },
-    { title:'LG OLED TV 55"', content:'4K Ultra HD, smart features.', user_id:u2.user_id, catName:'Televisions & Accessories' },
-    { title:'iPad Air 4 64GB', content:'PTA approved, with box.', user_id:u1.user_id, catName:'Tablets' },
-    { title:'5 Marla Plot', content:'Prime location near boulevard.', user_id:u2.user_id, catName:'Land & Plots' },
-    { title:'Sales Executive', content:'Full-time role, 2+ years experience.', user_id:u1.user_id, catName:'Sales' },
-    { title:'German Shepherd Puppy', content:'Vaccinated, 8 weeks old.', user_id:u2.user_id, catName:'Dogs' },
-    { title:'Wooden Dining Table', content:'6 chairs included.', user_id:u1.user_id, catName:'Tables & Dining' },
-    { title:'Designer Bridal Dress', content:'Lightly used.', user_id:u2.user_id, catName:'Wedding' },
-    { title:'Cricket Kit', content:'Bat, pads, gloves.', user_id:u1.user_id, catName:'Sports Equipment' },
-    { title:'Kids Cycle 14"', content:'Good condition.', user_id:u2.user_id, catName:'Kids Vehicles' },
-    { title:'AC Installation Service', content:'Split AC fitting and gas refill.', user_id:u1.user_id, catName:'Home & Office Repair' },
-    { title:'Industrial Drill Machine', content:'3-phase, heavy duty.', user_id:u2.user_id, catName:'Construction & Heavy Machinery' },
-  ].map(p => {
-    const catId = findCategoryId(p.catName)
-    if (!catId) return null
-    return { title: p.title, content: p.content, user_id: p.user_id, category_id: catId }
-  }).filter(Boolean)
-  
-  const posts = await Promise.all(
-    postData.map(data => prisma.post.create({ data }))
-  )
-  return { users:[u1,u2], categories:cats, posts }
+  // Posts seeding removed - no default posts will be created
+  return { users:[adminUser, u1, u2], categories:cats, posts:[] }
 }
