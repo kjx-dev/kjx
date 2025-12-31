@@ -7,7 +7,7 @@ function originFromReq(req){
 export async function getServerSideProps({ req, res }){
   const origin = originFromReq(req)
   const now = new Date().toISOString().slice(0,10)
-  const staticUrls = ['/', '/about', '/contact', '/faq', '/login', '/register', '/sell', '/manage', '/terms', '/privacy']
+  const staticUrls = ['/', '/about', '/contact', '/faq', '/login', '/register', '/sell', '/my-ads', '/terms', '/privacy']
   const products = []
   const categories = []
   const urls = [

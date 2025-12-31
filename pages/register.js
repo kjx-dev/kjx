@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router'
 import { useState } from 'react'
+import Logo from '../components/Logo'
 
 export default function Register(){
   const router = useRouter()
@@ -38,11 +39,13 @@ export default function Register(){
     }catch(e){ setErrors({ form: 'Network error during registration' }) }
   }
   return (
-    <div className="email_login" style={{margin:'40px auto'}}>
+    <div className="email_login" style={{margin:'40px auto', maxWidth: '400px'}}>
       <div className="icons_flex">
         <a href="/"><i className="fa-solid fa-arrow-left"></i></a>
       </div>
-      <img src="/images/auth/email_login.svg" alt="" />
+      <div style={{display: 'flex', justifyContent: 'center', marginBottom: '24px'}}>
+        <Logo height={48} />
+      </div>
       <h2>Create Your Account</h2>
       <input type="text" id="signphone" placeholder="Phone Number" value={phone} onChange={e=>setPhone(e.target.value)} aria-invalid={!!errors.phone} />
       {errors.phone ? <div className="form__error" aria-live="polite">{errors.phone}</div> : null}

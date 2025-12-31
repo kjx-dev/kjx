@@ -2,9 +2,9 @@ import Head from 'next/head'
 import { useEffect, useState } from 'react'
 import { Roboto } from 'next/font/google'
 import ErrorBoundary from '../components/ErrorBoundary'
-import '../assets/css/style.css'
-import '../assets/css/profile.css'
-import '../assets/css/sell.css'
+import '../styles/style.css'
+import '../styles/profile.css'
+import '../styles/sell.css'
 
 // Optimize font loading - only load weights we actually use
 const roboto = Roboto({

@@ -188,7 +188,7 @@ npx prisma migrate deploy
 
 ### WebSocket Server
 
-If you have a separate WebSocket server (`server/ws-server.js`), you may need to:
+If you have a separate WebSocket server (`server/websocket-server.js`), you may need to:
 1. Run it as a separate process
 2. Or integrate it into the Next.js server
 3. Ensure it's included in the standalone build

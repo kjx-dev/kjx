@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router'
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
+import Logo from '../components/Logo'
 
 export default function Login(){
   const router = useRouter()
@@ -422,7 +423,9 @@ export default function Login(){
         <div className="icons_flex">
           <a href="/"><i className="fa-solid fa-arrow-left"></i></a>
         </div>
-        <img src="/images/auth/email_login.svg" alt="" />
+        <div style={{display: 'flex', justifyContent: 'center', marginBottom: '24px'}}>
+          <Logo height={48} />
+        </div>
         <h2>Login</h2>
         
         {/* Social Sign-In Buttons */}

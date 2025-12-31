@@ -38,7 +38,7 @@ export default function Tips(){
               <div className="sell__section">
                 <h4>Related</h4>
                 <ul style={{textAlign:'left'}}>
-                  <li><a href="/posting-ads">All you need to know about Posting Ads</a></li>
+                  <li><a href="/posting-guide">All you need to know about Posting Ads</a></li>
                   <li><a href="/sell">Post Your Ad</a></li>
                 </ul>
               </div>

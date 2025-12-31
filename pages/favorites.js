@@ -90,7 +90,7 @@ export default function Favorites(){
       return next
     })
   }
-  function manage(){ router.push('/manage') }
+  function manage(){ router.push('/my-ads') }
   function sell(){ if (auth.email && auth.isAuthenticated) router.push('/sell'); else router.push('/login') }
   function logout(){ try{ localStorage.removeItem('auth_token'); localStorage.removeItem('email'); localStorage.removeItem('username'); localStorage.removeItem('name'); localStorage.removeItem('phone'); localStorage.removeItem('gender'); localStorage.removeItem('isAuthenticated'); }catch(_){ } router.replace('/') }
   function formatPrice(p){ try{ const n = Number(p||0); if (!n) return 'Rs 0'; return 'Rs '+n.toLocaleString('en-PK') }catch(_){ return 'Rs '+String(p||0) } }

@@ -6,11 +6,11 @@
  * This script provides easy commands for managing database migrations and seeds.
  * 
  * Usage:
- *   node scripts/db-manage.js migrate      - Run pending migrations
- *   node scripts/db-manage.js migrate:dev  - Create a new migration
- *   node scripts/db-manage.js seed         - Run seeds
- *   node scripts/db-manage.js reset        - Reset database and reseed
- *   node scripts/db-manage.js status       - Check migration status
+ *   node scripts/database-manager.js migrate      - Run pending migrations
+ *   node scripts/database-manager.js migrate:dev  - Create a new migration
+ *   node scripts/database-manager.js seed         - Run seeds
+ *   node scripts/database-manager.js reset        - Reset database and reseed
+ *   node scripts/database-manager.js status       - Check migration status
  */
 
 const { execSync } = require('child_process');
@@ -322,7 +322,7 @@ async function main() {
       console.log(`
 📦 Database Management Script
 
-Usage: node scripts/db-manage.js <command> [options]
+Usage: node scripts/database-manager.js <command> [options]
 
 Commands:
   migrate              Run pending migrations
@@ -335,11 +335,11 @@ Commands:
   studio               Open Prisma Studio
 
 Examples:
-  node scripts/db-manage.js migrate
-  node scripts/db-manage.js migrate:dev add_user_role
-  node scripts/db-manage.js seed
-  node scripts/db-manage.js reset
-  node scripts/db-manage.js status
+  node scripts/database-manager.js migrate
+  node scripts/database-manager.js migrate:dev add_user_role
+  node scripts/database-manager.js seed
+  node scripts/database-manager.js reset
+  node scripts/database-manager.js status
 `);
       process.exit(1);
   }

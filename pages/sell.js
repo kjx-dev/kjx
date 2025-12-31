@@ -192,7 +192,7 @@ export default function Sell(){
     }
   }, [])
   function sell(){ if (auth.email && auth.isAuthenticated) router.push('/sell'); else router.push('/login') }
-  function manage(){ router.push('/manage') }
+  function manage(){ router.push('/my-ads') }
   function logout(){ try{ localStorage.removeItem('auth_token'); localStorage.removeItem('email'); localStorage.removeItem('username'); localStorage.removeItem('name'); localStorage.removeItem('phone'); localStorage.removeItem('gender'); localStorage.removeItem('isAuthenticated'); }catch(_){ } router.replace('/') }
   function toggleProfileMenu(){
     setProfileOpen(v => {

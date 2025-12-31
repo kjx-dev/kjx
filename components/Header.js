@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import { FaSearch, FaUser, FaChevronDown, FaList, FaHeart, FaComment, FaKey, FaSignOutAlt, FaCar, FaHome, FaCog, FaShoppingCart, FaShoppingBag } from 'react-icons/fa'
 import { getShortCategoryName } from '../lib/categoryNames'
+import Logo from './Logo'
 
 export default function Header(){
   const router = useRouter()
@@ -122,7 +123,7 @@ export default function Header(){
     })
   }
   function sell(){ if (auth.email && auth.isAuthenticated) router.push('/sell'); else router.push('/login') }
-  function manage(){ router.push('/manage') }
+  function manage(){ router.push('/my-ads') }
   function logout(){ try{ localStorage.removeItem('auth_token'); localStorage.removeItem('email'); localStorage.removeItem('username'); localStorage.removeItem('name'); localStorage.removeItem('phone'); localStorage.removeItem('gender'); localStorage.removeItem('isAuthenticated'); }catch(_){ } router.push('/login') }
   function onSearchChange(e){ setQ(e.target.value) }
   function onLocationChange(e){ setLocation(e.target.value) }
@@ -143,11 +144,7 @@ export default function Header(){
         <div className="small__navbar container-width">
           <div className="small__navbar_left">
           <div className="small__navbar_logo">
-            <a href="/" onClick={(e)=>{ e.preventDefault(); router.push('/') }} style={{display:'inline-block', textDecoration:'none'}}>
-              <svg height="32" viewBox="0 0 80 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="KJX Logo">
-                <text x="2" y="26" fontFamily="'Arial Black', 'Arial Bold', Arial, sans-serif" fontSize="27" fontWeight="900" fill="#f55100" fontStyle="italic" transform="skewX(0)">KJX</text>
-              </svg>
-            </a>
+            <Logo height={32} />
           </div>
           </div>
 

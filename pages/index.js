@@ -258,7 +258,7 @@ export default function Home() {
     if (auth.email && auth.isAuthenticated) router.push('/sell')
     else router.push('/login')
   }
-  function manage() { router.push('/manage') }
+  function manage() { router.push('/my-ads') }
   function toggleProfileMenu(){
     setProfileMenuOpen(v => {
       const next = !v

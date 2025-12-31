@@ -346,7 +346,7 @@ export default function ProductDetails(){
   }, [router.query.id, router.query.slug])
   function search(){ router.push('/') }
   function sell(){ if (auth.email && auth.isAuthenticated) router.push('/sell'); else router.push('/login') }
-  function manage(){ router.push('/manage') }
+  function manage(){ router.push('/my-ads') }
   function buyNow(){
     const idPart = getPostId()
     if (Number.isNaN(idPart)) return
