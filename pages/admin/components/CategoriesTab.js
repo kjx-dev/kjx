@@ -296,7 +296,7 @@ export default function CategoriesTab({ error, setError }) {
           }}
           style={{
             padding: '8px 16px',
-            background: '#3a77ff',
+            background: 'var(--primary-color)',
             color: '#fff',
             border: 'none',
             borderRadius: '6px',
@@ -314,20 +314,20 @@ export default function CategoriesTab({ error, setError }) {
       </div>
       
       {error && (
-        <div style={{padding: '20px', color: '#b00020', background: '#ffebee'}}>
+        <div style={{padding: '20px', color: 'var(--primary-color)', background: 'rgba(245, 81, 0, 0.1)'}}>
           {error}
         </div>
       )}
 
       {showAddForm && !showEditModal && (
-        <div style={{padding: '20px', borderBottom: '1px solid rgba(1,47,52,.1)', background: '#f5f8fa'}}>
+        <div style={{padding: '20px', borderBottom: '1px solid rgba(1,47,52,.1)', background: 'rgba(1,47,52,0.02)'}}>
           <h3 style={{fontSize: '16px', fontWeight: '500', marginBottom: '16px'}}>
             Add New Category
           </h3>
           <form onSubmit={handleSubmit}>
             <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px'}}>
               <div>
-                <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#012f34'}}>
+                <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: 'var(--dark-teal)'}}>
                   Category Name *
                 </label>
                 <input
@@ -346,7 +346,7 @@ export default function CategoriesTab({ error, setError }) {
                 />
               </div>
               <div>
-                <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#012f34'}}>
+                <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: 'var(--dark-teal)'}}>
                   Icon (Font Awesome class)
                 </label>
                 <input
@@ -365,7 +365,7 @@ export default function CategoriesTab({ error, setError }) {
               </div>
             </div>
             <div style={{marginBottom: '16px'}}>
-              <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#012f34'}}>
+              <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: 'var(--dark-teal)'}}>
                 Description
               </label>
               <textarea
@@ -385,7 +385,7 @@ export default function CategoriesTab({ error, setError }) {
               />
             </div>
             <div style={{marginBottom: '16px'}}>
-              <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#012f34'}}>
+              <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: 'var(--dark-teal)'}}>
                 Parent Category
               </label>
               <select
@@ -413,7 +413,7 @@ export default function CategoriesTab({ error, setError }) {
                 disabled={updating.submitting}
                 style={{
                   padding: '10px 20px',
-                  background: '#3a77ff',
+                  background: 'var(--primary-color)',
                   color: '#fff',
                   border: 'none',
                   borderRadius: '6px',
@@ -432,7 +432,7 @@ export default function CategoriesTab({ error, setError }) {
                 style={{
                   padding: '10px 20px',
                   background: '#fff',
-                  color: '#012f34',
+                  color: 'var(--dark-teal)',
                   border: '1px solid rgba(1,47,52,.2)',
                   borderRadius: '6px',
                   cursor: updating.submitting ? 'not-allowed' : 'pointer',
@@ -589,7 +589,7 @@ export default function CategoriesTab({ error, setError }) {
                   style={{
                     padding: '10px 20px',
                     background: '#fff',
-                    color: '#012f34',
+                    color: 'var(--dark-teal)',
                     border: '1px solid rgba(1,47,52,.2)',
                     borderRadius: '6px',
                     cursor: updating.editing ? 'not-allowed' : 'pointer',
@@ -604,7 +604,7 @@ export default function CategoriesTab({ error, setError }) {
                   disabled={updating.editing}
                   style={{
                     padding: '10px 20px',
-                    background: '#3a77ff',
+                    background: 'var(--primary-color)',
                     color: '#fff',
                     border: 'none',
                     borderRadius: '6px',
@@ -633,13 +633,13 @@ export default function CategoriesTab({ error, setError }) {
           <table style={{width: '100%', borderCollapse: 'collapse'}}>
             <thead>
               <tr style={{background: '#f5f5f5'}}>
-                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>ID</th>
-                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Name</th>
-                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Icon</th>
-                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Parent</th>
-                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Description</th>
-                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Created At</th>
-                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: '#012f34', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Actions</th>
+                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: 'var(--dark-teal)', borderBottom: '1px solid rgba(1,47,52,.1)'}}>ID</th>
+                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: 'var(--dark-teal)', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Name</th>
+                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: 'var(--dark-teal)', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Icon</th>
+                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: 'var(--dark-teal)', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Parent</th>
+                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: 'var(--dark-teal)', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Description</th>
+                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: 'var(--dark-teal)', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Created At</th>
+                <th style={{padding: '12px 16px', textAlign: 'left', fontWeight: '500', fontSize: '14px', color: 'var(--dark-teal)', borderBottom: '1px solid rgba(1,47,52,.1)'}}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -654,13 +654,13 @@ export default function CategoriesTab({ error, setError }) {
                   const isUpdating = updating[category.category_id]
                   return (
                     <tr key={category.category_id} style={{borderBottom: '1px solid rgba(1,47,52,.05)'}}>
-                      <td style={{padding: '12px 16px', fontSize: '14px', color: '#012f34'}}>{category.category_id}</td>
+                      <td style={{padding: '12px 16px', fontSize: '14px', color: 'var(--dark-teal)'}}>{category.category_id}</td>
                       <td style={{padding: '12px 16px', fontSize: '14px', color: '#012f34', fontWeight: '500'}}>{category.name || 'N/A'}</td>
-                      <td style={{padding: '12px 16px', fontSize: '14px', color: '#012f34'}}>
+                      <td style={{padding: '12px 16px', fontSize: '14px', color: 'var(--dark-teal)'}}>
                         <i className={`fa-solid ${category.icon || 'fa-tags'}`} style={{fontSize: '16px'}}></i>
                         <span style={{marginLeft: '8px', fontSize: '12px', color: '#666'}}>{category.icon || 'fa-tags'}</span>
                       </td>
-                      <td style={{padding: '12px 16px', fontSize: '14px', color: '#012f34'}}>{getParentName(category.parent_id)}</td>
+                      <td style={{padding: '12px 16px', fontSize: '14px', color: 'var(--dark-teal)'}}>{getParentName(category.parent_id)}</td>
                       <td style={{padding: '12px 16px', fontSize: '14px', color: '#666', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
                         {category.description || 'N/A'}
                       </td>
@@ -672,7 +672,7 @@ export default function CategoriesTab({ error, setError }) {
                             disabled={isUpdating}
                             style={{
                               padding: '6px 12px',
-                              background: '#3a77ff',
+                              background: 'var(--primary-color)',
                               color: '#fff',
                               border: 'none',
                               borderRadius: '4px',

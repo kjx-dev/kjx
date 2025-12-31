@@ -33,6 +33,104 @@ export default function PermissionsTab({ error, setError }) {
     }
   }
 
+  async function grantAllPermissionsForResource(role, resource) {
+    const resourceKey = `${role}-${resource}-all`
+    try {
+      setError('')
+      setTogglingPermission(prev => ({ ...prev, [resourceKey]: true }))
+      
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        setError('Not authenticated')
+        return
+      }
+      
+      // Grant all actions for this resource
+      const promises = actions.map(action => {
+        const rolePerms = permissions[role] || []
+        const hasPermission = rolePerms.some(p => p.resource === resource && p.action === action.key)
+        
+        if (!hasPermission) {
+          return fetch('/api/v1/admin/permissions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              role,
+              resource,
+              action: action.key
+            })
+          })
+        }
+        return Promise.resolve()
+      })
+      
+      await Promise.all(promises)
+      await fetchPermissions() // Refresh permissions
+    } catch (err) {
+      console.error('Error granting all permissions for resource:', err)
+      setError('Error granting all permissions: ' + (err.message || 'Unknown error'))
+    } finally {
+      setTogglingPermission(prev => {
+        const next = { ...prev }
+        delete next[resourceKey]
+        return next
+      })
+    }
+  }
+
+  async function grantAllPermissionsForRole(role) {
+    const roleKey = `${role}-all-all`
+    try {
+      setError('')
+      setTogglingPermission(prev => ({ ...prev, [roleKey]: true }))
+      
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        setError('Not authenticated')
+        return
+      }
+      
+      // Grant all permissions for all resources
+      const promises = resources.flatMap(resource => 
+        actions.map(action => {
+          const rolePerms = permissions[role] || []
+          const hasPermission = rolePerms.some(p => p.resource === resource.key && p.action === action.key)
+          
+          if (!hasPermission) {
+            return fetch('/api/v1/admin/permissions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                role,
+                resource: resource.key,
+                action: action.key
+              })
+            })
+          }
+          return Promise.resolve()
+        })
+      )
+      
+      await Promise.all(promises)
+      await fetchPermissions() // Refresh permissions
+    } catch (err) {
+      console.error('Error granting all permissions for role:', err)
+      setError('Error granting all permissions: ' + (err.message || 'Unknown error'))
+    } finally {
+      setTogglingPermission(prev => {
+        const next = { ...prev }
+        delete next[roleKey]
+        return next
+      })
+    }
+  }
+
   async function togglePermission(role, resource, action) {
     const key = `${role}-${resource}-${action}`
     try {
@@ -113,21 +211,21 @@ export default function PermissionsTab({ error, setError }) {
   ]
 
   const roleColors = {
-    admin: { bg: 'rgba(245, 81, 0, 0.08)', border: 'rgba(245, 81, 0, 0.2)', color: '#f55100' },
-    manager: { bg: 'rgba(58, 119, 255, 0.08)', border: 'rgba(58, 119, 255, 0.2)', color: '#3a77ff' },
-    data_entry: { bg: 'rgba(255, 206, 50, 0.08)', border: 'rgba(255, 206, 50, 0.2)', color: '#ffce32' },
-    user: { bg: 'rgba(0, 47, 52, 0.06)', border: 'rgba(0, 47, 52, 0.15)', color: '#012f34' }
+    admin: { bg: 'rgba(245, 81, 0, 0.08)', border: 'rgba(245, 81, 0, 0.2)', color: 'var(--primary-color)' },
+    manager: { bg: 'rgba(245, 81, 0, 0.12)', border: 'rgba(245, 81, 0, 0.25)', color: 'var(--primary-color-dark)' },
+    data_entry: { bg: 'rgba(245, 81, 0, 0.06)', border: 'rgba(245, 81, 0, 0.15)', color: 'var(--primary-color)' },
+    user: { bg: 'rgba(1, 47, 52, 0.06)', border: 'rgba(1, 47, 52, 0.15)', color: 'var(--dark-teal)' }
   }
 
   return (
     <div style={{background: '#fff', borderRadius: '8px', border: '1px solid rgba(1,47,52,.2)', overflow: 'hidden'}}>
       <div style={{padding: '24px', borderBottom: '1px solid rgba(1,47,52,.1)', background: 'rgba(1,47,52,.02)'}}>
-        <h2 style={{fontSize: '24px', fontWeight: '500', margin: '0 0 8px 0', color: '#012f34'}}>Role Permissions</h2>
-        <p style={{fontSize: '14px', color: 'rgba(0,47,52,.64)', margin: 0, lineHeight: '1.5'}}>Manage access controls by assigning specific permissions to each role. Toggle permissions to grant or revoke access.</p>
+        <h2 style={{fontSize: '24px', fontWeight: '500', margin: '0 0 8px 0', color: 'var(--dark-teal)'}}>Role Permissions</h2>
+        <p style={{fontSize: '14px', color: 'rgba(1,47,52,.64)', margin: 0, lineHeight: '1.5'}}>Manage access controls by assigning specific permissions to each role. Toggle permissions to grant or revoke access.</p>
       </div>
       
       {permissionsLoading ? (
-        <div style={{padding: '60px', textAlign: 'center', color: 'rgba(0,47,52,.64)'}}>
+        <div style={{padding: '60px', textAlign: 'center', color: 'rgba(1,47,52,.64)'}}>
           <i className="fa-solid fa-spinner fa-spin" style={{fontSize: '24px', marginBottom: '12px', display: 'block'}}></i>
           <div>Loading permissions...</div>
         </div>
@@ -168,29 +266,52 @@ export default function PermissionsTab({ error, setError }) {
                     alignItems: 'center',
                     justifyContent: 'space-between'
                   }}>
-                    <h3 style={{
-                      margin: 0,
-                      fontSize: '18px',
-                      fontWeight: '500',
-                      color: roleColor.color,
-                      textTransform: 'capitalize',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px'
-                    }}>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '10px', flex: 1}}>
                       <i className={`fa-solid fa-user-shield`} style={{fontSize: '16px'}}></i>
-                      {role.replace('_', ' ')}
-                    </h3>
-                    <div style={{
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      color: 'rgba(0,47,52,.64)',
-                      background: '#fff',
-                      padding: '4px 10px',
-                      borderRadius: '12px',
-                      border: `1px solid ${roleColor.border}`
-                    }}>
-                      {grantedPerms}/{totalPerms}
+                      <h3 style={{
+                        margin: 0,
+                        fontSize: '18px',
+                        fontWeight: '500',
+                        color: roleColor.color,
+                        textTransform: 'capitalize'
+                      }}>
+                        {role.replace('_', ' ')}
+                      </h3>
+                    </div>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                      <div style={{
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        color: 'rgba(1,47,52,.64)',
+                        background: '#fff',
+                        padding: '4px 10px',
+                        borderRadius: '12px',
+                        border: `1px solid ${roleColor.border}`
+                      }}>
+                        {grantedPerms}/{totalPerms}
+                      </div>
+                      <button
+                        onClick={() => grantAllPermissionsForRole(role)}
+                        disabled={togglingPermission[`${role}-all-all`] || grantedPerms === totalPerms}
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: '11px',
+                          fontWeight: '500',
+                          color: '#fff',
+                          background: togglingPermission[`${role}-all-all`] || grantedPerms === totalPerms ? 'rgba(1,47,52,0.3)' : 'var(--primary-color)',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: togglingPermission[`${role}-all-all`] || grantedPerms === totalPerms ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          opacity: togglingPermission[`${role}-all-all`] ? 0.6 : 1
+                        }}
+                        title={grantedPerms === totalPerms ? 'All permissions already granted' : 'Grant all permissions for this role'}
+                      >
+                        <i className="fa-solid fa-check-double" style={{fontSize: '10px'}}></i>
+                        All
+                      </button>
                     </div>
                   </div>
                   
@@ -210,25 +331,49 @@ export default function PermissionsTab({ error, setError }) {
                             marginBottom: '14px',
                             fontSize: '15px',
                             fontWeight: '600',
-                            color: '#012f34',
+                            color: 'var(--dark-teal)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between'
                           }}>
                             <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                              <i className={`fa-solid fa-folder`} style={{fontSize: '14px', color: '#3a77ff'}}></i>
+                              <i className={`fa-solid fa-folder`} style={{fontSize: '14px', color: 'var(--primary-color)'}}></i>
                               {resource.label}
                             </span>
-                            <span style={{
-                              fontSize: '11px',
-                              fontWeight: '500',
-                              color: 'rgba(0,47,52,.6)',
-                              background: '#fff',
-                              padding: '2px 8px',
-                              borderRadius: '10px'
-                            }}>
-                              {resourcePerms.length}/{actions.length}
-                            </span>
+                            <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                              <span style={{
+                                fontSize: '11px',
+                                fontWeight: '500',
+                                color: 'rgba(1,47,52,.6)',
+                                background: '#fff',
+                                padding: '2px 8px',
+                                borderRadius: '10px'
+                              }}>
+                                {resourcePerms.length}/{actions.length}
+                              </span>
+                              <button
+                                onClick={() => grantAllPermissionsForResource(role, resource.key)}
+                                disabled={togglingPermission[`${role}-${resource.key}-all`] || resourcePerms.length === actions.length}
+                                style={{
+                                  padding: '4px 8px',
+                                  fontSize: '10px',
+                                  fontWeight: '500',
+                                  color: '#fff',
+                                  background: togglingPermission[`${role}-${resource.key}-all`] || resourcePerms.length === actions.length ? 'rgba(1,47,52,0.3)' : 'var(--primary-color)',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  cursor: togglingPermission[`${role}-${resource.key}-all`] || resourcePerms.length === actions.length ? 'not-allowed' : 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  opacity: togglingPermission[`${role}-${resource.key}-all`] ? 0.6 : 1
+                                }}
+                                title={resourcePerms.length === actions.length ? 'All permissions already granted' : 'Grant all permissions for this resource'}
+                              >
+                                <i className="fa-solid fa-check" style={{fontSize: '9px'}}></i>
+                                All
+                              </button>
+                            </div>
                           </div>
                           <div style={{
                             display: 'grid',
@@ -295,12 +440,12 @@ export default function PermissionsTab({ error, setError }) {
                                     {action.icon && (
                                       <i className={`fa-solid ${action.icon}`} style={{
                                         fontSize: '12px',
-                                        color: checked ? roleColor.color : 'rgba(0,47,52,.5)'
+                                        color: checked ? roleColor.color : 'rgba(1,47,52,.5)'
                                       }}></i>
                                     )}
                                     <span style={{
                                       fontSize: '13px',
-                                      color: checked ? '#012f34' : 'rgba(0,47,52,.7)',
+                                      color: checked ? 'var(--dark-teal)' : 'rgba(1,47,52,.7)',
                                       fontWeight: checked ? '600' : '500',
                                       lineHeight: '1.2'
                                     }}>

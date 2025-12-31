@@ -169,13 +169,13 @@ export default function UsersTab({ error, setError }) {
       </div>
       
       {loading && (
-        <div style={{padding: '40px', textAlign: 'center', color: '#666'}}>
+        <div style={{padding: '40px', textAlign: 'center', color: 'rgba(1,47,52,0.6)'}}>
           Loading users...
         </div>
       )}
       
       {error && (
-        <div style={{padding: '20px', color: '#b00020', background: '#ffebee'}}>
+        <div style={{padding: '20px', color: 'var(--primary-color)', background: 'rgba(245, 81, 0, 0.1)'}}>
           {error}
         </div>
       )}
@@ -198,7 +198,7 @@ export default function UsersTab({ error, setError }) {
             <tbody>
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan="8" style={{padding: '40px', textAlign: 'center', color: '#666'}}>
+                  <td colSpan="8" style={{padding: '40px', textAlign: 'center', color: 'rgba(1,47,52,0.6)'}}>
                     No users found
                   </td>
                 </tr>
@@ -226,8 +226,8 @@ export default function UsersTab({ error, setError }) {
                             fontSize: '13px',
                             border: '1px solid rgba(1,47,52,.2)',
                             borderRadius: '4px',
-                            backgroundColor: currentStatus === 'active' ? '#e8f5e9' : '#ffebee',
-                            color: currentStatus === 'active' ? '#2e7d32' : '#c62828',
+                            backgroundColor: currentStatus === 'active' ? 'rgba(245, 81, 0, 0.1)' : 'rgba(245, 81, 0, 0.1)',
+                            color: currentStatus === 'active' ? 'var(--primary-color-dark)' : 'var(--primary-color)',
                             fontWeight: '500',
                             cursor: isUpdating ? 'not-allowed' : 'pointer',
                             minWidth: '100px'
@@ -259,7 +259,7 @@ export default function UsersTab({ error, setError }) {
                           <option value="admin">Admin</option>
                         </select>
                       </td>
-                      <td style={{padding: '12px 16px', fontSize: '14px', color: '#666'}}>{formatDate(user.created_at)}</td>
+                      <td style={{padding: '12px 16px', fontSize: '14px', color: 'rgba(1,47,52,0.6)'}}>{formatDate(user.created_at)}</td>
                     </tr>
                   )
                 })

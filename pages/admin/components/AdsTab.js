@@ -405,10 +405,10 @@ export default function AdsTab({ error, setError }) {
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px'}}>
           <div>
             <h2 style={{fontSize: '20px', fontWeight: '500', margin: 0}}>Manage All Ads</h2>
-            <p style={{fontSize: '14px', color: '#666', margin: '8px 0 0 0'}}>
+            <p style={{fontSize: '14px', color: 'rgba(1,47,52,0.6)', margin: '8px 0 0 0'}}>
               View and manage all ads from all users
               {totalAds > 0 && (
-                <span style={{marginLeft: '8px', color: '#012f34', fontWeight: '500'}}>
+                <span style={{marginLeft: '8px', color: 'var(--dark-teal)', fontWeight: '500'}}>
                   ({totalAds.toLocaleString()} total)
                 </span>
               )}
@@ -437,13 +437,13 @@ export default function AdsTab({ error, setError }) {
       </div>
       
       {adsLoading ? (
-        <div style={{padding: '60px 20px', textAlign: 'center', color: '#666'}}>
+        <div style={{padding: '60px 20px', textAlign: 'center', color: 'rgba(1,47,52,0.6)'}}>
           <div style={{
             display: 'inline-block',
             width: '32px',
             height: '32px',
             border: '3px solid rgba(1,47,52,.1)',
-            borderTopColor: '#3a77ff',
+            borderTopColor: 'var(--primary-color)',
             borderRadius: '50%',
             animation: 'spin 0.8s linear infinite',
             marginBottom: '12px'
@@ -502,7 +502,7 @@ export default function AdsTab({ error, setError }) {
                     {kind === 'pending' && (
                       <span style={{
                         marginLeft: '6px',
-                        background: '#ff9800',
+                        background: 'var(--primary-color)',
                         color: '#fff',
                         borderRadius: '10px',
                         padding: '2px 6px',
@@ -523,11 +523,11 @@ export default function AdsTab({ error, setError }) {
             <div style={{
               marginBottom: '16px',
               padding: '10px 14px',
-              background: '#e3f2fd',
-              border: '1px solid rgba(58,119,255,.2)',
+              background: 'rgba(245, 81, 0, 0.1)',
+              border: '1px solid rgba(245, 81, 0, 0.2)',
               borderRadius: '6px',
               fontSize: '13px',
-              color: '#1565c0'
+              color: 'var(--primary-color)'
             }}>
               Showing {filteredAds.length} {filteredAds.length === 1 ? 'result' : 'results'} on this page
               {(selectedCategory !== 'all' || debouncedSearch.trim()) && ` (filtered from ${totalAds} total)`}
@@ -537,8 +537,8 @@ export default function AdsTab({ error, setError }) {
           {/* Ads List */}
           <div style={{display: 'flex', flexDirection: 'column', gap: '12px', minHeight: '400px'}}>
             {filteredAds.length === 0 ? (
-              <div style={{padding: '60px 20px', textAlign: 'center', color: '#666'}}>
-                <div style={{fontSize: '16px', marginBottom: '8px', color: '#012f34'}}>
+              <div style={{padding: '60px 20px', textAlign: 'center', color: 'rgba(1,47,52,0.6)'}}>
+                <div style={{fontSize: '16px', marginBottom: '8px', color: 'var(--dark-teal)'}}>
                   No ads found
                 </div>
                 <div style={{fontSize: '14px'}}>

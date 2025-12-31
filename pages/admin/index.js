@@ -124,7 +124,7 @@ export default function Admin(){
           </div>
 
           {error && (
-            <div style={{padding: '12px 20px', marginBottom: '20px', color: '#b00020', background: '#ffebee', borderRadius: '4px'}}>
+            <div style={{padding: '12px 20px', marginBottom: '20px', color: 'var(--primary-color)', background: 'rgba(245, 81, 0, 0.1)', borderRadius: '4px'}}>
               {error}
             </div>
           )}

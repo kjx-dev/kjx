@@ -130,12 +130,12 @@ export default function ReportsTab({ error, setError }) {
       <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h2 style={{ fontSize: '24px', fontWeight: '500', marginBottom: '8px' }}>Spam Reports</h2>
-          <p style={{ color: 'rgba(0,0,0,0.6)', fontSize: '14px' }}>
+          <p style={{ color: 'rgba(1,47,52,0.6)', fontSize: '14px' }}>
             Posts reported as spam multiple times. Review and take appropriate action.
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <label style={{ fontSize: '14px', color: 'rgba(0,0,0,0.7)' }}>
+          <label style={{ fontSize: '14px', color: 'rgba(1,47,52,0.7)' }}>
             Min Reports:
           </label>
           <select
@@ -144,7 +144,7 @@ export default function ReportsTab({ error, setError }) {
             style={{
               padding: '8px 12px',
               borderRadius: '6px',
-              border: '1px solid rgba(0,0,0,0.2)',
+              border: '1px solid rgba(1,47,52,0.2)',
               fontSize: '14px',
               cursor: 'pointer'
             }}
@@ -162,8 +162,8 @@ export default function ReportsTab({ error, setError }) {
         <div style={{
           padding: '12px 20px',
           marginBottom: '20px',
-          color: '#b00020',
-          background: '#ffebee',
+          color: 'var(--primary-color)',
+          background: 'rgba(245, 81, 0, 0.1)',
           borderRadius: '8px',
           fontSize: '14px'
         }}>
@@ -172,20 +172,20 @@ export default function ReportsTab({ error, setError }) {
       )}
 
       {loading ? (
-        <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(0,0,0,0.6)' }}>
+        <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(1,47,52,0.6)' }}>
           Loading reports...
         </div>
       ) : reports.length === 0 ? (
         <div style={{
           padding: '60px 20px',
           textAlign: 'center',
-          background: '#f5f5f5',
+          background: 'rgba(1,47,52,0.05)',
           borderRadius: '12px',
-          border: '1px solid rgba(0,0,0,0.1)'
+          border: '1px solid rgba(1,47,52,0.1)'
         }}>
-          <FaCheckCircle style={{ fontSize: '48px', color: 'rgba(0,0,0,0.3)', marginBottom: '16px' }} />
+          <FaCheckCircle style={{ fontSize: '48px', color: 'rgba(1,47,52,0.3)', marginBottom: '16px' }} />
           <h3 style={{ fontSize: '18px', fontWeight: '500', marginBottom: '8px' }}>No Reports Found</h3>
-          <p style={{ color: 'rgba(0,0,0,0.6)', fontSize: '14px' }}>
+          <p style={{ color: 'rgba(1,47,52,0.6)', fontSize: '14px' }}>
             {minReports === 1 
               ? 'No posts have been reported as spam yet.'
               : `No posts have been reported as spam ${minReports} or more times.`}
@@ -199,9 +199,9 @@ export default function ReportsTab({ error, setError }) {
               style={{
                 background: '#fff',
                 borderRadius: '12px',
-                border: '1px solid rgba(0,0,0,0.1)',
+                border: '1px solid rgba(1,47,52,0.1)',
                 padding: '20px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                boxShadow: '0 2px 8px rgba(1,47,52,0.05)'
               }}
             >
               <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
@@ -209,8 +209,8 @@ export default function ReportsTab({ error, setError }) {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                     <div style={{
-                      background: '#ffebee',
-                      color: '#b00020',
+                      background: 'rgba(245, 81, 0, 0.1)',
+                      color: 'var(--primary-color)',
                       padding: '6px 12px',
                       borderRadius: '20px',
                       fontSize: '12px',
@@ -227,8 +227,8 @@ export default function ReportsTab({ error, setError }) {
                       borderRadius: '12px',
                       fontSize: '12px',
                       fontWeight: '500',
-                      background: report.status === 'active' ? '#e8f5e9' : report.status === 'pending' ? '#fff3e0' : '#ffebee',
-                      color: report.status === 'active' ? '#2e7d32' : report.status === 'pending' ? '#e65100' : '#b00020'
+                      background: report.status === 'active' ? 'rgba(245, 81, 0, 0.1)' : report.status === 'pending' ? 'rgba(245, 81, 0, 0.15)' : 'rgba(245, 81, 0, 0.1)',
+                      color: report.status === 'active' ? 'var(--primary-color-dark)' : report.status === 'pending' ? 'var(--primary-color)' : 'var(--primary-color)'
                     }}>
                       {report.status || 'pending'}
                     </span>
@@ -238,7 +238,7 @@ export default function ReportsTab({ error, setError }) {
                     fontSize: '18px',
                     fontWeight: '500',
                     marginBottom: '8px',
-                    color: '#012f34',
+                    color: 'var(--dark-teal)',
                     cursor: 'pointer'
                   }}
                   onClick={() => router.push(`/product/${report.post_id}`)}
@@ -248,7 +248,7 @@ export default function ReportsTab({ error, setError }) {
 
                   <p style={{
                     fontSize: '14px',
-                    color: 'rgba(0,0,0,0.7)',
+                    color: 'rgba(1,47,52,0.7)',
                     marginBottom: '12px',
                     lineHeight: '1.5',
                     display: '-webkit-box',
@@ -259,9 +259,9 @@ export default function ReportsTab({ error, setError }) {
                     {report.content}
                   </p>
 
-                  <div style={{ display: 'flex', gap: '16px', fontSize: '14px', color: 'rgba(0,0,0,0.6)', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', gap: '16px', fontSize: '14px', color: 'rgba(1,47,52,0.6)', marginBottom: '12px' }}>
                     {report.price && (
-                      <span style={{ fontWeight: '500', color: '#f55100' }}>
+                      <span style={{ fontWeight: '500', color: 'var(--primary-color)' }}>
                         {formatPrice(report.price)}
                       </span>
                     )}
@@ -275,13 +275,13 @@ export default function ReportsTab({ error, setError }) {
                   {report.user && (
                     <div style={{
                       padding: '12px',
-                      background: '#f5f5f5',
+                      background: 'rgba(1,47,52,0.05)',
                       borderRadius: '8px',
                       marginBottom: '12px',
                       fontSize: '14px'
                     }}>
                       <div style={{ fontWeight: '500', marginBottom: '4px' }}>Posted by:</div>
-                      <div style={{ color: 'rgba(0,0,0,0.7)' }}>
+                      <div style={{ color: 'rgba(1,47,52,0.7)' }}>
                         {report.user.name || report.user.username} ({report.user.email})
                         {report.user.role && (
                           <span style={{
@@ -289,8 +289,8 @@ export default function ReportsTab({ error, setError }) {
                             padding: '2px 8px',
                             borderRadius: '12px',
                             fontSize: '11px',
-                            background: report.user.role === 'admin' ? '#e3f2fd' : '#f3e5f5',
-                            color: report.user.role === 'admin' ? '#1976d2' : '#7b1fa2'
+                            background: report.user.role === 'admin' ? 'rgba(245, 81, 0, 0.15)' : 'rgba(245, 81, 0, 0.1)',
+                            color: 'var(--primary-color)'
                           }}>
                             {report.user.role}
                           </span>
@@ -301,8 +301,8 @@ export default function ReportsTab({ error, setError }) {
                             padding: '2px 8px',
                             borderRadius: '12px',
                             fontSize: '11px',
-                            background: '#ffebee',
-                            color: '#b00020',
+                            background: 'rgba(245, 81, 0, 0.1)',
+                            color: 'var(--primary-color)',
                             fontWeight: '600'
                           }}>
                             BANNED
@@ -318,7 +318,7 @@ export default function ReportsTab({ error, setError }) {
                     style={{
                       background: 'transparent',
                       border: 'none',
-                      color: '#1976d2',
+                      color: 'var(--primary-color)',
                       cursor: 'pointer',
                       fontSize: '14px',
                       padding: '8px 0',
@@ -335,9 +335,9 @@ export default function ReportsTab({ error, setError }) {
                     <div style={{
                       marginTop: '12px',
                       padding: '16px',
-                      background: '#fff3e0',
+                      background: 'rgba(245, 81, 0, 0.1)',
                       borderRadius: '8px',
-                      border: '1px solid #ffcc80'
+                      border: '1px solid rgba(245, 81, 0, 0.2)'
                     }}>
                       <div style={{ fontWeight: '500', marginBottom: '12px', fontSize: '14px' }}>Report Details:</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -352,7 +352,7 @@ export default function ReportsTab({ error, setError }) {
                               {flag.author || 'Anonymous'} - {formatDate(flag.created_at)}
                             </div>
                             {flag.details && (
-                              <div style={{ color: 'rgba(0,0,0,0.7)', marginTop: '4px' }}>
+                              <div style={{ color: 'rgba(1,47,52,0.7)', marginTop: '4px' }}>
                                 {flag.details}
                               </div>
                             )}
@@ -376,7 +376,7 @@ export default function ReportsTab({ error, setError }) {
                     style={{
                       padding: '10px 16px',
                       borderRadius: '8px',
-                      background: '#b00020',
+                      background: 'var(--primary-color-dark)',
                       color: '#fff',
                       border: 'none',
                       cursor: actionLoading[report.post_id] ? 'not-allowed' : 'pointer',
@@ -400,7 +400,7 @@ export default function ReportsTab({ error, setError }) {
                       style={{
                         padding: '10px 16px',
                         borderRadius: '8px',
-                        background: report.user?.status === 'banned' ? '#ccc' : '#ff6f00',
+                        background: report.user?.status === 'banned' ? 'rgba(1,47,52,0.3)' : 'var(--primary-color)',
                         color: '#fff',
                         border: 'none',
                         cursor: (actionLoading[report.post_id] || report.user?.status === 'banned') ? 'not-allowed' : 'pointer',
@@ -425,7 +425,7 @@ export default function ReportsTab({ error, setError }) {
                       style={{
                         padding: '10px 16px',
                         borderRadius: '8px',
-                        background: '#d32f2f',
+                        background: 'var(--primary-color-dark)',
                         color: '#fff',
                         border: 'none',
                         cursor: actionLoading[report.post_id] ? 'not-allowed' : 'pointer',
@@ -449,7 +449,7 @@ export default function ReportsTab({ error, setError }) {
                     style={{
                       padding: '10px 16px',
                       borderRadius: '8px',
-                      background: '#f57c00',
+                      background: 'var(--primary-color)',
                       color: '#fff',
                       border: 'none',
                       cursor: actionLoading[report.post_id] ? 'not-allowed' : 'pointer',
@@ -471,7 +471,7 @@ export default function ReportsTab({ error, setError }) {
                     style={{
                       padding: '10px 16px',
                       borderRadius: '8px',
-                      background: '#4caf50',
+                      background: 'var(--dark-teal)',
                       color: '#fff',
                       border: 'none',
                       cursor: actionLoading[report.post_id] ? 'not-allowed' : 'pointer',

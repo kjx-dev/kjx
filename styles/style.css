@@ -373,11 +373,9 @@ b {
     z-index: 3000;
     height: auto;
     min-height: auto;
-    max-height: none;
-    overflow: visible;
-    overflow-y: visible;
-    overflow-x: visible;
-    -webkit-overflow-scrolling: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
 .profile__menu.hidden { 

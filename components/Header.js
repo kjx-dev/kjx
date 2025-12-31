@@ -117,7 +117,9 @@ export default function Header(){
         const menuW = 300
         const top = Math.round(rect.bottom + 8)
         const left = Math.min(Math.max(16, Math.round(rect.right - menuW)), Math.round(window.innerWidth - 16 - menuW))
-        setProfileMenuPos({ top, left })
+        // Calculate max height based on available viewport space
+        const availableHeight = window.innerHeight - top - 16 // 16px bottom margin
+        setProfileMenuPos({ top, left, maxHeight: availableHeight })
       }
       return next
     })
@@ -183,7 +185,7 @@ export default function Header(){
                   <FaChevronDown />
                 </button>
                 {profileMenuOpen && (
-                  <div id="profileMenu" ref={profileMenuRef} className="profile__menu" style={{ position:'fixed', top: profileMenuPos.top, left: profileMenuPos.left }}>
+                  <div id="profileMenu" ref={profileMenuRef} className="profile__menu" style={{ position:'fixed', top: profileMenuPos.top, left: profileMenuPos.left, maxHeight: profileMenuPos.maxHeight ? `${profileMenuPos.maxHeight}px` : 'calc(100vh - 40px)' }}>
                     <div className="header">
                       <div className="profile-icon-wrapper"> 
                           <FaUser style={{fontSize:22}} />

@@ -129,17 +129,17 @@ export default function SettingsTab({ error, setError }) {
       <h2 style={{fontSize: '24px', fontWeight: 500, marginBottom: '24px'}}>Settings</h2>
       
       {message && (
-        <div style={{padding: '12px 20px', marginBottom: '20px', color: '#1b5e20', background: '#e8f5e9', borderRadius: '4px'}}>
+        <div style={{padding: '12px 20px', marginBottom: '20px', color: 'var(--primary-color-dark)', background: 'rgba(245, 81, 0, 0.1)', borderRadius: '4px'}}>
           {message}
         </div>
       )}
 
       {/* Ad Expiration Settings */}
       <div style={{marginBottom: '32px', paddingBottom: '32px', borderBottom: '1px solid rgba(1,47,52,.1)'}}>
-        <label style={{display: 'block', marginBottom: '8px', fontSize: '16px', fontWeight: 500, color: '#012f34'}}>
+        <label style={{display: 'block', marginBottom: '8px', fontSize: '16px', fontWeight: 500, color: 'var(--dark-teal)'}}>
           Ad Expiration Days
         </label>
-        <p style={{marginBottom: '12px', color: 'rgba(0,47,52,.7)', fontSize: '14px'}}>
+        <p style={{marginBottom: '12px', color: 'rgba(1,47,52,.7)', fontSize: '14px'}}>
           Set the number of days after which ads will automatically expire. Default is 30 days.
         </p>
         <input
@@ -161,16 +161,16 @@ export default function SettingsTab({ error, setError }) {
 
       {/* Google OAuth Settings */}
       <div style={{marginBottom: '32px', paddingBottom: '32px', borderBottom: '1px solid rgba(1,47,52,.1)'}}>
-        <h3 style={{fontSize: '18px', fontWeight: 500, marginBottom: '16px', color: '#012f34'}}>Google OAuth Configuration</h3>
-        <p style={{marginBottom: '16px', color: 'rgba(0,47,52,.7)', fontSize: '14px'}}>
+        <h3 style={{fontSize: '18px', fontWeight: 500, marginBottom: '16px', color: 'var(--dark-teal)'}}>Google OAuth Configuration</h3>
+        <p style={{marginBottom: '16px', color: 'rgba(1,47,52,.7)', fontSize: '14px'}}>
           Configure Google Sign-In authentication. Get your credentials from{' '}
-          <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" style={{color: '#e44c00', textDecoration: 'underline'}}>
+          <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" style={{color: 'var(--primary-color-dark)', textDecoration: 'underline'}}>
             Google Cloud Console
           </a>.
         </p>
         
         <div style={{marginBottom: '16px'}}>
-          <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 500, color: '#012f34'}}>
+          <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 500, color: 'var(--dark-teal)'}}>
             Google Client ID
           </label>
           <input
@@ -190,7 +190,7 @@ export default function SettingsTab({ error, setError }) {
         </div>
 
         <div style={{marginBottom: '16px'}}>
-          <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 500, color: '#012f34'}}>
+          <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 500, color: 'var(--dark-teal)'}}>
             Google Client Secret
           </label>
           <input
@@ -212,16 +212,16 @@ export default function SettingsTab({ error, setError }) {
 
       {/* Facebook OAuth Settings */}
       <div style={{marginBottom: '32px', paddingBottom: '32px', borderBottom: '1px solid rgba(1,47,52,.1)'}}>
-        <h3 style={{fontSize: '18px', fontWeight: 500, marginBottom: '16px', color: '#012f34'}}>Facebook OAuth Configuration</h3>
-        <p style={{marginBottom: '16px', color: 'rgba(0,47,52,.7)', fontSize: '14px'}}>
+        <h3 style={{fontSize: '18px', fontWeight: 500, marginBottom: '16px', color: 'var(--dark-teal)'}}>Facebook OAuth Configuration</h3>
+        <p style={{marginBottom: '16px', color: 'rgba(1,47,52,.7)', fontSize: '14px'}}>
           Configure Facebook Sign-In authentication. Get your credentials from{' '}
-          <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" style={{color: '#e44c00', textDecoration: 'underline'}}>
+          <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" style={{color: 'var(--primary-color-dark)', textDecoration: 'underline'}}>
             Facebook Developers
           </a>.
         </p>
         
         <div style={{marginBottom: '16px'}}>
-          <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 500, color: '#012f34'}}>
+          <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 500, color: 'var(--dark-teal)'}}>
             Facebook App ID
           </label>
           <input
@@ -241,7 +241,7 @@ export default function SettingsTab({ error, setError }) {
         </div>
 
         <div style={{marginBottom: '16px'}}>
-          <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 500, color: '#012f34'}}>
+          <label style={{display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 500, color: 'var(--dark-teal)'}}>
             Facebook App Secret
           </label>
           <input
@@ -263,8 +263,8 @@ export default function SettingsTab({ error, setError }) {
 
       {/* Post Editing Permissions */}
       <div style={{marginBottom: '32px', paddingBottom: '32px', borderBottom: '1px solid rgba(1,47,52,.1)'}}>
-        <h3 style={{fontSize: '18px', fontWeight: 500, marginBottom: '16px', color: '#012f34'}}>Post Editing Permissions</h3>
-        <p style={{marginBottom: '16px', color: 'rgba(0,47,52,.7)', fontSize: '14px'}}>
+        <h3 style={{fontSize: '18px', fontWeight: 500, marginBottom: '16px', color: 'var(--dark-teal)'}}>Post Editing Permissions</h3>
+        <p style={{marginBottom: '16px', color: 'rgba(1,47,52,.7)', fontSize: '14px'}}>
           Select which user roles can edit posts without requiring admin approval. Posts edited by other roles will be set to "pending" status and require approval.
         </p>
         
@@ -305,7 +305,7 @@ export default function SettingsTab({ error, setError }) {
                   cursor: 'pointer'
                 }}
               />
-              <span style={{fontSize: '15px', color: '#012f34', textTransform: 'capitalize'}}>
+              <span style={{fontSize: '15px', color: 'var(--dark-teal)', textTransform: 'capitalize'}}>
                 {role === 'data_entry' ? 'Data Entry' : role}
               </span>
             </label>
@@ -334,7 +334,7 @@ export default function SettingsTab({ error, setError }) {
           disabled={saving || expirationDays < 1 || expirationDays > 365}
           style={{
             padding: '10px 24px',
-            background: saving || expirationDays < 1 || expirationDays > 365 ? '#ccc' : '#e44c00',
+            background: saving || expirationDays < 1 || expirationDays > 365 ? 'rgba(1,47,52,0.3)' : 'var(--primary-color-dark)',
             color: '#fff',
             border: 'none',
             borderRadius: '6px',
@@ -345,12 +345,12 @@ export default function SettingsTab({ error, setError }) {
           }}
           onMouseEnter={(e) => {
             if (!saving && expirationDays >= 1 && expirationDays <= 365) {
-              e.currentTarget.style.background = '#c94300'
+              e.currentTarget.style.background = 'var(--primary-color)'
             }
           }}
           onMouseLeave={(e) => {
             if (!saving && expirationDays >= 1 && expirationDays <= 365) {
-              e.currentTarget.style.background = '#e44c00'
+              e.currentTarget.style.background = 'var(--primary-color-dark)'
             }
           }}
         >
@@ -365,7 +365,7 @@ export default function SettingsTab({ error, setError }) {
         border: '1px solid rgba(1,47,52,.1)'
       }}>
         <h3 style={{fontSize: '16px', fontWeight: 500, marginBottom: '8px'}}>Note:</h3>
-        <p style={{margin: 0, fontSize: '14px', color: 'rgba(0,47,52,.7)', lineHeight: 1.6}}>
+        <p style={{margin: 0, fontSize: '14px', color: 'rgba(1,47,52,.7)', lineHeight: 1.6}}>
           This setting applies to all new ads posted after saving. Existing ads will continue to use their original expiration dates.
         </p>
       </div>

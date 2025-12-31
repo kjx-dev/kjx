@@ -472,7 +472,7 @@ export default function Sell(){
           )}
           {step === 0 ? (
             <div style={{marginTop:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'60px 20px', minHeight:'400px'}}>
-              <h2 style={{color: '#012f34', fontSize: '28px', fontWeight: 600, marginBottom: '12px', textAlign: 'center', fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>
+              <h2 style={{color: '#012f34', fontSize: '28px', fontWeight: 500, marginBottom: '12px', textAlign: 'center', fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>
                 What would you like to do?
               </h2>
               <p style={{color: 'rgba(0,47,52,.64)', fontSize: '16px', marginBottom: '40px', textAlign: 'center', fontFamily:'var(--font-roboto), Roboto, sans-serif'}}>
@@ -492,7 +492,7 @@ export default function Sell(){
                     background: '#fff',
                     color: '#012f34',
                     fontSize: '18px',
-                    fontWeight: 600,
+                    fontWeight: 500,
                     cursor: 'pointer',
                     fontFamily:'var(--font-roboto), Roboto, sans-serif',
                     display: 'flex',
@@ -545,7 +545,7 @@ export default function Sell(){
                     background: '#fff',
                     color: '#012f34',
                     fontSize: '18px',
-                    fontWeight: 600,
+                    fontWeight: 500,
                     cursor: 'pointer',
                     fontFamily:'var(--font-roboto), Roboto, sans-serif',
                     display: 'flex',
@@ -977,7 +977,7 @@ export default function Sell(){
           <div className="sell__section" style={{border:'1px solid rgba(1,47,52,.2)', borderRadius:12, padding:16, background:'#fff', boxShadow:'0 6px 18px rgba(1,47,52,.08)'}}>
             <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
               <div style={{color:'rgba(0,47,52,.84)'}}>Your phone number</div>
-              <div style={{fontWeight:600}}>{form.profilePhone || '+92XXXXXXXXXX'}</div>
+              <div style={{fontWeight:500}}>{form.profilePhone || '+92XXXXXXXXXX'}</div>
             </div>
             <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:12}}>
               <div>Show my phone number in ads</div>
@@ -1146,19 +1146,27 @@ export default function Sell(){
                     {(() => {
                       const orderedCats = getOrderedCategories(tiles, groups)
                       return orderedCats.map((parent, idx) => {
-                        const group = groups.find(g => (g.parent.category_id === parent.category_id || g.parent.name === parent.name || g.parent.name === parent.k))
+                        // Match by category_id first (most reliable), then by name (case-insensitive)
+                        const group = groups.find(g => {
+                          if (parent.category_id && g.parent.category_id === parent.category_id) return true
+                          const parentName = (parent.k || parent.name || '').toLowerCase().trim()
+                          const groupName = (g.parent.name || '').toLowerCase().trim()
+                          return parentName === groupName
+                        })
                         const hasChildren = group && group.children && group.children.length > 0
+                        // Use the actual database category name from the group, not the tile key
+                        const actualCategoryName = group ? group.parent.name : (parent.k || parent.name)
                       return (
                         <button
                           key={parent.category_id || parent.name || idx}
                           onClick={() => {
                             if (!hasChildren) {
-                              setForm({...form, category: parent.name})
+                              setForm({...form, category: actualCategoryName})
                               setErrors(err => ({ ...err, category: '' }))
                               setHeaderCatOpen(false)
                               setModalSelectedParent(null)
                             } else {
-                              setModalSelectedParent(parent)
+                              setModalSelectedParent({...parent, name: actualCategoryName, category_id: group ? group.parent.category_id : parent.category_id})
                             }
                           }}
                           style={{
