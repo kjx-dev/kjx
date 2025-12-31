@@ -1,13 +1,40 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 export default function PermissionsTab({ error, setError }) {
   const [permissions, setPermissions] = useState({})
   const [permissionsLoading, setPermissionsLoading] = useState(false)
   const [togglingPermission, setTogglingPermission] = useState({})
+  const scrollPositionRef = useRef(null)
+  const shouldRestoreScrollRef = useRef(false)
 
   useEffect(() => {
     fetchPermissions()
   }, [])
+
+  // Restore scroll position after permissions update
+  useEffect(() => {
+    if (shouldRestoreScrollRef.current && scrollPositionRef.current !== null) {
+      // Use multiple strategies to ensure scroll is restored
+      const restoreScroll = () => {
+        window.scrollTo({
+          top: scrollPositionRef.current,
+          left: 0,
+          behavior: 'auto' // Disable smooth scrolling to prevent jerk
+        })
+      }
+      
+      // Try multiple times to ensure it works
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          restoreScroll()
+          setTimeout(() => {
+            restoreScroll()
+            shouldRestoreScrollRef.current = false
+          }, 0)
+        })
+      })
+    }
+  }, [permissions])
 
   async function fetchPermissions() {
     try {
@@ -35,6 +62,9 @@ export default function PermissionsTab({ error, setError }) {
 
   async function grantAllPermissionsForResource(role, resource) {
     const resourceKey = `${role}-${resource}-all`
+    // Store scroll position to prevent jump
+    scrollPositionRef.current = window.scrollY || window.pageYOffset
+    shouldRestoreScrollRef.current = true
     try {
       setError('')
       setTogglingPermission(prev => ({ ...prev, [resourceKey]: true }))
@@ -68,10 +98,11 @@ export default function PermissionsTab({ error, setError }) {
       })
       
       await Promise.all(promises)
-      await fetchPermissions() // Refresh permissions
+      await fetchPermissions() // Refresh permissions - scroll will be restored via useEffect
     } catch (err) {
       console.error('Error granting all permissions for resource:', err)
       setError('Error granting all permissions: ' + (err.message || 'Unknown error'))
+      shouldRestoreScrollRef.current = true // Still restore on error
     } finally {
       setTogglingPermission(prev => {
         const next = { ...prev }
@@ -84,7 +115,8 @@ export default function PermissionsTab({ error, setError }) {
   async function grantAllPermissionsForRole(role) {
     const roleKey = `${role}-all-all`
     // Store scroll position to prevent jump
-    const scrollY = window.scrollY || window.pageYOffset
+    scrollPositionRef.current = window.scrollY || window.pageYOffset
+    shouldRestoreScrollRef.current = true
     try {
       setError('')
       setTogglingPermission(prev => ({ ...prev, [roleKey]: true }))
@@ -120,19 +152,95 @@ export default function PermissionsTab({ error, setError }) {
       )
       
       await Promise.all(promises)
-      await fetchPermissions() // Refresh permissions
-      
-      // Restore scroll position after update
-      requestAnimationFrame(() => {
-        window.scrollTo(0, scrollY)
-      })
+      await fetchPermissions() // Refresh permissions - scroll will be restored via useEffect
     } catch (err) {
       console.error('Error granting all permissions for role:', err)
       setError('Error granting all permissions: ' + (err.message || 'Unknown error'))
-      // Restore scroll position even on error
-      requestAnimationFrame(() => {
-        window.scrollTo(0, scrollY)
+      shouldRestoreScrollRef.current = true // Still restore on error
+    } finally {
+      setTogglingPermission(prev => {
+        const next = { ...prev }
+        delete next[roleKey]
+        return next
       })
+    }
+  }
+
+  async function revokeAllPermissionsForResource(role, resource) {
+    const resourceKey = `${role}-${resource}-revoke-all`
+    // Store scroll position to prevent jump
+    scrollPositionRef.current = window.scrollY || window.pageYOffset
+    shouldRestoreScrollRef.current = true
+    try {
+      setError('')
+      setTogglingPermission(prev => ({ ...prev, [resourceKey]: true }))
+      
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        setError('Not authenticated')
+        return
+      }
+      
+      // Revoke all actions for this resource
+      const rolePerms = permissions[role] || []
+      const promises = rolePerms
+        .filter(p => p.resource === resource)
+        .map(perm => {
+          return fetch(`/api/v1/admin/permissions?role=${encodeURIComponent(role)}&resource=${encodeURIComponent(resource)}&action=${encodeURIComponent(perm.action)}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+        })
+      
+      await Promise.all(promises)
+      await fetchPermissions() // Refresh permissions - scroll will be restored via useEffect
+    } catch (err) {
+      console.error('Error revoking all permissions for resource:', err)
+      setError('Error revoking all permissions: ' + (err.message || 'Unknown error'))
+      shouldRestoreScrollRef.current = true // Still restore on error
+    } finally {
+      setTogglingPermission(prev => {
+        const next = { ...prev }
+        delete next[resourceKey]
+        return next
+      })
+    }
+  }
+
+  async function revokeAllPermissionsForRole(role) {
+    const roleKey = `${role}-revoke-all-all`
+    // Store scroll position to prevent jump
+    scrollPositionRef.current = window.scrollY || window.pageYOffset
+    shouldRestoreScrollRef.current = true
+    try {
+      setError('')
+      setTogglingPermission(prev => ({ ...prev, [roleKey]: true }))
+      
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        setError('Not authenticated')
+        return
+      }
+      
+      // Revoke all permissions for all resources
+      const rolePerms = permissions[role] || []
+      const promises = rolePerms.map(perm => {
+        return fetch(`/api/v1/admin/permissions?role=${encodeURIComponent(role)}&resource=${encodeURIComponent(perm.resource)}&action=${encodeURIComponent(perm.action)}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+      })
+      
+      await Promise.all(promises)
+      await fetchPermissions() // Refresh permissions - scroll will be restored via useEffect
+    } catch (err) {
+      console.error('Error revoking all permissions for role:', err)
+      setError('Error revoking all permissions: ' + (err.message || 'Unknown error'))
+      shouldRestoreScrollRef.current = true // Still restore on error
     } finally {
       setTogglingPermission(prev => {
         const next = { ...prev }
@@ -144,6 +252,9 @@ export default function PermissionsTab({ error, setError }) {
 
   async function togglePermission(role, resource, action) {
     const key = `${role}-${resource}-${action}`
+    // Store scroll position to prevent jump
+    scrollPositionRef.current = window.scrollY || window.pageYOffset
+    shouldRestoreScrollRef.current = true
     try {
       setError('')
       setTogglingPermission(prev => ({ ...prev, [key]: true }))
@@ -194,9 +305,12 @@ export default function PermissionsTab({ error, setError }) {
           throw new Error('Failed to add permission: Unexpected response format')
         }
       }
+      
+      // Scroll will be restored via useEffect when permissions state updates
     } catch (err) {
       console.error('Error updating permission:', err)
       setError('Error updating permission: ' + (err.message || 'Unknown error'))
+      shouldRestoreScrollRef.current = true // Still restore on error
     } finally {
       setTogglingPermission(prev => ({ ...prev, [key]: false }))
     }
@@ -328,6 +442,34 @@ export default function PermissionsTab({ error, setError }) {
                         <i className="fa-solid fa-check-double" style={{fontSize: '10px'}}></i>
                         All
                       </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          revokeAllPermissionsForRole(role)
+                        }}
+                        disabled={togglingPermission[`${role}-revoke-all-all`] || grantedPerms === 0}
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: '11px',
+                          fontWeight: '500',
+                          color: '#fff',
+                          background: togglingPermission[`${role}-revoke-all-all`] || grantedPerms === 0 ? 'rgba(1,47,52,0.3)' : '#5a6268',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: togglingPermission[`${role}-revoke-all-all`] || grantedPerms === 0 ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          opacity: togglingPermission[`${role}-revoke-all-all`] ? 0.6 : 1,
+                          boxShadow: togglingPermission[`${role}-revoke-all-all`] || grantedPerms === 0 ? 'none' : '0 2px 4px rgba(0,0,0,0.15)'
+                        }}
+                        title={grantedPerms === 0 ? 'No permissions to revoke' : 'Revoke all permissions for this role'}
+                      >
+                        <i className="fa-solid fa-times" style={{fontSize: '10px'}}></i>
+                        Unselect All
+                      </button>
                     </div>
                   </div>
                   
@@ -393,6 +535,34 @@ export default function PermissionsTab({ error, setError }) {
                               >
                                 <i className="fa-solid fa-check" style={{fontSize: '9px'}}></i>
                                 All
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  revokeAllPermissionsForResource(role, resource.key)
+                                }}
+                                disabled={togglingPermission[`${role}-${resource.key}-revoke-all`] || resourcePerms.length === 0}
+                                style={{
+                                  padding: '4px 8px',
+                                  fontSize: '10px',
+                                  fontWeight: '500',
+                                  color: '#fff',
+                                  background: togglingPermission[`${role}-${resource.key}-revoke-all`] || resourcePerms.length === 0 ? 'rgba(1,47,52,0.3)' : '#5a6268',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  cursor: togglingPermission[`${role}-${resource.key}-revoke-all`] || resourcePerms.length === 0 ? 'not-allowed' : 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  opacity: togglingPermission[`${role}-${resource.key}-revoke-all`] ? 0.6 : 1,
+                                  boxShadow: togglingPermission[`${role}-${resource.key}-revoke-all`] || resourcePerms.length === 0 ? 'none' : '0 2px 4px rgba(0,0,0,0.15)'
+                                }}
+                                title={resourcePerms.length === 0 ? 'No permissions to revoke' : 'Revoke all permissions for this resource'}
+                              >
+                                <i className="fa-solid fa-times" style={{fontSize: '9px'}}></i>
+                                Unselect All
                               </button>
                             </div>
                           </div>
